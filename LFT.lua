@@ -2148,7 +2148,11 @@ function LFT.showDungeonObjectives()
     local dungeonName = LFT.dungeonNameFromCode(LFT.groupFullCode)
     LFTObjectives.objectivesComplete = 0
 
-    --reset ??
+    for index, _ in next, LFT.objectivesFrames do
+        if getglobal("LFTObjective" .. index) then
+            getglobal("LFTObjective" .. index):Hide()
+        end
+    end
 
     if LFT.dungeons[dungeonName] then
         if LFT.bosses[LFT.groupFullCode] then
