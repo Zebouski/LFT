@@ -169,8 +169,8 @@ LFTObjectives:SetScript("OnEvent", function()
         --        if LFT.dungeons[zoneText] then
         if LFT.bosses[LFT.groupFullCode] then
             for code, boss in next, LFT.bosses[LFT.groupFullCode] do
-                if creatureDied == boss .. ' dies.' then
-                    LFTObjectives.objectiveComplete(boss)
+                if creatureDied == LFT.bossTrim(boss) .. ' dies.' then
+                    LFTObjectives.objectiveComplete(LFT.bossTrim(boss))
                     return true
                 end
             end
@@ -907,7 +907,7 @@ LFT:SetScript("OnEvent", function()
                         LFTFillAvailableDungeonsDelay.queueAfterIfPossible = GetNumPartyMembers() < (DEV_GROUP_SIZE - 1)
                         lfdebug('num party = ' .. GetNumPartyMembers() .. ' < 4 ?')
                         if not LFTFillAvailableDungeonsDelay.queueAfterIfPossible then --group full
-                            SendAddonMessage(LFT_ADDON_CHANNEL, "LFMPartyReady:" .. LFT.LFMDungeonCode .. ":" .. LFTObjectives.objectivesComplete .. ":" .. LFT.tableSize(LFT.bosses[LFT.LFMDungeonCode]), "PARTY")
+                            SendAddonMessage(LFT_ADDON_CHANNEL, "LFMPartyReady:" .. LFT.LFMDungeonCode .. ":" .. LFTObjectives.objectivesComplete .. ":" .. LFT.dungeonObjectivesNumber(LFT.LFMDungeonCode), "PARTY")
                             return false -- so it goes into check full in timer
                         end
                         leaveQueue()
@@ -916,7 +916,7 @@ LFT:SetScript("OnEvent", function()
                         --  lfdebug('player ' .. newName .. ' joined from queue')
                         lfdebug('check lfm group ready')
                         if LFT.checkLFMGroupReady(LFT.LFMDungeonCode) then
-                            SendAddonMessage(LFT_ADDON_CHANNEL, "LFMPartyReady:" .. LFT.LFMDungeonCode .. ":" .. LFTObjectives.objectivesComplete .. ":" .. LFT.tableSize(LFT.bosses[LFT.LFMDungeonCode]), "PARTY")
+                            SendAddonMessage(LFT_ADDON_CHANNEL, "LFMPartyReady:" .. LFT.LFMDungeonCode .. ":" .. LFTObjectives.objectivesComplete .. ":" .. LFT.dungeonObjectivesNumber(LFT.LFMDungeonCode), "PARTY")
                         else
                             SendAddonMessage(LFT_ADDON_CHANNEL, "weInQueue:" .. LFT.LFMDungeonCode, "PARTY")
                         end
@@ -2018,7 +2018,7 @@ end
 
 function LFT.showDungeonObjectives()
 
-    --    LFT.groupFullCode = 'smarmory' --dev
+    LFT.groupFullCode = 'maraprincess' --dev
 
     local dungeonName = LFT.dungeonNameFromCode(LFT.groupFullCode)
     LFTObjectives.objectivesComplete = 0
@@ -2035,15 +2035,18 @@ function LFT.showDungeonObjectives()
                     LFT.objectivesFrames[index] = CreateFrame("Frame", "LFTObjective" .. index, getglobal('LFTDungeonStatus'), "LFTObjectiveBossTemplate")
                 end
                 LFT.objectivesFrames[index]:Show()
-                LFT.objectivesFrames[index].name = boss
+                LFT.objectivesFrames[index].name = LFT.bossTrim(boss)
                 LFT.objectivesFrames[index].code = LFT.groupFullCode
                 LFT.objectivesFrames[index].completed = false
 
-                local color = '|cff888888'
                 getglobal("LFTObjective" .. index .. 'Swoosh'):SetAlpha(0)
                 getglobal("LFTObjective" .. index .. 'ObjectiveComplete'):Hide()
                 getglobal("LFTObjective" .. index .. 'ObjectivePending'):Show()
-                getglobal("LFTObjective" .. index .. 'Objective'):SetText(color .. '0/1 ' .. boss .. ' defeated')
+                local sufix = ''
+                if string.find(boss, '-o') then sufix = '(optional)' end
+                if string.find(boss, '-s') then sufix = '(summoned)' end
+                if string.find(boss, '-r') then sufix = '(rare)' end
+                getglobal("LFTObjective" .. index .. 'Objective'):SetText(COLOR_DISABLED .. '0/1 ' .. LFT.bossTrim(boss) .. sufix .. ' defeated')
 
                 LFT.objectivesFrames[index]:SetPoint("TOPLEFT", getglobal("LFTDungeonStatus"), "TOPLEFT", 10, -110 - 20 * (index))
             end
@@ -2430,8 +2433,8 @@ function LFTObjectives.objectiveComplete(bossName)
             LFTObjectives.objectivesComplete = LFTObjectives.objectivesComplete + 1
             getglobal("LFTObjective" .. index .. 'ObjectiveComplete'):Show()
             getglobal("LFTObjective" .. index .. 'ObjectivePending'):Hide()
-            local color = '|cffffffff'
-            getglobal("LFTObjective" .. index .. 'Objective'):SetText(color .. '1/1 ' .. bossName .. ' defeated')
+                        getglobal("LFTObjective" .. index .. 'Objective'):SetText(COLOR_WHITE .. '1/1 ' .. bossName .. ' defeated')
+--            getglobal("LFTObjective" .. index .. 'Objective'):SetText(lft_replace(getglobal("LFTObjective" .. index .. 'Objective'), '0/1', '1/1'))
             LFTObjectives.lastObjective = index
             LFTObjectives:Show()
             code = LFT.objectivesFrames[index].code
@@ -2554,7 +2557,7 @@ LFT.bosses = {
         'Lord Serpentis',
         'Verdan the Everliving',
         'Mutanus the Devourer',
-        'Deviate Faerie Dragon' --rare
+--        'Deviate Faerie Dragon-r' --rare
     },
     ['dm'] = {
         'Rhahk\'zor',
@@ -2564,7 +2567,7 @@ LFT.bosses = {
         'Cookie',
         'Captain Greenskin',
         'Edwin VanCleef',
-        'Miner Johnson', --rare
+--        'Miner Johnson-r', --rare
     },
     ['sfk'] = {
         'Rethilgore',
@@ -2575,7 +2578,7 @@ LFT.bosses = {
         'Fenrus the Devourer',
         'Wolf Master Nandos',
         'Archmage Arugal',
-        'Deathsworn Captain', --rare
+--        'Deathsworn Captain-r', --rare
     },
     ['bfd'] = {
         'Ghamoo-ra',
@@ -2593,7 +2596,7 @@ LFT.bosses = {
         'Hamhock',
         'Bazil Thredd',
         'Dextren Ward',
-        'Bruegal Ironknuckle', --rare
+--        'Bruegal Ironknuckle-r', --rare
     },
     ['gnomer'] = {
         'Grubbis',
@@ -2601,7 +2604,7 @@ LFT.bosses = {
         'Electrocutioner 6000',
         'Crowd Pummeler 9-60',
         'Mekgineer Thermaplugg',
-        'Dark Iron Ambassador', --rare
+--        'Dark Iron Ambassador-r', --rare
     },
     ['rfk'] = {
         'Roogug',
@@ -2610,15 +2613,15 @@ LFT.bosses = {
         'Overlord Ramtusk',
         'Agathelos the Raging',
         'Charlga Razorflank',
-        'Blind Hunter', --rare
-        'Earthcaller Halmgar' --rare
+--        'Blind Hunter-r', --rare
+--        'Earthcaller Halmgar-r' --rare
     },
     ['smgy'] = {
         'Interrogator Vishas',
         'Bloodmage Thalnos',
-        'Azshir the Sleepless', --rare
-        'Fallen Champion', --rare
-        'Ironspire' --rare
+--        'Azshir the Sleepless-r', --rare
+--        'Fallen Champion-r', --rare
+--        'Ironspire-r' --rare
     },
     ['smarmory'] = {
         'Herod'
@@ -2638,12 +2641,9 @@ LFT.bosses = {
         'Glutton',
         'Ragglesnout',
         'Amnennar the Coldbringer',
-        'Plaguemaw the Rotting' --summon ?
+--        'Plaguemaw the Rotting-s' --summon ?
     },
     ['ulda'] = {
-        'Baelog',
-        'Olaf', --horde only
-        'Eric "The Swift"', --horde only
         'Revelosh',
         'Ironaya',
         'Obsidian Sentinel',
@@ -2651,6 +2651,9 @@ LFT.bosses = {
         'Galgann Firehammer',
         'Grimlok',
         'Archaedas',
+--        'Baelog-o', --horde only
+--        'Olaf-o', --horde only
+--        'Eric "The Swift"-o', --horde only
     },
     ['zf'] = {
         'Antu\'sul',
@@ -2661,22 +2664,22 @@ LFT.bosses = {
         'Sergeant Bly',
         'Hydromancer Velratha',
         'Chief Ukorz Sandscalp',
-        'Ruuzlu', -- who is this guy ?
-        'Zerillis', --rare
-        'Shadowpriest Sezz\'ziz', --rare ?
-        'Dustwraith', --rare
-        'Gahz\'rilla', --summon
-
+--        'Ruuzlu-o', -- who is this guy ?
+--        'Zerillis-r', --rare
+--        'Shadowpriest Sezz\'ziz-r', --rare ?
+--        'Dustwraith-r', --rare
+--        'Gahz\'rilla-s', --summon
     },
     ['maraorange'] = {
         'Lord Vyletongue',
         'Noxxion',
         'Razorlash',
         'Celebras the Cursed',
-        'Meshlok the Harvester' --rare
+--        'Meshlok the Harvester-r' --rare
     },
-    ['marapurple'] = { --todo needs fix
-        'Meshlok the Harvester' --rare
+    ['marapurple'] = {
+        --todo needs fix
+--        'Meshlok the Harvester-r' --rare
     },
     ['maraprincess'] = {
         'Tinkerer Gizlock',
@@ -2691,12 +2694,13 @@ LFT.bosses = {
         'Morphaz',
         'Hazzas',
         'Shade of Eranikus',
-        'Atal\'alarion', -- ?
-        'Ogom the Wretched', -- ?
-        'Avatar of Hakkar', -- summon
-        'Spawn of Hakkar'
+        'Spawn of Hakkar',
+--        'Atal\'alarion-o', -- ?
+--        'Ogom the Wretched-o', -- ?
+--        'Avatar of Hakkar-s', -- summon
     },
-    ['brd'] = { --todo needs split ?
+    ['brd'] = {
+        --todo needs split ?
         'Lord Roccor',
         'High Interrogator Gerstahn',
         'Houndmaster Grebmar',
@@ -2708,7 +2712,7 @@ LFT.bosses = {
         'Ribbly Screwspigot',
         'Fineous Darkvire',
         'Emperor Dagran Thaurissan',
-        'Panzor the Invincible', --rare
+
         'Phalanx',
         'Lord Incendius',
         'Warder Stilgiss',
@@ -2718,12 +2722,13 @@ LFT.bosses = {
         'Ambassador Flamelash',
         'Magmus',
         'Princess Moira Bronzebeard',
-        'Gorosh the Dervish', --summoned
-        'Grizzle', --summoned
-        'Eviscerator', --summoned
-        'Ok\'thor the Breaker', --summoned
-        'Anub\'shiah', --summoned
-        'Hedrum the Creeper' --summoned
+--        'Panzor the Invincible-r', --rare
+--        'Gorosh the Dervish-s', --summoned
+--        'Grizzle-s', --summoned
+--        'Eviscerator-s', --summoned
+--        'Ok\'thor the Breaker-s', --summoned
+--        'Anub\'shiah-s', --summoned
+--        'Hedrum the Creeper-s' --summoned
     },
     ['lbrs'] = {
         'Highlord Omokk',
@@ -2735,25 +2740,25 @@ LFT.bosses = {
         'Gizrul the Slavener',
         'Overlord Wyrmthalak',
 
-        'Bannok Grimaxe', --rare
-        'Crystal Fang', --rare
-        'Ghok Bashguud', --rare
-        'Spirestone Butcher', --rare
-        'Burning Felguard', --rare
-        'Spirestone Battle Lord', --rare
-        'Spirestone Lord Magus', --rare
-        'Urok Doomhowl', --summoned
-        'Mor Grayhoof' --summoned
+--        'Bannok Grimaxe-r', --rare
+--        'Crystal Fang-r', --rare
+--        'Ghok Bashguud-r', --rare
+--        'Spirestone Butcher-r', --rare
+--        'Burning Felguard-r', --rare
+--        'Spirestone Battle Lord-r', --rare
+--        'Spirestone Lord Magus-r', --rare
+--        'Urok Doomhowl-r', --summoned
+--        'Mor Grayhoof-r' --summoned
     },
     ['ubrs'] = {
         'Pyroguard Emberseer',
-        'Goraluk Anvilcrack', --kinda optional ?
+--        'Goraluk Anvilcrack-o', --kinda optional ?
         'Warchief Rend Blackhand',
         'The Beast',
         'General Drakkisath',
-        'Solakar Flamewreath', --summoned
-        'Jed Runewatcher', --rare
-        'Lord Valthalak' --summoned
+--        'Solakar Flamewreath-s', --summoned
+--        'Jed Runewatcher-r', --rare
+--        'Lord Valthalak-s' --summoned
     },
     ['dme'] = {
         'Pusilin',
@@ -2761,7 +2766,7 @@ LFT.bosses = {
         'Hydrospawn',
         'Lethtendris',
         'Alzzin the Wildshaper',
-        'Isalien' --summoned
+--        'Isalien-s' --summoned
     },
     ['dmn'] = {
         'Guard Mol\'dar',
@@ -2769,8 +2774,8 @@ LFT.bosses = {
         'Guard Fengus',
         'Guard Slip\'kik',
         'Captain Kromcrush',
-        --        'Cho\'Rush the Observer',
         'King Gordok',
+--        'Cho\'Rush the Observer-o',
     },
     ['dmw'] = {
         'Tendris Warpwood',
@@ -2778,8 +2783,8 @@ LFT.bosses = {
         'Magister Kalendris',
         'Immol\'thar',
         'Prince Tortheldrin',
-        --        'Tsu\'zee', --rare
-        --        'Lord Hel\'nurath'  --summoned
+--        'Tsu\'zee-r', --rare
+--        'Lord Hel\'nurath-s' --summoned
     },
     ['scholo'] = {
         'Jandice Barov',
@@ -2792,29 +2797,28 @@ LFT.bosses = {
         'Lord Alexei Barov',
         'Lady Illucia Barov',
         'Darkmaster Gandling',
-        'Blood Steward of Kirtonos', --optional
-        'Kirtonos the Herald', -- summon
-        'Death Knight Darkreaver', --summon
-        'Marduk Blackpool', --optional
-        'Vectus', --optional
-        'Kormok', --summoned
+--        'Blood Steward of Kirtonos-o', --optional
+--        'Kirtonos the Herald-s', -- summon
+--        'Death Knight Darkreaver-s', --summon
+--        'Marduk Blackpool-o', --optional
+--        'Vectus-o', --optional
+--        'Kormok-s', --summoned
     },
     ['stratlive'] = {
-
         'The Unforgiven',
         'Timmy the Cruel',
         'Malor the Zealous',
-        'Cannon Master Wiley',
+        'Cannon Master Willey',
         'Archivist Galford',
---        'Grand Crusader Dathrohan', -- balnazzar
+        --        'Grand Crusader Dathrohan', -- balnazzar
         'Balnazzar',
 
-        'Hearthsinger Forresten', --rare
-        'Stratholme Courier', --optional
-        'Skul', -- rare
-        'Postmaster Malown', --summon
-        'Sothos', --summoned
-        'Jarien', --summoned
+--        'Hearthsinger Forresten-r', --rare
+--        'Stratholme Courier-o', --optional
+--        'Skul-r', -- rare
+--        'Postmaster Malown-s', --summon
+--        'Sothos-s', --summoned
+--        'Jarien-s', --summoned
     },
     ['stratud'] = {
         'Nerub\'enkan',
@@ -2823,11 +2827,30 @@ LFT.bosses = {
         'Magistrate Barthilas',
         'Ramstein the Gorger',
         'Baron Rivendare',
-        'Stonespire', --rare
+--        'Stonespire-r', --rare
     }
 };
 
 -- utils
+
+function LFT.bossTrim(boss)
+    boss = lft_replace(boss, '-o', '')
+    boss = lft_replace(boss, '-s', '')
+    boss = lft_replace(boss, '-r', '')
+    return boss
+end
+
+function LFT.dungeonObjectivesNumber(code)
+    local nr = 0
+    for index, name in next, LFT.bosses[code] do
+        if not string.find(name, '-o')
+                and not string.find(name, '-s')
+                and not string.find(name, '-r') then
+            nr = nr + 1
+        end
+    end
+    return nr
+end
 
 function LFT.playerClass(name)
     if name == me then
