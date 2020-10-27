@@ -2522,7 +2522,9 @@ LFT.dungeons = {
     ['Scarlet Monastery Cathedral'] = { minLevel = 35, maxLevel = 45, code = 'smcath', queued = false, canQueue = true, background = 'scarletmonastery' },
     ['Razorfen Downs'] = { minLevel = 36, maxLevel = 46, code = 'rfd', queued = false, canQueue = true, background = 'razorfendowns' },
     ['Zul\'Farrak'] = { minLevel = 44, maxLevel = 54, code = 'zf', queued = false, canQueue = true, background = 'zulfarak' },
-    ['Maraudon'] = { minLevel = 47, maxLevel = 55, code = 'mara', queued = false, canQueue = true, background = 'maraudon' },
+    ['Maraudon Orange'] = { minLevel = 47, maxLevel = 55, code = 'maraorange', queued = false, canQueue = true, background = 'maraudon' },
+    ['Maraudon Purple'] = { minLevel = 47, maxLevel = 55, code = 'marapurple', queued = false, canQueue = true, background = 'maraudon' },
+    ['Maraudon Princess'] = { minLevel = 47, maxLevel = 55, code = 'maraprincess', queued = false, canQueue = true, background = 'maraudon' },
     ['Uldaman'] = { minLevel = 50, maxLevel = 51, code = 'ulda', queued = false, canQueue = true, background = 'uldaman' },
     ['Temple of Atal\'Hakkar'] = { minLevel = 50, maxLevel = 60, code = 'st', queued = false, canQueue = true, background = 'sunkentemple' },
     ['Blackrock Depths'] = { minLevel = 52, maxLevel = 60, code = 'brd', queued = false, canQueue = true, background = 'blackrockdepths' },
@@ -2538,17 +2540,17 @@ LFT.dungeons = {
 --needs work
 LFT.bosses = {
     ['rfc'] = {
-        'Taragaman the Hungerer',
         'Oggleflint',
-        'Bazzalan',
-        'Jergosh the Invoker'
+        'Taragaman the Hungerer',
+        'Jergosh the Invoker',
+        'Bazzalan'
     },
     ['wc'] = {
-        'Kresh',
-        'Skum',
-        'Lady Anacondra',
         'Lord Cobrahn',
+        'Lady Anacondra',
+        'Kresh',
         'Lord Pythas',
+        'Skum',
         'Lord Serpentis',
         'Verdan the Everliving',
         'Mutanus the Devourer',
@@ -2558,56 +2560,56 @@ LFT.bosses = {
         'Rhahk\'zor',
         'Sneed',
         'Gilnid',
-        'Edwin VanCleef',
-        'Cookie',
-        'Miner Johnson', --rare
         'Mr. Smite',
-        'Captain Greenskin'
+        'Cookie',
+        'Captain Greenskin',
+        'Edwin VanCleef',
+        'Miner Johnson', --rare
     },
     ['sfk'] = {
+        'Rethilgore',
         'Razorclaw the Butcher',
         'Baron Silverlaine',
-        'Fenrus the Devourer',
+        'Commander Springvale',
         'Odo the Blindwatcher',
+        'Fenrus the Devourer',
+        'Wolf Master Nandos',
         'Archmage Arugal',
         'Deathsworn Captain', --rare
-        'Commander Springvale',
-        'Wolf Master Nandos',
-        'Rethilgore'
     },
     ['bfd'] = {
-        'Lorgus Jett',
-        'Twilight Lord Kelris',
-        'Gelihast',
-        'Aku\'mai',
         'Ghamoo-ra',
+        'Lady Sarevess',
+        'Gelihast',
+        'Lorgus Jett',
         'Baron Aquanis',
+        'Twilight Lord Kelris',
         'Old Serra\'kis',
-        'Lady Sarevess'
+        'Aku\'mai',
     },
     ['stocks'] = {
         'Targorr the Dread',
         'Kam Deepfury',
         'Hamhock',
-        'Bruegal Ironknuckle', --rare
         'Bazil Thredd',
-        'Dextren Ward'
+        'Dextren Ward',
+        'Bruegal Ironknuckle', --rare
     },
     ['gnomer'] = {
-        'Viscous Fallout',
         'Grubbis',
-        'Crowd Pummeler 9-60',
+        'Viscous Fallout',
         'Electrocutioner 6000',
+        'Crowd Pummeler 9-60',
+        'Mekgineer Thermaplugg',
         'Dark Iron Ambassador', --rare
-        'Mekgineer Thermaplugg'
     },
     ['rfk'] = {
-        'Aggem Thorncurse',
-        'Agathelos the Raging',
-        'Charlga Razorflank',
         'Roogug',
+        'Aggem Thorncurse',
         'Death Speaker Jargba',
         'Overlord Ramtusk',
+        'Agathelos the Raging',
+        'Charlga Razorflank',
         'Blind Hunter', --rare
         'Earthcaller Halmgar' --rare
     },
@@ -2631,68 +2633,73 @@ LFT.bosses = {
         'Arcanist Doan'
     },
     ['rfd'] = {
-        'Mordresh Fire Eye',
-        'Ragglesnout',
         'Tuten\'kash',
+        'Mordresh Fire Eye',
         'Glutton',
+        'Ragglesnout',
         'Amnennar the Coldbringer',
-        'Plaguemaw the Rotting'
+        'Plaguemaw the Rotting' --summon ?
     },
     ['ulda'] = {
         'Baelog',
-        'Olaf',
-        'Eric "The Swift"',
+        'Olaf', --horde only
+        'Eric "The Swift"', --horde only
         'Revelosh',
         'Ironaya',
         'Obsidian Sentinel',
         'Ancient Stone Keeper',
-        'Grimlok',
         'Galgann Firehammer',
+        'Grimlok',
         'Archaedas',
     },
     ['zf'] = {
-        'Theka the Martyr',
         'Antu\'sul',
+        'Theka the Martyr',
         'Witch Doctor Zum\'rah',
         'Sandfury Executioner',
-        'Sergeant Bly',
-        'Ruuzlu',
-        'Hydromancer Velratha',
-        'Zerillis', --rare
         'Nekrum Gutchewer',
-        'Shadowpriest Sezz\'ziz',
+        'Sergeant Bly',
+        'Hydromancer Velratha',
+        'Chief Ukorz Sandscalp',
+        'Ruuzlu', -- who is this guy ?
+        'Zerillis', --rare
+        'Shadowpriest Sezz\'ziz', --rare ?
         'Dustwraith', --rare
-        'Gahz\'rilla',
-        'Chief Ukorz Sandscalp'
+        'Gahz\'rilla', --summon
+
     },
-    ['mara'] = {
-        'Tinkerer Gizlock',
+    ['maraorange'] = {
         'Lord Vyletongue',
         'Noxxion',
         'Razorlash',
-        'Landslide',
-        'Rotgrip',
-        'Princess Theradras',
         'Celebras the Cursed',
         'Meshlok the Harvester' --rare
     },
+    ['marapurple'] = { --todo needs fix
+        'Meshlok the Harvester' --rare
+    },
+    ['maraprincess'] = {
+        'Tinkerer Gizlock',
+        'Landslide',
+        'Rotgrip',
+        'Princess Theradras',
+    },
     ['st'] = {
-        'Hazzas',
-        'Morphaz',
         'Jammal\'an the Prophet',
-        'Shade of Eranikus',
-        'Atal\'alarion',
-        'Ogom the Wretched',
+        'Dreamscythe',
         'Weaver',
         'Morphaz',
-        'Dreamscythe',
-        'Avatar of Hakkar',
+        'Hazzas',
+        'Shade of Eranikus',
+        'Atal\'alarion', -- ?
+        'Ogom the Wretched', -- ?
+        'Avatar of Hakkar', -- summon
         'Spawn of Hakkar'
     },
-    ['brd'] = {
+    ['brd'] = { --todo needs split ?
+        'Lord Roccor',
         'High Interrogator Gerstahn',
         'Houndmaster Grebmar',
-        'Lord Roccor',
         'Golem Lord Argelmach',
         'Hurley Blackbreath',
         'Bael\'Gar',
@@ -2719,7 +2726,15 @@ LFT.bosses = {
         'Hedrum the Creeper' --summoned
     },
     ['lbrs'] = {
+        'Highlord Omokk',
+        'Shadow Hunter Vosh\'gajin',
+        'War Master Voone',
         'Mother Smolderweb',
+        'Quartermaster Zigris',
+        'Halycon',
+        'Gizrul the Slavener',
+        'Overlord Wyrmthalak',
+
         'Bannok Grimaxe', --rare
         'Crystal Fang', --rare
         'Ghok Bashguud', --rare
@@ -2727,24 +2742,17 @@ LFT.bosses = {
         'Burning Felguard', --rare
         'Spirestone Battle Lord', --rare
         'Spirestone Lord Magus', --rare
-        'Highlord Omokk',
         'Urok Doomhowl', --summoned
-        'Quartermaster Zigris',
-        'Halycon',
-        'Gizrul the Slavener',
-        'War Master Voone',
-        'Overlord Wyrmthalak',
-        'Mor Grayhoof' --summoned 
+        'Mor Grayhoof' --summoned
     },
     ['ubrs'] = {
-        'Jed Runewatcher', --rare
-        'Gyth',
-        'Warchief Rend Blackhand',
         'Pyroguard Emberseer',
-        'Solakar Flamewreath',
-        'Goraluk Anvilcrack',
+        'Goraluk Anvilcrack', --kinda optional ?
+        'Warchief Rend Blackhand',
         'The Beast',
         'General Drakkisath',
+        'Solakar Flamewreath', --summoned
+        'Jed Runewatcher', --rare
         'Lord Valthalak' --summoned
     },
     ['dme'] = {
@@ -2774,45 +2782,48 @@ LFT.bosses = {
         --        'Lord Hel\'nurath'  --summoned
     },
     ['scholo'] = {
-        'Marduk Blackpool', --optional
+        'Jandice Barov',
+        'Rattlegore',
+        'Ras Frostwhisper',
+        'Instructor Malicia',
         'Doctor Theolen Krastinov',
         'Lorekeeper Polkelt',
         'The Ravenian',
-        'Darkmaster Gandling',
-        'Kirtonos the Herald',
-        'Blood Steward of Kirtonos',
-        'Jandice Barov',
-        'Rattlegore',
-        --        'Death Knight Darkreaver', --summon
-        'Instructor Malicia',
-        'Vectus', --optional
-        'Ras Frostwhisper',
-        'Lady Illucia Barov',
         'Lord Alexei Barov',
-        'Kormok' --summoned
+        'Lady Illucia Barov',
+        'Darkmaster Gandling',
+        'Blood Steward of Kirtonos', --optional
+        'Kirtonos the Herald', -- summon
+        'Death Knight Darkreaver', --summon
+        'Marduk Blackpool', --optional
+        'Vectus', --optional
+        'Kormok', --summoned
     },
     ['stratlive'] = {
-        'Stratholme Courier',
+
         'The Unforgiven',
-        'Cannon Master Wiley',
-        'Grand Crusader Dathrohan',
         'Timmy the Cruel',
-        'Archivist Galford',
         'Malor the Zealous',
-        'Hearthsinger Forresten',
+        'Cannon Master Wiley',
+        'Archivist Galford',
+--        'Grand Crusader Dathrohan', -- balnazzar
+        'Balnazzar',
+
+        'Hearthsinger Forresten', --rare
+        'Stratholme Courier', --optional
+        'Skul', -- rare
+        'Postmaster Malown', --summon
         'Sothos', --summoned
         'Jarien', --summoned
-        --        'Skul', -- rare
-        --        'Postmaster Malown' --summon
     },
     ['stratud'] = {
+        'Nerub\'enkan',
+        'Baroness Anastari',
+        'Maleki the Pallid',
         'Magistrate Barthilas',
         'Ramstein the Gorger',
-        'Nerub\'enkan',
-        'Maleki the Pallid',
-        'Baroness Anastari',
         'Baron Rivendare',
-        'Stonespire'
+        'Stonespire', --rare
     }
 };
 
