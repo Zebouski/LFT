@@ -897,6 +897,11 @@
                         </Offset>
                     </Anchor>
                 </Anchors>
+                <Scripts>
+                    <OnClick>
+                            close_lft_objectives()
+                    </OnClick>
+                </Scripts>
             </Button>
         </Frames>
     </Frame>
@@ -1051,7 +1056,6 @@
                     this:RegisterForDrag("LeftButton");
                     this:SetMovable(1);
                     this:SetUserPlaced(true);
-                    tinsert(UISpecialFrames, this:GetName());
             </OnLoad>
             <OnDragStart>
                     this:StartMoving();
@@ -1061,12 +1065,6 @@
                     this:StopMovingOrSizing();
                     this.isMoving = false;
             </OnDragStop>
-            <OnShow>
-                PlaySound("igCharacterInfoOpen");
-            </OnShow>
-            <OnHide>
-                    PlaySound("igCharacterInfoClose");
-            </OnHide>
         </Scripts>
     </Frame>
 
