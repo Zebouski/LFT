@@ -1,6 +1,6 @@
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.1.8'
+local addonVer = '0.0.1.9'
 local showedUpdateNotification = false
 local LFT_ADDON_CHANNEL = 'LFT'
 local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
@@ -495,6 +495,8 @@ LFTComms:SetScript("OnEvent", function()
                     getglobal('LFTReadyStatus'):Hide()
                     LFTGroupReadyFrameCloser:Hide()
                     LFT.showDungeonObjectives()
+                    --promote the tank to leader
+                    if LFT.isLeader and role == 'tank' and arg4 ~= me then PromoteByName(arg4) end
                 end
             end
             if string.sub(arg2, 1, 11) == 'LFTVersion:' and arg4 ~= me then
@@ -1161,6 +1163,13 @@ function LFT.init()
 
     if not LFT_FORMED_GROUPS then
         LFT.resetFormedGroups()
+    else
+        --check if formed groups include maybe new dungeon codes
+        for dungeon, data in next, LFT.dungeons do
+            if not LFT_FORMED_GROUPS[data.code] then
+                LFT_FORMED_GROUPS[data.code] = 0
+            end
+        end
     end
 
     LFT.channel = 'LFT'
@@ -1185,7 +1194,7 @@ function LFT.init()
 
     LFT.fillAvailableDungeons()
 
-    LFTChannelJoinDelay:Show()
+--    LFTChannelJoinDelay:Show()
 
     LFT.objectives = {}
     LFT.objectivesFrames = {}
@@ -1337,8 +1346,10 @@ function LFT.checkLFTChannel()
     end
 
     if LFT.channelIndex == 0 then
+        lfdebug('not in chan, joining')
         JoinChannelByName(LFT.channel)
     else
+        lfdebug('in chan, chilling')
     end
 end
 
