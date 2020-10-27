@@ -668,7 +668,7 @@
             <Layer level="BACKGROUND">
                 <Texture name="LFTDungeonCompleteIcon" file="Interface\addons\LFT\images\icon\lfgicon-aqtemple">
                     <Size>
-                        <AbsDimension x="58" y="58"/>
+                        <AbsDimension x="42" y="42"/>
                     </Size>
                     <Anchors>
                         <Anchor point="LEFT">
@@ -680,7 +680,7 @@
                 </Texture>
             </Layer>
             <Layer level="ARTWORK">
-                <Texture name="LFTDungeonCompleteFrame" file="Interface\addons\LFT\images\dungeon_complete\dungeon_complete_25">
+                <Texture name="LFTDungeonCompleteFrame" file="Interface\addons\LFT\images\dungeon_complete\dungeon_complete_00">
                     <Size>
                         <AbsDimension x="512" y="128"/>
                     </Size>
@@ -701,7 +701,7 @@
                     <Anchors>
                         <Anchor point="CENTER">
                             <Offset>
-                                <AbsDimension x="15" y="10"/>
+                                <AbsDimension x="25" y="10"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -976,13 +976,13 @@
                 <FontString name="$parentDungeonName" text="Scarlet Monastery"
                             font="Interface\addons\LFT\fonts\MORPHEUS.TTF">
                     <Color r="0.86" g="0.81" b="0.69" a=".9"/>
-                    <FontHeight val="18"/>
+                    <FontHeight val="20"/>
                     <Shadow>
                         <Color a="0.9" r="0.2" g="0.2" b="0.2"/>
                         <Offset x="1" y="-1"/>
                     </Shadow>
                     <Size>
-                        <AbsDimension x="200" y="50"/>
+                        <AbsDimension x="160" y="50"/>
                     </Size>
                     <Anchors>
                         <Anchor point="TOP">
