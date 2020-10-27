@@ -1,6 +1,6 @@
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.1.6'
+local addonVer = '0.0.1.7'
 local showedUpdateNotification = false
 local LFT_ADDON_CHANNEL = 'LFT'
 local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
@@ -351,7 +351,6 @@ LFTGroupReadyFrameCloser:Hide()
 LFTGroupReadyFrameCloser.response = ''
 LFTGroupReadyFrameCloser:SetScript("OnShow", function()
     this.startTime = GetTime()
-    this.clickedNotReady = false
 end)
 
 LFTGroupReadyFrameCloser:SetScript("OnHide", function()
@@ -635,6 +634,7 @@ LFTComms:SetScript("OnEvent", function()
             if me == 'Er' then
                 lfprint(groupsFormedThisSession .. ' groups formed this session.')
             end
+            if not time then return false end
             if LFT.averageWaitTime == 0 then
                 LFT.averageWaitTime = time
             else
@@ -1160,7 +1160,7 @@ LFTQueue:SetScript("OnUpdate", function()
                     SendChatMessage("[LFT]:" .. code .. ":party:ready:" .. healer .. ":" .. damage1 .. ":" .. damage2 .. ":" .. damage3,
                         "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
 
-                    SendChatMessage("[LFT]:lft_group_formed:" .. code, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                    SendChatMessage("[LFT]:lft_group_formed:" .. code .. ":" .. time() - LFT.queueStartTime, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
 
                     --untick everything
                     for dungeon, data in next, LFT.dungeons do
@@ -2018,7 +2018,7 @@ end
 
 function LFT.showDungeonObjectives()
 
-    LFT.groupFullCode = 'maraprincess' --dev
+--    LFT.groupFullCode = 'maraprincess' --dev
 
     local dungeonName = LFT.dungeonNameFromCode(LFT.groupFullCode)
     LFTObjectives.objectivesComplete = 0
@@ -2372,6 +2372,9 @@ function leaveQueue()
 
     getglobal('LFTGroupReady'):Hide()
     getglobal("LFTDungeonStatus"):Hide()
+
+    LFTGroupReadyFrameCloser:Hide()
+    LFTGroupReadyFrameCloser.response = ''
 
     LFTQueue:Hide()
     LFTRoleCheck:Hide()
