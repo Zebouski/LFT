@@ -1,4 +1,4 @@
-# LFT - a LFG Addon for Turtle WoW, v0.0.1.7rc
+# LFT - a LFG Addon for Turtle WoW, v0.0.1.8rc
 _!!! Remove `-master` when extracting into your `interface/addons` folder !!!_<BR><BR><Br>
 
 
