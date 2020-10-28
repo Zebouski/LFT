@@ -230,7 +230,7 @@ LFTChannelJoinDelay:SetScript("OnHide", function()
 end)
 
 LFTChannelJoinDelay:SetScript("OnUpdate", function()
-    local plus = 5 --seconds
+    local plus = 15 --seconds
     local gt = GetTime() * 1000
     local st = (this.startTime + plus) * 1000
     if gt >= st then
@@ -1039,7 +1039,9 @@ LFT:SetScript("OnEvent", function()
                 if LFTInvite.inviteIndex == 2 then
                     return false
                 end
-                leaveQueue()
+                if LFT.findingGroup or LFT.findingMore then
+                    leaveQueue()
+                end
                 return false
             end
 
@@ -1178,6 +1180,7 @@ LFT:SetScript("OnEvent", function()
                     end
                 end
             end
+            lfdebug('ajunge aici ??')
             if LFT.isLeader then
                 LFT.sendMinimapDataToParty(LFT.LFMDungeonCode)
             end
@@ -1256,12 +1259,14 @@ function LFT.init()
 
     LFT.fillAvailableDungeons()
 
---    LFTChannelJoinDelay:Show()
+    LFTChannelJoinDelay:Show()
 
     LFT.objectives = {}
     LFT.objectivesFrames = {}
 
     lfprint(COLOR_HUNTER .. 'Looking For Turtles v' .. addonVer .. COLOR_WHITE .. ' - LFG Addon for Turtle WoW loaded.')
+
+--    getglobal('MainMenuBarTexture2'):SetWidth(288)
 end
 
 LFTQueue:SetScript("OnShow", function()
@@ -1395,7 +1400,7 @@ LFTQueue:SetScript("OnUpdate", function()
 end)
 
 function LFT.checkLFTChannel()
-    lfdebug('checl LFT channel')
+    lfdebug('check LFT channel call - after 15s')
     local lastVal = 0
     local chanList = { GetChannelList() }
 
@@ -2681,26 +2686,23 @@ function leaveQueue()
     end
     if LFT.findingGroup or LFT.findingMore then
         if LFT.inGroup then
+            if LFT.isLeader then
+                SendAddonMessage(LFT_ADDON_CHANNEL, "leaveQueue:now", "PARTY")
+            end
             lfprint('Your group has left the queue for |cff69ccf0' .. dungeonsText .. COLOR_WHITE .. '.')
         else
             lfprint('You have left the queue for |cff69ccf0' .. dungeonsText .. COLOR_WHITE .. '.')
         end
+
+        LFT.sendCancelMeMessage()
+        LFT.findingGroup = false
+        LFT.findingMore = false
     end
 
     LFT.enableDungeonCheckbuttons()
 
     LFT.GetPossibleRoles()
     LFTsetRole(LFT_ROLE)
-
-    if LFT.findingGroup or LFT.findingMore then
-        LFT.sendCancelMeMessage()
-        LFT.findingGroup = false
-        LFT.findingMore = false
-    end
-
-    if LFT.isLeader then
-        SendAddonMessage(LFT_ADDON_CHANNEL, "leaveQueue:now", "PARTY")
-    end
 
     if LFT.LFMDungeonCode ~= '' then
         if getglobal("Dungeon_" .. LFT.LFMDungeonCode) then
