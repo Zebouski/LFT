@@ -1257,6 +1257,27 @@
         </Layers>
         <Frames>
 
+<!--            <Button name="LFTMicroButton" inherits="MainMenuBarMicroButton" parent="MainMenuBarArtFrame" hidden="false">-->
+<!--                <Anchors>-->
+<!--                    <Anchor point="BOTTOMLEFT" relativeTo="HelpMicroButton" relativePoint="BOTTOMRIGHT">-->
+<!--                        <Offset>-->
+<!--                            <AbsDimension x="-3" y="0"/>-->
+<!--                        </Offset>-->
+<!--                    </Anchor>-->
+<!--                </Anchors>-->
+<!--                <Scripts>-->
+<!--                    <OnLoad>-->
+<!--                            LoadMicroButtonTextures("Help");-->
+<!--                            this.tooltipText = TEXT(HELP_BUTTON);-->
+<!--                            this.newbieText = NEWBIE_TOOLTIP_HELP;-->
+<!--                    </OnLoad>-->
+<!--                    <OnClick>-->
+<!--&#45;&#45;                            ToggleHelpFrame();-->
+<!--                    </OnClick>-->
+<!--                </Scripts>-->
+<!--            </Button>-->
+
+
             <ScrollFrame name="DungeonListScrollFrame" hidden="false" inherits="FauxScrollFrameTemplate">
                 <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
                           tile="false">
