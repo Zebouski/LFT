@@ -1,15 +1,20 @@
-local LFT = CreateFrame("Frame")
+local _G, _ = _G or getfenv()
+
+LFT = CreateFrame("Frame")
 local me = UnitName('player')
 local addonVer = '0.0.2.0'
-local showedUpdateNotification = false
 local LFT_ADDON_CHANNEL = 'LFT'
-local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
+--local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
 local groupsFormedThisSession = 0
 
-local DEV_GROUP_SIZE = 5
-local DEV_MAX_DUNGEONS_TO_SPAM = 5 --not used for now
-local DEV_MAX_DUNGEONS_TO_QUEUE = 5
 
+
+--one group LFM,    one tank lfg,  one dps lfg
+--see if lfm leader invites dps if tank from lfg picked dps, or dps picked the tank
+
+LFT.showedUpdateNotification = false
+LFT.maxDungeonsInQueue = 5
+LFT.groupSizeMax = 5
 LFT.class = ''
 LFT.channel = 'LFT'
 LFT.channelIndex = 0
@@ -31,7 +36,7 @@ LFT.queueStartTime = 0
 LFT.averageWaitTime = 0
 LFT.types = {
     [1] = 'Suggested Dungeons',
---    [2] = 'Random Dungeon',
+    --    [2] = 'Random Dungeon',
     [3] = 'All Available Dungeons'
 }
 LFT.maxDungeonsList = 11
@@ -81,16 +86,15 @@ local COLOR_HEALER = COLOR_GREEN
 local COLOR_DAMAGE = COLOR_RED
 
 -- dungeon complete animation
-local LFTDungeonComplete = CreateFrame("Frame")
+LFTDungeonComplete = CreateFrame("Frame")
 LFTDungeonComplete:Hide()
 LFTDungeonComplete.frameIndex = 0
-
 
 LFTDungeonComplete:SetScript("OnShow", function()
     this.startTime = GetTime()
     LFTDungeonComplete.frameIndex = 0
-    getglobal('LFTDungeonComplete'):SetAlpha(0)
-    getglobal('LFTDungeonComplete'):Show()
+    _G['LFTDungeonComplete']:SetAlpha(0)
+    _G['LFTDungeonComplete']:Show()
 end)
 
 LFTDungeonComplete:SetScript("OnHide", function()
@@ -109,17 +113,17 @@ LFTDungeonComplete:SetScript("OnUpdate", function()
         else
             frame = frame .. LFTDungeonComplete.frameIndex
         end
-        getglobal('LFTDungeonCompleteFrame'):SetTexture('Interface\\addons\\LFT\\images\\dungeon_complete\\dungeon_complete_' .. frame)
+        _G['LFTDungeonCompleteFrame']:SetTexture('Interface\\addons\\LFT\\images\\dungeon_complete\\dungeon_complete_' .. frame)
         if LFTDungeonComplete.frameIndex < 35 then
-            getglobal('LFTDungeonComplete'):SetAlpha(getglobal('LFTDungeonComplete'):GetAlpha() + 0.03)
+            _G['LFTDungeonComplete']:SetAlpha(_G['LFTDungeonComplete']:GetAlpha() + 0.03)
         end
         if LFTDungeonComplete.frameIndex > 119 then
-            getglobal('LFTDungeonComplete'):SetAlpha(getglobal('LFTDungeonComplete'):GetAlpha() - 0.03)
+            _G['LFTDungeonComplete']:SetAlpha(_G['LFTDungeonComplete']:GetAlpha() - 0.03)
         end
         if LFTDungeonComplete.frameIndex >= 150 then
-            getglobal('LFTDungeonComplete'):Hide()
-            getglobal('LFTDungeonStatus'):Hide()
-            getglobal('LFTDungeonCompleteFrame'):SetTexture('Interface\\addons\\LFT\\images\\dungeon_complete\\dungeon_complete_00')
+            _G['LFTDungeonComplete']:Hide()
+            _G['LFTDungeonStatus']:Hide()
+            _G['LFTDungeonCompleteFrame']:SetTexture('Interface\\addons\\LFT\\images\\dungeon_complete\\dungeon_complete_00')
             LFTDungeonComplete:Hide()
         end
         LFTDungeonComplete.frameIndex = LFTDungeonComplete.frameIndex + 1
@@ -127,7 +131,7 @@ LFTDungeonComplete:SetScript("OnUpdate", function()
 end)
 
 -- objectives
-local LFTObjectives = CreateFrame("Frame")
+LFTObjectives = CreateFrame("Frame")
 LFTObjectives:Hide()
 LFTObjectives:RegisterEvent("CHAT_MSG_COMBAT_HOSTILE_DEATH")
 LFTObjectives.collapsed = false
@@ -159,16 +163,16 @@ LFTObjectives:SetScript("OnUpdate", function()
         this.startTime = GetTime()
         LFTObjectives.frameIndex = LFTObjectives.frameIndex + 1
         LFTObjectives.leftOffset = LFTObjectives.leftOffset + 5
-        getglobal("LFTObjective" .. LFTObjectives.lastObjective .. 'Swoosh'):SetPoint("TOPLEFT", getglobal("LFTObjective" .. LFTObjectives.lastObjective), "TOPLEFT", LFTObjectives.leftOffset, 5)
+        _G["LFTObjective" .. LFTObjectives.lastObjective .. 'Swoosh']:SetPoint("TOPLEFT", _G["LFTObjective" .. LFTObjectives.lastObjective], "TOPLEFT", LFTObjectives.leftOffset, 5)
         if LFTObjectives.frameIndex <= 10 then
-            getglobal("LFTObjective" .. LFTObjectives.lastObjective .. 'Swoosh'):SetAlpha(LFTObjectives.frameIndex / 10)
+            _G["LFTObjective" .. LFTObjectives.lastObjective .. 'Swoosh']:SetAlpha(LFTObjectives.frameIndex / 10)
         end
         if LFTObjectives.frameIndex >= 30 then
-            getglobal("LFTObjective" .. LFTObjectives.lastObjective .. 'Swoosh'):SetAlpha(1 - LFTObjectives.frameIndex / 40)
+            _G["LFTObjective" .. LFTObjectives.lastObjective .. 'Swoosh']:SetAlpha(1 - LFTObjectives.frameIndex / 40)
         end
         if LFTObjectives.leftOffset >= 120 then
             LFTObjectives:Hide()
-            getglobal("LFTObjective" .. LFTObjectives.lastObjective .. 'Swoosh'):SetAlpha(0)
+            _G["LFTObjective" .. LFTObjectives.lastObjective .. 'Swoosh']:SetAlpha(0)
         end
     end
 end)
@@ -178,7 +182,7 @@ LFTObjectives:SetScript("OnEvent", function()
         local creatureDied = arg1
         --        if LFT.dungeons[zoneText] then
         if LFT.bosses[LFT.groupFullCode] then
-            for code, boss in next, LFT.bosses[LFT.groupFullCode] do
+            for _, boss in next, LFT.bosses[LFT.groupFullCode] do
                 if creatureDied == boss .. ' dies.' then
                     LFTObjectives.objectiveComplete(boss)
                     return true
@@ -189,8 +193,8 @@ LFTObjectives:SetScript("OnEvent", function()
     end
 end)
 
--- fill available dungeons delayer because unitlevel(member who just joined) returns 0
-local LFTFillAvailableDungeonsDelay = CreateFrame("Frame")
+-- fill available dungeons delayer because UnitLevel(member who just joined) returns 0
+LFTFillAvailableDungeonsDelay = CreateFrame("Frame")
 LFTFillAvailableDungeonsDelay.offset = 0
 LFTFillAvailableDungeonsDelay.triggers = 0
 LFTFillAvailableDungeonsDelay.queueAfterIfPossible = false
@@ -204,7 +208,7 @@ LFTFillAvailableDungeonsDelay:SetScript("OnHide", function()
         LFT.fillAvailableDungeons(LFTFillAvailableDungeonsDelay.offset, LFTFillAvailableDungeonsDelay.queueAfterIfPossible)
         LFTFillAvailableDungeonsDelay.triggers = LFTFillAvailableDungeonsDelay.triggers + 1
     else
-        lferror('Error occured at LFTFillAvailableDungeonsDelay triggers = 10. Please report this to Xerron/Er.')
+        lferror('Error occurred at LFTFillAvailableDungeonsDelay triggers = 10. Please report this to Xerron/Er.')
     end
 end)
 LFTFillAvailableDungeonsDelay:SetScript("OnUpdate", function()
@@ -218,7 +222,7 @@ end)
 
 -- channel join delayer
 
-local LFTChannelJoinDelay = CreateFrame("Frame")
+LFTChannelJoinDelay = CreateFrame("Frame")
 LFTChannelJoinDelay:Hide()
 
 LFTChannelJoinDelay:SetScript("OnShow", function()
@@ -238,19 +242,19 @@ LFTChannelJoinDelay:SetScript("OnUpdate", function()
     end
 end)
 
-local LFTQueue = CreateFrame("Frame")
+LFTQueue = CreateFrame("Frame")
 LFTQueue:Hide()
 
 -- group invite timer
 
-local LFTInvite = CreateFrame("Frame")
+LFTInvite = CreateFrame("Frame")
 LFTInvite:Hide()
 LFTInvite.inviteIndex = 1
 LFTInvite:SetScript("OnShow", function()
     this.startTime = GetTime()
     LFTInvite.inviteIndex = 1
-    local awesomeButton = getglobal('LFTGroupReadyAwesome')
-    awesomeButton:SetText('Waiting Players (' .. DEV_GROUP_SIZE - GetNumPartyMembers() - 1 .. ')')
+    local awesomeButton = _G['LFTGroupReadyAwesome']
+    awesomeButton:SetText('Waiting Players (' .. LFT.groupSizeMax - GetNumPartyMembers() - 1 .. ')')
     awesomeButton:Disable()
 end)
 
@@ -273,12 +277,12 @@ LFTInvite:SetScript("OnUpdate", function()
                 InviteByName(LFT.group[LFT.groupFullCode].damage1)
             end
         end
-        if LFTInvite.inviteIndex == 4 and LFTInvite.inviteIndex <= DEV_GROUP_SIZE then
+        if LFTInvite.inviteIndex == 4 and LFTInvite.inviteIndex <= LFT.groupSizeMax then
             if LFT.group[LFT.groupFullCode].damage2 ~= '' then
                 InviteByName(LFT.group[LFT.groupFullCode].damage2)
             end
         end
-        if LFTInvite.inviteIndex == 5 and LFTInvite.inviteIndex <= DEV_GROUP_SIZE then
+        if LFTInvite.inviteIndex == 5 and LFTInvite.inviteIndex <= LFT.groupSizeMax then
             if LFT.group[LFT.groupFullCode].damage3 ~= '' then
                 InviteByName(LFT.group[LFT.groupFullCode].damage3)
                 LFTInvite:Hide()
@@ -290,7 +294,7 @@ end)
 
 -- role check timer
 
-local LFTRoleCheck = CreateFrame("Frame")
+LFTRoleCheck = CreateFrame("Frame")
 LFTRoleCheck:Hide()
 
 LFTRoleCheck:SetScript("OnShow", function()
@@ -305,7 +309,7 @@ LFTRoleCheck:SetScript("OnHide", function()
             PlaySoundFile("Interface\\Addons\\LFT\\sound\\lfg_denied.ogg")
         end
     end
-    getglobal('LFTRoleCheck'):Hide()
+    _G['LFTRoleCheck']:Hide()
 end)
 
 LFTRoleCheck:SetScript("OnUpdate", function()
@@ -322,7 +326,7 @@ LFTRoleCheck:SetScript("OnUpdate", function()
         if LFT.isLeader then
             lfprint('A member of your group does not have the ' .. COLOR_HUNTER .. '[LFT] ' .. COLOR_WHITE ..
                     'addon. Looking for more is disabled. (Type ' .. COLOR_HUNTER .. '/lft advertise ' .. COLOR_WHITE .. ' to send them a link)')
-            getglobal('findMoreButton'):Disable()
+            _G['findMoreButton']:Disable()
 
         else
             declineRole()
@@ -332,7 +336,7 @@ end)
 
 -- who counter timer
 
-local LFTWhoCounter = CreateFrame("Frame")
+LFTWhoCounter = CreateFrame("Frame")
 LFTWhoCounter:Hide()
 LFTWhoCounter.people = 0
 LFTWhoCounter.listening = false
@@ -358,8 +362,8 @@ LFTWhoCounter:SetScript("OnUpdate", function()
     end
 end)
 
---closes the group ready frame when someoene leaves queue from the button
-local LFTGroupReadyFrameCloser = CreateFrame("Frame")
+--closes the group ready frame when someone leaves queue from the button
+LFTGroupReadyFrameCloser = CreateFrame("Frame")
 LFTGroupReadyFrameCloser:Hide()
 LFTGroupReadyFrameCloser.response = ''
 LFTGroupReadyFrameCloser:SetScript("OnShow", function()
@@ -380,11 +384,11 @@ LFTGroupReadyFrameCloser:SetScript("OnUpdate", function()
         end
     end
     if gt >= st2 then
-        getglobal('LFTReadyStatus'):Hide()
+        _G['LFTReadyStatus']:Hide()
         lfprint('A member of your group has not accepted the invitation. You are rejoining the queue.')
         if LFT.isLeader then
             leaveQueue()
-            local offset = FauxScrollFrame_GetOffset(getglobal('DungeonListScrollFrame'));
+            local offset = FauxScrollFrame_GetOffset(_G['DungeonListScrollFrame']);
             LFT.fillAvailableDungeons(offset, 'queueAgain' == 'queueAgain')
         end
         if LFTGroupReadyFrameCloser.response == 'notReady' then
@@ -397,7 +401,7 @@ end)
 
 -- communication
 
-local LFTComms = CreateFrame("Frame")
+LFTComms = CreateFrame("Frame")
 LFTComms:Hide()
 LFTComms:RegisterEvent("CHAT_MSG_CHANNEL")
 LFTComms:RegisterEvent("CHAT_MSG_WHISPER")
@@ -425,7 +429,7 @@ LFTComms:SetScript("OnEvent", function()
 
                 local objectivesString = string.split(objEx[3], '-')
 
-                if not LFTObjectives.closedByUser and not getglobal("LFTDungeonStatus"):IsVisible() then
+                if not LFTObjectives.closedByUser and not _G["LFTDungeonStatus"]:IsVisible() then
                     LFT.showDungeonObjectives()
                 end
 
@@ -433,7 +437,7 @@ LFTComms:SetScript("OnEvent", function()
                     if s then
                         if s == '1' then
                             local index = 0
-                            for code, boss in next, LFT.bosses[LFT.groupFullCode] do
+                            for _, boss in next, LFT.bosses[LFT.groupFullCode] do
                                 index = index + 1
                                 if index == stringIndex then
                                     LFTObjectives.objectiveComplete(boss, true)
@@ -450,18 +454,18 @@ LFTComms:SetScript("OnEvent", function()
                 local readyEx = string.split(arg2, ':')
                 local role = readyEx[2]
                 if role == 'tank' then
-                    getglobal('LFTReadyStatusReadyTank'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
+                    _G['LFTReadyStatusReadyTank']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
                 end
                 if role == 'healer' then
-                    getglobal('LFTReadyStatusReadyHealer'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
+                    _G['LFTReadyStatusReadyHealer']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
                 end
                 if role == 'damage' then
-                    if getglobal('LFTReadyStatusReadyDamage1'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
-                        getglobal('LFTReadyStatusReadyDamage1'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
-                    elseif getglobal('LFTReadyStatusReadyDamage2'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
-                        getglobal('LFTReadyStatusReadyDamage2'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
-                    elseif getglobal('LFTReadyStatusReadyDamage3'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
-                        getglobal('LFTReadyStatusReadyDamage3'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
+                    if _G['LFTReadyStatusReadyDamage1']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
+                        _G['LFTReadyStatusReadyDamage1']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
+                    elseif _G['LFTReadyStatusReadyDamage2']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
+                        _G['LFTReadyStatusReadyDamage2']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
+                    elseif _G['LFTReadyStatusReadyDamage3']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
+                        _G['LFTReadyStatusReadyDamage3']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-notready')
                     end
                 end
             end
@@ -470,41 +474,43 @@ LFTComms:SetScript("OnEvent", function()
                 local role = readyEx[2]
 
                 if role == 'tank' then
-                    getglobal('LFTReadyStatusReadyTank'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
+                    _G['LFTReadyStatusReadyTank']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
                 end
                 if role == 'healer' then
-                    getglobal('LFTReadyStatusReadyHealer'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
+                    _G['LFTReadyStatusReadyHealer']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
                 end
                 if role == 'damage' then
-                    if getglobal('LFTReadyStatusReadyDamage1'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
-                        getglobal('LFTReadyStatusReadyDamage1'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
-                    elseif getglobal('LFTReadyStatusReadyDamage2'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
-                        getglobal('LFTReadyStatusReadyDamage2'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
-                    elseif getglobal('LFTReadyStatusReadyDamage3'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
-                        getglobal('LFTReadyStatusReadyDamage3'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
+                    if _G['LFTReadyStatusReadyDamage1']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
+                        _G['LFTReadyStatusReadyDamage1']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
+                    elseif _G['LFTReadyStatusReadyDamage2']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
+                        _G['LFTReadyStatusReadyDamage2']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
+                    elseif _G['LFTReadyStatusReadyDamage3']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-waiting' then
+                        _G['LFTReadyStatusReadyDamage3']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-ready')
                     end
                 end
-                if getglobal('LFTReadyStatusReadyTank'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' and
-                        getglobal('LFTReadyStatusReadyHealer'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' and
-                        getglobal('LFTReadyStatusReadyDamage1'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' and
-                        getglobal('LFTReadyStatusReadyDamage2'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' and
-                        getglobal('LFTReadyStatusReadyDamage3'):GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' then
-                    getglobal('LFTReadyStatus'):Hide()
+                if _G['LFTReadyStatusReadyTank']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' and
+                        _G['LFTReadyStatusReadyHealer']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' and
+                        _G['LFTReadyStatusReadyDamage1']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' and
+                        _G['LFTReadyStatusReadyDamage2']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' and
+                        _G['LFTReadyStatusReadyDamage3']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' then
+                    _G['LFTReadyStatus']:Hide()
                     LFTGroupReadyFrameCloser:Hide()
                     LFT.showDungeonObjectives()
                     --promote the tank to leader
-                    if LFT.isLeader and role == 'tank' and arg4 ~= me then PromoteByName(arg4) end
+                    if LFT.isLeader and role == 'tank' and arg4 ~= me then
+                        PromoteByName(arg4)
+                    end
                 end
             end
             if string.sub(arg2, 1, 11) == 'LFTVersion:' and arg4 ~= me then
-                if not showedUpdateNotification then
+                if not LFT.showedUpdateNotification then
                     local verEx = string.split(arg2, ':')
                     if LFT.ver(verEx[2]) > LFT.ver(addonVer) then
                         lfprint(COLOR_HUNTER .. 'Looking For Turtles ' .. COLOR_WHITE .. ' - new version available ' ..
                                 COLOR_GREEN .. 'v' .. verEx[2] .. COLOR_WHITE .. ' (current version ' ..
                                 COLOR_ORANGE .. 'v' .. addonVer .. COLOR_WHITE .. ')')
                         lfprint('Update yours at ' .. COLOR_HUNTER .. 'https://github.com/CosminPOP/LFT')
-                        showedUpdateNotification = true
+                        LFT.showedUpdateNotification = true
                     end
                 end
             end
@@ -527,11 +533,21 @@ LFTComms:SetScript("OnEvent", function()
                         damage2 = '',
                         damage3 = ''
                     }
-                    if tank == 1 then LFT.group[code].tank = 'DummyTank' end
-                    if healer == 1 then LFT.group[code].healer = 'DummyHealer' end
-                    if damage > 0 then LFT.group[code].damage1 = 'DummyDamage1' end
-                    if damage > 1 then LFT.group[code].damage2 = 'DummyDamage2' end
-                    if damage > 2 then LFT.group[code].damage3 = 'DummyDamage3' end
+                    if tank == 1 then
+                        LFT.group[code].tank = 'DummyTank'
+                    end
+                    if healer == 1 then
+                        LFT.group[code].healer = 'DummyHealer'
+                    end
+                    if damage > 0 then
+                        LFT.group[code].damage1 = 'DummyDamage1'
+                    end
+                    if damage > 1 then
+                        LFT.group[code].damage2 = 'DummyDamage2'
+                    end
+                    if damage > 2 then
+                        LFT.group[code].damage3 = 'DummyDamage3'
+                    end
                 end
             end
             if string.sub(arg2, 1, 14) == 'LFMPartyReady:' then
@@ -541,10 +557,10 @@ LFTComms:SetScript("OnEvent", function()
                 local objectivesCompleted = queueEx[3]
                 local objectivesTotal = queueEx[4]
                 LFT.groupFullCode = mCode
-                --untick everything
-                for i, frame in LFT.availableDungeons do
-                    getglobal('Dungeon_' .. LFT.groupFullCode):SetChecked(false)
-                end
+                --uncheck everything
+                --for i, frame in LFT.availableDungeons do
+                _G['Dungeon_' .. LFT.groupFullCode]:SetChecked(false)
+                --end
                 LFT.findingGroup = false
                 LFT.findingMore = false
                 local background = ''
@@ -555,18 +571,18 @@ LFTComms:SetScript("OnEvent", function()
                         dungeonName = d
                     end
                 end
-                getglobal('LFTGroupReadyBackground'):SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
-                getglobal('LFTGroupReadyRole'):SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
-                getglobal('LFTGroupReadyMyRole'):SetText(LFT.ucFirst(LFT_ROLE))
-                getglobal('LFTGroupReadyDungeonName'):SetText(dungeonName)
-                getglobal('LFTGroupReadyObjectivesCompleted'):SetText(objectivesCompleted .. '/' .. objectivesTotal .. ' Bosses Defeated')
+                _G['LFTGroupReadyBackground']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
+                _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
+                _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(LFT_ROLE))
+                _G['LFTGroupReadyDungeonName']:SetText(dungeonName)
+                _G['LFTGroupReadyObjectivesCompleted']:SetText(objectivesCompleted .. '/' .. objectivesTotal .. ' Bosses Defeated')
                 LFT.readyStatusReset()
-                getglobal('LFTGroupReady'):Show()
+                _G['LFTGroupReady']:Show()
                 LFTGroupReadyFrameCloser:Show()
 
                 PlaySoundFile("Interface\\Addons\\LFT\\sound\\levelup2.ogg")
                 LFT.fixMainButton()
-                getglobal('LFTMain'):Hide()
+                _G['LFTMain']:Hide()
                 LFTQueue:Hide()
 
                 if LFT.isLeader then
@@ -600,13 +616,13 @@ LFTComms:SetScript("OnEvent", function()
                         SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
                     end
                     if LFT_ROLE == 'damage' then
---                        LFT.LFMGroup.damage1 = me
+                        --                        LFT.LFMGroup.damage1 = me
                         SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
                     end
                 else
-                    getglobal('LFTRoleCheckQForText'):SetText(COLOR_WHITE .. "Queued for " .. COLOR_YELLOW .. LFT.dungeonNameFromCode(mCode))
-                    getglobal('LFTRoleCheck'):Show()
-                    getglobal('LFTGroupReady'):Hide()
+                    _G['LFTRoleCheckQForText']:SetText(COLOR_WHITE .. "Queued for " .. COLOR_YELLOW .. LFT.dungeonNameFromCode(mCode))
+                    _G['LFTRoleCheck']:Show()
+                    _G['LFTGroupReady']:Hide()
                 end
                 LFTRoleCheck:Show()
             end
@@ -615,9 +631,15 @@ LFTComms:SetScript("OnEvent", function()
                 local roleEx = string.split(arg2, ':')
                 local roleColor = ''
 
-                if roleEx[2] == 'tank' then roleColor = COLOR_TANK end
-                if roleEx[2] == 'healer' then roleColor = COLOR_HEALER end
-                if roleEx[2] == 'damage' then roleColor = COLOR_DAMAGE end
+                if roleEx[2] == 'tank' then
+                    roleColor = COLOR_TANK
+                end
+                if roleEx[2] == 'healer' then
+                    roleColor = COLOR_HEALER
+                end
+                if roleEx[2] == 'damage' then
+                    roleColor = COLOR_DAMAGE
+                end
                 if arg4 == me then
                     lfprint('You have chosen: ' .. roleColor .. LFT.ucFirst(roleEx[2]))
                 else
@@ -628,7 +650,7 @@ LFTComms:SetScript("OnEvent", function()
                     if LFT_ROLE == 'tank' then
                         if LFT.isLeader then
                             if arg4 == me then
-                                --                                might aswel tank = me/arg4, but LFT.LFMGroup.tank is already me
+                                --                                might as well tank = me/arg4, but LFT.LFMGroup.tank is already me
                             else
                                 lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen ' .. COLOR_TANK .. 'Tank' .. COLOR_WHITE .. ' but you already confirmed this role.')
                                 lfprint('Queueing aborted.')
@@ -651,7 +673,7 @@ LFTComms:SetScript("OnEvent", function()
                     if LFT_ROLE == 'healer' then
                         if LFT.isLeader then
                             if arg4 == me then
-                                --                                might aswel healer = me/arg4, but LFT.LFMGroup.healer is already me
+                                --                                might as well healer = me/arg4, but LFT.LFMGroup.healer is already me
                             else
                                 lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen ' .. COLOR_HEALER .. 'Healer' .. COLOR_WHITE .. ' but you already confirmed this role.')
                                 lfprint('Queueing aborted.')
@@ -674,7 +696,7 @@ LFTComms:SetScript("OnEvent", function()
                     if LFT_ROLE == 'damage' then
                         if LFT.isLeader then
                             if arg4 == me then
-                                --                                might aswel healer = me/arg4, but LFT.LFMGroup.healer is already me
+                                --                                might as well healer = me/arg4, but LFT.LFMGroup.healer is already me
                             else
                                 if LFT.LFMGroup.damage1 ~= '' and LFT.LFMGroup.damage2 ~= '' and LFT.LFMGroup.damage3 ~= '' then
                                     lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen ' .. COLOR_DAMAGE .. 'Damage' .. COLOR_WHITE
@@ -739,13 +761,17 @@ LFTComms:SetScript("OnEvent", function()
             if me == 'Er' then
                 lfprint(groupsFormedThisSession .. ' groups formed this session.')
             end
-            if not time then return false end
+            if not time then
+                return false
+            end
             if LFT.averageWaitTime == 0 then
                 LFT.averageWaitTime = time
             else
                 LFT.averageWaitTime = math.floor((LFT.averageWaitTime + time) / 2)
             end
-            if not LFT_FORMED_GROUPS[code] then LFT_FORMED_GROUPS[code] = 0 end
+            if not LFT_FORMED_GROUPS[code] then
+                LFT_FORMED_GROUPS[code] = 0
+            end
             LFT_FORMED_GROUPS[code] = LFT_FORMED_GROUPS[code] + 1
         end
         if event == 'CHAT_MSG_CHANNEL' and string.find(arg1, '[LFT]', 1, true) and arg8 == LFT.channelIndex and arg2 ~= me and --for lfg
@@ -758,7 +784,9 @@ LFTComms:SetScript("OnEvent", function()
             local damage3 = mEx[8]
 
             --check if party ready message is for me
-            if me ~= healer and me ~= damage1 and me ~= damage2 and me ~= damage3 then return end
+            if me ~= healer and me ~= damage1 and me ~= damage2 and me ~= damage3 then
+                return
+            end
 
             LFT.onlyAcceptFrom = arg2
             LFT.acceptNextInvite = true
@@ -771,20 +799,20 @@ LFTComms:SetScript("OnEvent", function()
                     dungeonName = d
                 end
             end
-            getglobal('LFTGroupReadyBackground'):SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
-            getglobal('LFTGroupReadyRole'):SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
-            getglobal('LFTGroupReadyMyRole'):SetText(LFT.ucFirst(LFT_ROLE))
-            getglobal('LFTGroupReadyDungeonName'):SetText(dungeonName)
-            getglobal('LFTGroupReady'):Show()
+            _G['LFTGroupReadyBackground']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
+            _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
+            _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(LFT_ROLE))
+            _G['LFTGroupReadyDungeonName']:SetText(dungeonName)
+            _G['LFTGroupReady']:Show()
             LFTGroupReadyFrameCloser:Show()
-            getglobal('LFTRoleCheck'):Hide()
+            _G['LFTRoleCheck']:Hide()
 
             PlaySoundFile("Interface\\Addons\\LFT\\sound\\levelup2.ogg")
             LFTQueue:Hide()
 
             LFT.findingGroup = false
             LFT.findingMore = false
-            getglobal('LFTMain'):Hide()
+            _G['LFTMain']:Hide()
 
             LFT.fixMainButton()
         end
@@ -801,7 +829,9 @@ LFTComms:SetScript("OnEvent", function()
                         local verEx = string.split(arg1, ':')
                         local ver = verEx[2]
                         local color = COLOR_GREEN
-                        if LFT.ver(ver) < LFT.ver(addonVer) then color = COLOR_ORANGE end
+                        if LFT.ver(ver) < LFT.ver(addonVer) then
+                            color = COLOR_ORANGE
+                        end
                         lfprint(arg2 .. ' - ' .. color .. 'v' .. ver)
                     end
                 end
@@ -814,7 +844,7 @@ LFTComms:SetScript("OnEvent", function()
 
                 local foundLongEx = string.split(arg1, ' ')
 
-                for index, found in foundLongEx do
+                for _, found in foundLongEx do
                     local foundEx = string.split(found, ':')
                     local mRole = foundEx[2]
                     local mDungeon = foundEx[3]
@@ -853,31 +883,41 @@ LFTComms:SetScript("OnEvent", function()
                 end
 
                 -- lfm, leader should invite this guy now
-                if LFT.isLeader then lfdebug('im leader') else lfdebug('im not leader') end
+                if LFT.isLeader then
+                    lfdebug('im leader')
+                else
+                    lfdebug('im not leader')
+                end
                 if LFT.isLeader and leader == me then
                     if LFT.isNeededInLFMGroup(mRole, arg2, mDungeon) then
-                        if mRole == 'tank' then LFT.addTank(mDungeon, arg2, true, true) end
-                        if mRole == 'healer' then LFT.addHealer(mDungeon, arg2, true, true) end
-                        if mRole == 'damage' then LFT.addDamage(mDungeon, arg2, true, true) end
+                        if mRole == 'tank' then
+                            LFT.addTank(mDungeon, arg2, true, true)
+                        end
+                        if mRole == 'healer' then
+                            LFT.addHealer(mDungeon, arg2, true, true)
+                        end
+                        if mRole == 'damage' then
+                            LFT.addDamage(mDungeon, arg2, true, true)
+                        end
                         LFT.inviteInLFMGroup(arg2)
                     end
                 end
             end
 
---            if string.sub(arg1, 1, 4) == 'LFG:' then
+            --            if string.sub(arg1, 1, 4) == 'LFG:' then
             -- LFG
---            if string.find(arg1, 'LFG:', 1, true) then
+            --            if string.find(arg1, 'LFG:', 1, true) then
             if string.sub(arg1, 1, 4) == 'LFG:' then
 
                 local lfgEx = string.split(arg1, ' ')
                 local foundMessage = ''
 
-                for index, lfg in lfgEx do
+                for _, lfg in lfgEx do
                     local spamSplit = string.split(lfg, ':')
                     local mDungeonCode = spamSplit[2]
                     local mRole = spamSplit[3] --other's role
 
-                    for dungeon, data in next, LFT.dungeons do
+                    for _, data in next, LFT.dungeons do
                         if data.queued and data.code == mDungeonCode then
 
                             if LFT.isLeader then
@@ -939,51 +979,51 @@ LFTComms:SetScript("OnEvent", function()
 
                 SendChatMessage(foundMessage, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
 
---                local spamSplit = string.split(arg1, ':')
---                local mDungeonCode = spamSplit[2]
---                local mRole = spamSplit[3] --other's role
---
---                for dungeon, data in next, LFT.dungeons do
---                    if data.queued and data.code == mDungeonCode then
---
---                        if LFT.isLeader then
---                            if mRole == 'tank' then LFT.addTank(mDungeonCode, arg2) end
---                            if mRole == 'healer' then LFT.addHealer(mDungeonCode, arg2) end
---                            if mRole == 'damage' then LFT.addDamage(mDungeonCode, arg2) end
---                            return false
---                        end
---
---                        if LFT_ROLE == 'tank' then
---                            LFT.group[mDungeonCode].tank = me
---
---                            if mRole == 'healer' then LFT.addHealer(mDungeonCode, arg2, false, true) end
---                            if mRole == 'damage' then LFT.addDamage(mDungeonCode, arg2, false, true) end
---                        end
---
---                        --pseudo fill group for tooltip display
---                        if LFT_ROLE == 'healer' then
---                            LFT.addHealer(mDungeonCode, me, true)
---
---                            if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
---                                LFT.group[mDungeonCode].tank = arg2
---                            end
---
---                            if mRole == 'damage' then
---                                LFT.addDamage(mDungeonCode, arg2, true)
---                            end
---                        end
---
---                        if LFT_ROLE == 'damage' then
---                            LFT.addDamage(mDungeonCode, me, true)
---                            if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
---                                LFT.group[mDungeonCode].tank = arg2
---                            end
---                            if mRole == 'healer' and LFT.group[mDungeonCode].healer == '' then
---                                LFT.group[mDungeonCode].healer = arg2
---                            end
---                        end
---                    end
---                end
+                --                local spamSplit = string.split(arg1, ':')
+                --                local mDungeonCode = spamSplit[2]
+                --                local mRole = spamSplit[3] --other's role
+                --
+                --                for dungeon, data in next, LFT.dungeons do
+                --                    if data.queued and data.code == mDungeonCode then
+                --
+                --                        if LFT.isLeader then
+                --                            if mRole == 'tank' then LFT.addTank(mDungeonCode, arg2) end
+                --                            if mRole == 'healer' then LFT.addHealer(mDungeonCode, arg2) end
+                --                            if mRole == 'damage' then LFT.addDamage(mDungeonCode, arg2) end
+                --                            return false
+                --                        end
+                --
+                --                        if LFT_ROLE == 'tank' then
+                --                            LFT.group[mDungeonCode].tank = me
+                --
+                --                            if mRole == 'healer' then LFT.addHealer(mDungeonCode, arg2, false, true) end
+                --                            if mRole == 'damage' then LFT.addDamage(mDungeonCode, arg2, false, true) end
+                --                        end
+                --
+                --                        --pseudo fill group for tooltip display
+                --                        if LFT_ROLE == 'healer' then
+                --                            LFT.addHealer(mDungeonCode, me, true)
+                --
+                --                            if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
+                --                                LFT.group[mDungeonCode].tank = arg2
+                --                            end
+                --
+                --                            if mRole == 'damage' then
+                --                                LFT.addDamage(mDungeonCode, arg2, true)
+                --                            end
+                --                        end
+                --
+                --                        if LFT_ROLE == 'damage' then
+                --                            LFT.addDamage(mDungeonCode, me, true)
+                --                            if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
+                --                                LFT.group[mDungeonCode].tank = arg2
+                --                            end
+                --                            if mRole == 'healer' and LFT.group[mDungeonCode].healer == '' then
+                --                                LFT.group[mDungeonCode].healer = arg2
+                --                            end
+                --                        end
+                --                    end
+                --                end
             end
         end
     end
@@ -1004,7 +1044,9 @@ function lferror(a)
 end
 
 function lfdebug(a)
-    if not LFT_DEBUG then return false end
+    if not LFT_DEBUG then
+        return false
+    end
     if type(a) == 'boolean' then
         if a then
             lfprint('|cff0070de[LFTDEBUG:' .. time() .. ']|cffffffff[true]')
@@ -1040,9 +1082,10 @@ LFT:SetScript("OnEvent", function()
             if LFT.inGroup then
                 if LFT.isLeader then
                 else
-                    getglobal('LFTMain'):Hide()
+                    _G['LFTMain']:Hide()
                 end
-            else -- i left the group OR everybody left
+            else
+                -- i left the group OR everybody left
 
                 if LFTInvite.inviteIndex == 2 then
                     return false
@@ -1071,17 +1114,20 @@ LFT:SetScript("OnEvent", function()
                             joinedManually = true
                         end
                     end
-                    if joinedManually then --joined manually, dont know his role
+                    if joinedManually then
+                        --joined manually, dont know his role
 
-                        LFTFillAvailableDungeonsDelay.queueAfterIfPossible = GetNumPartyMembers() < (DEV_GROUP_SIZE - 1)
+                        LFTFillAvailableDungeonsDelay.queueAfterIfPossible = GetNumPartyMembers() < (LFT.groupSizeMax - 1)
 
-                        if not LFTFillAvailableDungeonsDelay.queueAfterIfPossible then --group full
+                        if not LFTFillAvailableDungeonsDelay.queueAfterIfPossible then
+                            --group full
                             SendAddonMessage(LFT_ADDON_CHANNEL, "LFMPartyReady:" .. LFT.LFMDungeonCode .. ":" .. LFTObjectives.objectivesComplete .. ":" .. LFT.tableSize(LFT.bosses[LFT.LFMDungeonCode]), "PARTY")
                             return false -- so it goes into check full in timer
                         end
                         leaveQueue()
                         --                      findMore()
-                    else --joined from the queue, we know his role, check if group is full
+                    else
+                        --joined from the queue, we know his role, check if group is full
                         --  lfdebug('player ' .. newName .. ' joined from queue')
 
                         if LFT.checkLFMGroupReady(LFT.LFMDungeonCode) then
@@ -1093,8 +1139,8 @@ LFT:SetScript("OnEvent", function()
                 end
             end
             if someoneLeft then
-                getglobal('LFTReadyStatus'):Hide()
-                getglobal('LFTGroupReady'):Hide()
+                _G['LFTReadyStatus']:Hide()
+                _G['LFTGroupReady']:Hide()
                 -- find who left and update virtual group
                 if LFT.findingMore and LFT.isLeader then
 
@@ -1193,11 +1239,11 @@ LFT:SetScript("OnEvent", function()
                 LFT.sendMinimapDataToParty(LFT.LFMDungeonCode)
             end
             -- update awesome button enabled if 5/5 disabled + text if not
-            local awesomeButton = getglobal('LFTGroupReadyAwesome')
-            awesomeButton:SetText('Waiting Players (' .. DEV_GROUP_SIZE - GetNumPartyMembers() - 1 .. ')')
+            local awesomeButton = _G['LFTGroupReadyAwesome']
+            awesomeButton:SetText('Waiting Players (' .. LFT.groupSizeMax - GetNumPartyMembers() - 1 .. ')')
             awesomeButton:Disable()
 
-            if GetNumPartyMembers() == DEV_GROUP_SIZE - 1 then
+            if GetNumPartyMembers() == LFT.groupSizeMax - 1 then
                 awesomeButton:SetText('Let\'s do this!')
                 awesomeButton:Enable()
             end
@@ -1211,11 +1257,13 @@ end)
 
 function LFT.init()
 
-    if LFT_DEBUG == nil then LFT_DEBUG = false end
+    if LFT_DEBUG == nil then
+        LFT_DEBUG = false
+    end
     if LFT_DEBUG then
-        getglobal('LFTTitleTime'):Show()
+        _G['LFTTitleTime']:Show()
     else
-        getglobal('LFTTitleTime'):Hide()
+        _G['LFTTitleTime']:Hide()
     end
     local _, uClass = UnitClass('player')
     LFT.class = string.lower(uClass)
@@ -1224,10 +1272,12 @@ function LFT.init()
         LFT_TYPE = 1
     end
     -- disabled type 2, needs to reset to 1
-    if LFT_TYPE == 2 then LFT_TYPE = 1 end
+    if LFT_TYPE == 2 then
+        LFT_TYPE = 1
+    end
 
-    UIDropDownMenu_SetText(LFT.types[LFT_TYPE], getglobal('LFTTypeSelect'));
-    getglobal('LFTDungeonsText'):SetText(LFT.types[LFT_TYPE])
+    UIDropDownMenu_SetText(LFT.types[LFT_TYPE], _G['LFTTypeSelect']);
+    _G['LFTDungeonsText']:SetText(LFT.types[LFT_TYPE])
     if not LFT_ROLE then
         LFT_ROLE = LFT.GetPossibleRoles()
     else
@@ -1239,7 +1289,7 @@ function LFT.init()
         LFT.resetFormedGroups()
     else
         --check if formed groups include maybe new dungeon codes
-        for dungeon, data in next, LFT.dungeons do
+        for _, data in next, LFT.dungeons do
             if not LFT_FORMED_GROUPS[data.code] then
                 LFT_FORMED_GROUPS[data.code] = 0
             end
@@ -1274,7 +1324,7 @@ function LFT.init()
 
     lfprint(COLOR_HUNTER .. 'Looking For Turtles v' .. addonVer .. COLOR_WHITE .. ' - LFG Addon for Turtle WoW loaded.')
 
---    getglobal('MainMenuBarTexture2'):SetWidth(288)
+    --    _G['MainMenuBarTexture2'):SetWidth(288)
 end
 
 LFTQueue:SetScript("OnShow", function()
@@ -1289,7 +1339,7 @@ LFTQueue:SetScript("OnShow", function()
 end)
 
 LFTQueue:SetScript("OnHide", function()
-    getglobal('LFT_MinimapEye'):SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking0')
+    _G['LFT_MinimapEye']:SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking0')
 end)
 
 LFTQueue:SetScript("OnUpdate", function()
@@ -1301,24 +1351,26 @@ LFTQueue:SetScript("OnUpdate", function()
 
         local cSecond = tonumber(date("%S", time()))
 
-        getglobal('LFTTitleTime'):SetText(cSecond)
-        getglobal('LFTGroupStatusTimeInQueue'):SetText('Time in Queue: ' .. SecondsToTime(time() - LFT.queueStartTime))
+        _G['LFTTitleTime']:SetText(cSecond)
+        _G['LFTGroupStatusTimeInQueue']:SetText('Time in Queue: ' .. SecondsToTime(time() - LFT.queueStartTime))
         if LFT.averageWaitTime == 0 then
-            getglobal('LFTGroupStatusAverageWaitTime'):SetText('Average Wait Time: Unavailable')
+            _G['LFTGroupStatusAverageWaitTime']:SetText('Average Wait Time: Unavailable')
         else
-            getglobal('LFTGroupStatusAverageWaitTime'):SetText('Average Wait Time: ' .. SecondsToTimeAbbrev(LFT.averageWaitTime))
+            _G['LFTGroupStatusAverageWaitTime']:SetText('Average Wait Time: ' .. SecondsToTimeAbbrev(LFT.averageWaitTime))
         end
 
         if (cSecond == LFT.RESET_TIME or cSecond == LFT.RESET_TIME + LFT.TIME_MARGIN) and this.lastTime.reset ~= time() then
-            if not LFT.inGroup then -- dont reset group if we're LFM
+            if not LFT.inGroup then
+                -- dont reset group if we're LFM
                 LFT.resetGroup()
                 this.lastTime.reset = time()
             end
         end
 
         if (cSecond == LFT.TANK_TIME or cSecond == LFT.TANK_TIME + LFT.TIME_MARGIN) and LFT_ROLE == 'tank' and this.lastTime.tank ~= time() then
-            if not LFT.inGroup then -- only start forming group if im not already grouped
-                for dungeon, data in next, LFT.dungeons do
+            if not LFT.inGroup then
+                -- only start forming group if im not already grouped
+                for _, data in next, LFT.dungeons do
                     if data.queued then
                         LFT.group[data.code].tank = me
                     end
@@ -1330,14 +1382,16 @@ LFTQueue:SetScript("OnUpdate", function()
         end
 
         if (cSecond == LFT.HEALER_TIME + LFT.myRandomTime or cSecond == LFT.HEALER_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'healer' and this.lastTime.heal ~= time() then
-            if not LFT.inGroup then -- dont spam lfm if im already in a group, because leader will pick up new players
+            if not LFT.inGroup then
+                -- dont spam lfm if im already in a group, because leader will pick up new players
                 LFT.sendLFMessage()
                 this.lastTime.heal = time()
             end
         end
 
         if (cSecond == LFT.DAMAGE_TIME + LFT.myRandomTime or cSecond == LFT.DAMAGE_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'damage' and this.lastTime.damage ~= time() then
-            if not LFT.inGroup then -- dont spam lfm if im already in a group, because leader will pick up new players
+            if not LFT.inGroup then
+                -- dont spam lfm if im already in a group, because leader will pick up new players
                 LFT.sendLFMessage()
                 this.lastTime.damage = time()
             end
@@ -1352,14 +1406,14 @@ LFTQueue:SetScript("OnUpdate", function()
                     LFT.groupFullCode = code
 
                     SendChatMessage("[LFT]:" .. code .. ":party:ready:" .. healer .. ":" .. damage1 .. ":" .. damage2 .. ":" .. damage3,
-                        "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                            "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
 
                     SendChatMessage("[LFT]:lft_group_formed:" .. code .. ":" .. time() - LFT.queueStartTime, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
 
                     --untick everything
                     for dungeon, data in next, LFT.dungeons do
-                        if getglobal("Dungeon_" .. data.code) then
-                            getglobal("Dungeon_" .. data.code):SetChecked(false)
+                        if _G["Dungeon_" .. data.code] then
+                            _G["Dungeon_" .. data.code]:SetChecked(false)
                         end
                         LFT.dungeons[dungeon].queued = false
                     end
@@ -1375,21 +1429,21 @@ LFTQueue:SetScript("OnUpdate", function()
                             dungeonName = d
                         end
                     end
-                    getglobal('LFTGroupReadyBackground'):SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
-                    getglobal('LFTGroupReadyRole'):SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
-                    getglobal('LFTGroupReadyMyRole'):SetText(LFT.ucFirst(LFT_ROLE))
-                    getglobal('LFTGroupReadyDungeonName'):SetText(dungeonName)
-                    getglobal('LFTGroupReady'):Show()
+                    _G['LFTGroupReadyBackground']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
+                    _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
+                    _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(LFT_ROLE))
+                    _G['LFTGroupReadyDungeonName']:SetText(dungeonName)
+                    _G['LFTGroupReady']:Show()
                     LFTGroupReadyFrameCloser:Show()
 
-                    getglobal('LFTRoleCheck'):Hide()
+                    _G['LFTRoleCheck']:Hide()
 
                     PlaySoundFile("Interface\\Addons\\LFT\\sound\\levelup2.ogg")
                     LFTQueue:Hide()
-                    getglobal('LFT_MinimapEye'):SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking0')
+                    _G['LFT_MinimapEye']:SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking0')
 
                     LFT.fixMainButton()
-                    getglobal('LFTMain'):Hide()
+                    _G['LFTMain']:Hide()
                     LFTInvite:Show()
                 end
             end
@@ -1397,7 +1451,7 @@ LFTQueue:SetScript("OnUpdate", function()
             this.lastTime.checkGroupFull = time()
         end
 
-        getglobal('LFT_MinimapEye'):SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking' .. LFT.minimapFrameIndex)
+        _G['LFT_MinimapEye']:SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking' .. LFT.minimapFrameIndex)
 
         if LFT.minimapFrameIndex < 28 then
             LFT.minimapFrameIndex = LFT.minimapFrameIndex + 1
@@ -1412,7 +1466,7 @@ function LFT.checkLFTChannel()
     local lastVal = 0
     local chanList = { GetChannelList() }
 
-    for index, value in next, chanList do
+    for _, value in next, chanList do
         if value == LFT.channel then
             LFT.channelIndex = lastVal
             break
@@ -1430,14 +1484,14 @@ end
 
 function LFT.GetPossibleRoles()
 
-    local tankCheck = getglobal('RoleTank')
-    local healerCheck = getglobal('RoleHealer')
-    local damageCheck = getglobal('RoleDamage')
+    local tankCheck = _G['RoleTank']
+    local healerCheck = _G['RoleHealer']
+    local damageCheck = _G['RoleDamage']
 
     --ready check window
-    local readyCheckTank = getglobal('roleCheckTank')
-    local readyCheckHealer = getglobal('roleCheckHealer')
-    local readyCheckDamage = getglobal('roleCheckDamage')
+    local readyCheckTank = _G['roleCheckTank']
+    local readyCheckHealer = _G['roleCheckHealer']
+    local readyCheckDamage = _G['roleCheckDamage']
 
     tankCheck:Disable()
     tankCheck:SetChecked(false)
@@ -1507,13 +1561,16 @@ function LFT.GetPossibleRoles()
 end
 
 function LFT.getAvailableDungeons(level, type, mine)
-    if level == 0 then return {} end
+    if level == 0 then
+        return {}
+    end
     local dungeons = {}
-    for dungeon, data in next, LFT.dungeons do
+    for _, data in next, LFT.dungeons do
         if level >= data.minLevel and (level <= data.maxLevel or (not mine)) and type ~= 3 then
             dungeons[data.code] = true
         end
-        if level >= data.minLevel and type == 3 then --all available
+        if level >= data.minLevel and type == 3 then
+            --all available
             dungeons[data.code] = true
         end
     end
@@ -1521,7 +1578,9 @@ function LFT.getAvailableDungeons(level, type, mine)
 end
 
 function LFT.fillAvailableDungeons(offset, queueAfter)
-    if not offset then offset = 0 end
+    if not offset then
+        offset = 0
+    end
 
     --unqueue queued
     for dungeon, data in next, LFT.dungeons do
@@ -1532,13 +1591,13 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
     end
 
     --hide all
-    for i, frame in next, LFT.availableDungeons do
-        getglobal("Dungeon_" .. frame.code):Hide()
+    for _, frame in next, LFT.availableDungeons do
+        _G["Dungeon_" .. frame.code]:Hide()
     end
 
     -- if grouped fill only dungeons that can be joined by EVERYONE
     if LFT.inGroup then
-        local groupAvailableDungeons = {}
+
         local party = {
             [0] = {
                 level = LFT.level,
@@ -1592,103 +1651,119 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
             dungeonIndex = dungeonIndex + 1
             if dungeonIndex > offset and dungeonIndex <= offset + LFT.maxDungeonsList then
                 if not LFT.availableDungeons[data.code] then
-                    LFT.availableDungeons[data.code] = CreateFrame("CheckButton", "Dungeon_" .. data.code, getglobal("LFTMain"), "LFT_DungeonCheck")
+                    LFT.availableDungeons[data.code] = CreateFrame("CheckButton", "Dungeon_" .. data.code, _G["LFTMain"], "LFT_DungeonCheck")
                 end
 
                 LFT.availableDungeons[data.code]:Show()
 
                 local color = COLOR_GREEN
-                if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then color = COLOR_RED end
-                if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then color = COLOR_ORANGE end
-                if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then color = COLOR_GREEN end
+                if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
+                    color = COLOR_RED
+                end
+                if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
+                    color = COLOR_ORANGE
+                end
+                if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
+                    color = COLOR_GREEN
+                end
 
-                if LFT.level > data.maxLevel then color = COLOR_GREEN end
+                if LFT.level > data.maxLevel then
+                    color = COLOR_GREEN
+                end
 
-                getglobal('Dungeon_' .. data.code):Enable()
+                _G['Dungeon_' .. data.code]:Enable()
 
                 if data.canQueue then
-                    LFT.removeOnEnterTooltip(getglobal('Dungeon_' .. data.code .. '_Button'))
+                    LFT.removeOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'])
                 else
                     color = COLOR_DISABLED
                     data.queued = false
-                    LFT.addOnEnterTooltip(getglobal('Dungeon_' .. data.code .. '_Button'), dungeon .. ' is unavailable',
-                        'A member of your group does not meet', 'the suggested minimum level requirement (' .. data.minLevel .. ').')
-                    getglobal('Dungeon_' .. data.code):Disable()
+                    LFT.addOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'], dungeon .. ' is unavailable',
+                            'A member of your group does not meet', 'the suggested minimum level requirement (' .. data.minLevel .. ').')
+                    _G['Dungeon_' .. data.code]:Disable()
                 end
 
-                getglobal('Dungeon_' .. data.code .. 'Text'):SetText(color .. dungeon)
-                getglobal('Dungeon_' .. data.code .. 'Levels'):SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
-                getglobal('Dungeon_' .. data.code .. '_Button'):SetID(dungeonIndex)
+                _G['Dungeon_' .. data.code .. 'Text']:SetText(color .. dungeon)
+                _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
+                _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
 
-                LFT.availableDungeons[data.code]:SetPoint("TOP", getglobal("LFTMain"), "TOP", -145, -165 - 20 * (dungeonIndex - offset))
+                LFT.availableDungeons[data.code]:SetPoint("TOP", _G["LFTMain"], "TOP", -145, -165 - 20 * (dungeonIndex - offset))
                 LFT.availableDungeons[data.code].code = data.code
                 LFT.availableDungeons[data.code].minLevel = data.minLevel
                 LFT.availableDungeons[data.code].maxLevel = data.maxLevel
 
                 LFT.dungeons[dungeon].queued = data.queued
-                getglobal('Dungeon_' .. data.code):SetChecked(data.queued)
-
+                _G['Dungeon_' .. data.code]:SetChecked(data.queued)
 
                 if LFT_TYPE == 2 and not LFT.inGroup then
                     LFT.dungeons[dungeon].queued = true
-                    getglobal('Dungeon_' .. data.code):SetChecked(true)
+                    _G['Dungeon_' .. data.code]:SetChecked(true)
                 end
             end
         end
 
-        if LFT.level >= data.minLevel and LFT_TYPE == 3 then --all available
+        if LFT.level >= data.minLevel and LFT_TYPE == 3 then
+            --all available
 
             dungeonIndex = dungeonIndex + 1
             if dungeonIndex > offset and dungeonIndex <= offset + LFT.maxDungeonsList then
                 if not LFT.availableDungeons[data.code] then
-                    LFT.availableDungeons[data.code] = CreateFrame("CheckButton", "Dungeon_" .. data.code, getglobal("LFTMain"), "LFT_DungeonCheck")
+                    LFT.availableDungeons[data.code] = CreateFrame("CheckButton", "Dungeon_" .. data.code, _G["LFTMain"], "LFT_DungeonCheck")
                 end
 
                 LFT.availableDungeons[data.code]:Show()
 
                 local color = COLOR_GREEN
-                if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then color = COLOR_RED end
-                if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then color = COLOR_ORANGE end
-                if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then color = COLOR_GREEN end
+                if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
+                    color = COLOR_RED
+                end
+                if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
+                    color = COLOR_ORANGE
+                end
+                if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
+                    color = COLOR_GREEN
+                end
 
-                if LFT.level > data.maxLevel then color = COLOR_GREEN end
+                if LFT.level > data.maxLevel then
+                    color = COLOR_GREEN
+                end
 
-                getglobal('Dungeon_' .. data.code):Enable()
+                _G['Dungeon_' .. data.code]:Enable()
 
                 if data.canQueue then
-                    LFT.removeOnEnterTooltip(getglobal('Dungeon_' .. data.code .. '_Button'))
+                    LFT.removeOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'])
                 else
                     color = COLOR_DISABLED
                     data.queued = false
-                    LFT.addOnEnterTooltip(getglobal('Dungeon_' .. data.code .. '_Button'), dungeon .. ' is unavailable',
-                        'A member of your group does not meet', 'the suggested minimum level requirement (' .. data.minLevel .. ').')
-                    getglobal('Dungeon_' .. data.code):Disable()
+                    LFT.addOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'], dungeon .. ' is unavailable',
+                            'A member of your group does not meet', 'the suggested minimum level requirement (' .. data.minLevel .. ').')
+                    _G['Dungeon_' .. data.code]:Disable()
                 end
 
-                getglobal('Dungeon_' .. data.code .. 'Text'):SetText(color .. dungeon)
-                getglobal('Dungeon_' .. data.code .. 'Levels'):SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
-                getglobal('Dungeon_' .. data.code .. '_Button'):SetID(dungeonIndex)
+                _G['Dungeon_' .. data.code .. 'Text']:SetText(color .. dungeon)
+                _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
+                _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
 
-                LFT.availableDungeons[data.code]:SetPoint("TOP", getglobal("LFTMain"), "TOP", -145, -165 - 20 * (dungeonIndex - offset))
+                LFT.availableDungeons[data.code]:SetPoint("TOP", _G["LFTMain"], "TOP", -145, -165 - 20 * (dungeonIndex - offset))
                 LFT.availableDungeons[data.code].code = data.code
                 LFT.availableDungeons[data.code].minLevel = data.minLevel
                 LFT.availableDungeons[data.code].maxLevel = data.maxLevel
             end
         end
         if LFT.findingMore then
-            if getglobal('Dungeon_' .. data.code) then
-                getglobal('Dungeon_' .. data.code):Disable()
-                getglobal('Dungeon_' .. data.code):SetChecked(false)
+            if _G['Dungeon_' .. data.code] then
+                _G['Dungeon_' .. data.code]:Disable()
+                _G['Dungeon_' .. data.code]:SetChecked(false)
             end
             if data.code == LFT.LFMDungeonCode then
-                if getglobal('Dungeon_' .. data.code) then
-                    getglobal('Dungeon_' .. data.code):SetChecked(true)
+                if _G['Dungeon_' .. data.code] then
+                    _G['Dungeon_' .. data.code]:SetChecked(true)
                 end
                 LFT.dungeons[dungeon].queued = true
             end
         end
-        if getglobal('Dungeon_' .. data.code) then
-            if getglobal('Dungeon_' .. data.code):GetChecked() then
+        if _G['Dungeon_' .. data.code] then
+            if _G['Dungeon_' .. data.code]:GetChecked() then
                 LFT.dungeons[dungeon].queued = true
             end
         end
@@ -1696,25 +1771,27 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
 
     -- gray out the rest if there are 5 already checked
     local queues = 0
-    for dName, d in next, LFT.dungeons do
-        if d.queued then queues = queues + 1 end
+    for _, d in next, LFT.dungeons do
+        if d.queued then
+            queues = queues + 1
+        end
     end
-    if queues >= DEV_MAX_DUNGEONS_TO_QUEUE then
+    if queues >= LFT.maxDungeonsInQueue then
 
-        for i, frame in next, LFT.availableDungeons do
+        for _, frame in next, LFT.availableDungeons do
             local dungeonName = LFT.dungeonNameFromCode(frame.code)
             if not LFT.dungeons[dungeonName].queued then
-                getglobal("Dungeon_" .. frame.code):Disable()
-                getglobal('Dungeon_' .. frame.code .. 'Text'):SetText(COLOR_DISABLED .. dungeonName)
-                getglobal('Dungeon_' .. frame.code .. 'Levels'):SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
-                LFT.addOnEnterTooltip(getglobal('Dungeon_' .. frame.code .. '_Button'), 'Queueing for ' .. dungeonName .. ' is unavailable',
-                    'Maximum allowed queued dungeons at a time is ' .. DEV_MAX_DUNGEONS_TO_QUEUE .. '.')
+                _G["Dungeon_" .. frame.code]:Disable()
+                _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
+                _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
+                LFT.addOnEnterTooltip(_G['Dungeon_' .. frame.code .. '_Button'], 'Queueing for ' .. dungeonName .. ' is unavailable',
+                        'Maximum allowed queued dungeons at a time is ' .. LFT.maxDungeonsInQueue .. '.')
             end
         end
     end
     -- end gray
 
-    FauxScrollFrame_Update(getglobal('DungeonListScrollFrame'), dungeonIndex, LFT.maxDungeonsList, 20)
+    FauxScrollFrame_Update(_G['DungeonListScrollFrame'], dungeonIndex, LFT.maxDungeonsList, 20)
 
     LFT.fixMainButton()
 
@@ -1725,7 +1802,7 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
         local qDungeon = ''
         local dungeonName = ''
         for _, frame in next, LFT.availableDungeons do
-            if getglobal("Dungeon_" .. frame.code):GetChecked() then
+            if _G["Dungeon_" .. frame.code]:GetChecked() then
                 qDungeon = frame.code
             end
         end
@@ -1743,18 +1820,18 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
     end
 end
 
-function LFT.enableDungeonCheckbuttons()
-    for i, frame in next, LFT.availableDungeons do
-        getglobal("Dungeon_" .. frame.code):Enable()
+function LFT.enableDungeonCheckButtons()
+    for _, frame in next, LFT.availableDungeons do
+        _G["Dungeon_" .. frame.code]:Enable()
     end
 end
 
-function LFT.disableDungeonCheckbuttons(except)
-    for i, frame in next, LFT.availableDungeons do
+function LFT.disableDungeonCheckButtons(except)
+    for _, frame in next, LFT.availableDungeons do
         if except and except == frame.code then
             --dont disable
         else
-            getglobal("Dungeon_" .. frame.code):Disable()
+            _G["Dungeon_" .. frame.code]:Disable()
         end
     end
 end
@@ -1774,10 +1851,12 @@ function LFT.resetGroup()
 
     LFTGroupReadyFrameCloser.response = ''
 
-    for dungeon, data in next, LFT.dungeons do
+    for _, data in next, LFT.dungeons do
         if data.queued then
             local tank = ''
-            if LFT_ROLE == 'tank' then tank = me end
+            if LFT_ROLE == 'tank' then
+                tank = me
+            end
             LFT.group[data.code] = {
                 tank = tank,
                 healer = '',
@@ -1800,7 +1879,9 @@ end
 function LFT.addTank(dungeon, name, faux, add)
 
     if LFT.group[dungeon].tank == '' then
-        if add then LFT.group[dungeon].tank = name end
+        if add then
+            LFT.group[dungeon].tank = name
+        end
         if not faux then
             SendChatMessage('found:tank:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
         end
@@ -1811,10 +1892,14 @@ end
 
 function LFT.addHealer(dungeon, name, faux, add)
     --prevent adding same person twice
-    if LFT.group[dungeon].healer == name then return false end
+    if LFT.group[dungeon].healer == name then
+        return false
+    end
 
     if LFT.group[dungeon].healer == '' then
-        if add then LFT.group[dungeon].healer = name end
+        if add then
+            LFT.group[dungeon].healer = name
+        end
         if not faux then
             SendChatMessage('found:healer:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
         end
@@ -1843,25 +1928,32 @@ function LFT.addDamage(dungeon, name, faux, add)
     --prevent adding same person twice
     if LFT.group[dungeon].damage1 == name or
             LFT.group[dungeon].damage2 == name or
-            LFT.group[dungeon].damage3 == name then return false
+            LFT.group[dungeon].damage3 == name then
+        return false
     end
 
     if LFT.group[dungeon].damage1 == '' then
-        if add then LFT.group[dungeon].damage1 = name end
+        if add then
+            LFT.group[dungeon].damage1 = name
+        end
         if not faux then
---            SendChatMessage('found:damage:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+            --            SendChatMessage('found:damage:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
         end
         return true
     elseif LFT.group[dungeon].damage2 == '' then
-        if add then LFT.group[dungeon].damage2 = name end
+        if add then
+            LFT.group[dungeon].damage2 = name
+        end
         if not faux then
---            SendChatMessage('found:damage:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+            --            SendChatMessage('found:damage:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
         end
         return true
     elseif LFT.group[dungeon].damage3 == '' then
-        if add then LFT.group[dungeon].damage3 = name end
+        if add then
+            LFT.group[dungeon].damage3 = name
+        end
         if not faux then
---            SendChatMessage('found:damage:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+            --            SendChatMessage('found:damage:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
         end
         return true
     end
@@ -1870,18 +1962,28 @@ end
 
 function LFT.checkGroupFull()
 
-    for dungeon, data in next, LFT.dungeons do
+    for _, data in next, LFT.dungeons do
         if data.queued then
             local members = 0
-            if LFT.group[data.code].tank ~= '' then members = members + 1 end
-            if LFT.group[data.code].healer ~= '' then members = members + 1 end
-            if LFT.group[data.code].damage1 ~= '' then members = members + 1 end
-            if LFT.group[data.code].damage2 ~= '' then members = members + 1 end
-            if LFT.group[data.code].damage3 ~= '' then members = members + 1 end
+            if LFT.group[data.code].tank ~= '' then
+                members = members + 1
+            end
+            if LFT.group[data.code].healer ~= '' then
+                members = members + 1
+            end
+            if LFT.group[data.code].damage1 ~= '' then
+                members = members + 1
+            end
+            if LFT.group[data.code].damage2 ~= '' then
+                members = members + 1
+            end
+            if LFT.group[data.code].damage3 ~= '' then
+                members = members + 1
+            end
             lfdebug('members = ' .. members .. ' (' .. LFT.group[data.code].tank ..
                     ',' .. LFT.group[data.code].healer .. ',' .. LFT.group[data.code].damage1 ..
                     ',' .. LFT.group[data.code].damage2 .. ',' .. LFT.group[data.code].damage3 .. ')')
-            if members == DEV_GROUP_SIZE then
+            if members == LFT.groupSizeMax then
                 LFT.oneGroupFull = true
                 LFT.group[data.code].full = true
 
@@ -1898,14 +2000,18 @@ end
 
 function LFT.dungeonNameFromCode(code)
     for name, data in next, LFT.dungeons do
-        if data.code == code then return name, data.background end
+        if data.code == code then
+            return name, data.background
+        end
     end
     return 'Unknown', 'UnknownBackground'
 end
 
 function LFT.dungeonFromCode(code)
-    for name, data in next, LFT.dungeons do
-        if data.code == code then return data end
+    for _, data in next, LFT.dungeons do
+        if data.code == code then
+            return data
+        end
     end
     return false
 end
@@ -1922,18 +2028,23 @@ function LFT.DeclineGroupInvite()
     StaticPopup_Hide("PARTY_INVITE")
 end
 
-function LFT.fuckingSortAlready(t, f)
+function LFT.fuckingSortAlready(t)
     local a = {}
-    for n, l in pairs(t) do table.insert(a, { ['code'] = l.code, ['minLevel'] = l.minLevel, ['name'] = n })
+    for n, l in pairs(t) do
+        table.insert(a, { ['code'] = l.code, ['minLevel'] = l.minLevel, ['name'] = n })
     end
-    table.sort(a, function(a, b) return a['minLevel'] < b['minLevel']
+    table.sort(a, function(a, b)
+        return a['minLevel'] < b['minLevel']
     end)
     local i = 0 -- iterator variable
-    local iter = function() -- iterator function
+    local iter = function()
+        -- iterator function
         i = i + 1
-        if a[i] == nil then return nil
+        if a[i] == nil then
+            return nil
             --        else return a[i]['code'], t[a[i]['name']]
-        else return a[i]['name'], t[a[i]['name']]
+        else
+            return a[i]['name'], t[a[i]['name']]
         end
     end
     return iter
@@ -1941,7 +2052,10 @@ end
 
 function LFT.tableSize(t)
     local size = 0
-    for _, _ in next, t do size = size + 1 end return size
+    for _, _ in next, t do
+        size = size + 1
+    end
+    return size
 end
 
 function LFT.checkLFMgroup(someoneDeclined)
@@ -1954,17 +2068,27 @@ function LFT.checkLFMgroup(someoneDeclined)
         return false
     end
 
-    if not LFT.isLeader then return end
+    if not LFT.isLeader then
+        return
+    end
 
     local currentGroupSize = GetNumPartyMembers() + 1
     local readyNumber = 0
-    if LFT.LFMGroup.tank ~= '' then readyNumber = readyNumber + 1 end
-    if LFT.LFMGroup.healer ~= '' then readyNumber = readyNumber + 1 end
-    if LFT.LFMGroup.damage1 ~= '' then readyNumber = readyNumber + 1 end
-    if LFT.LFMGroup.damage2 ~= '' then readyNumber = readyNumber + 1 end
-    if LFT.LFMGroup.damage3 ~= '' then readyNumber = readyNumber + 1 end
-
-
+    if LFT.LFMGroup.tank ~= '' then
+        readyNumber = readyNumber + 1
+    end
+    if LFT.LFMGroup.healer ~= '' then
+        readyNumber = readyNumber + 1
+    end
+    if LFT.LFMGroup.damage1 ~= '' then
+        readyNumber = readyNumber + 1
+    end
+    if LFT.LFMGroup.damage2 ~= '' then
+        readyNumber = readyNumber + 1
+    end
+    if LFT.LFMGroup.damage3 ~= '' then
+        readyNumber = readyNumber + 1
+    end
 
     if currentGroupSize == readyNumber then
         --everyone is ready / confirmed roles
@@ -1990,11 +2114,11 @@ function LFT.weInQueue(code)
 
     LFT.findingGroup = true
     LFT.findingMore = true
-    LFT.disableDungeonCheckbuttons()
+    LFT.disableDungeonCheckButtons()
 
-    getglobal('RoleTank'):Disable()
-    getglobal('RoleHealer'):Disable()
-    getglobal('RoleDamage'):Disable()
+    _G['RoleTank']:Disable()
+    _G['RoleHealer']:Disable()
+    _G['RoleDamage']:Disable()
 
     PlaySound('PvpEnterQueue')
 
@@ -2013,15 +2137,15 @@ function LFT.weInQueue(code)
     LFT.oneGroupFull = false
     LFT.queueStartTime = time()
     LFTQueue:Show()
-    getglobal('LFTMain'):Hide()
+    _G['LFTMain']:Hide()
     LFT.fixMainButton()
 end
 
 function LFT.fixMainButton()
 
-    local lfgButton = getglobal('findGroupButton')
-    local lfmButton = getglobal('findMoreButton')
-    local leaveQueueButton = getglobal('leaveQueueButton')
+    local lfgButton = _G['findGroupButton']
+    local lfmButton = _G['findMoreButton']
+    local leaveQueueButton = _G['leaveQueueButton']
 
     lfgButton:Hide()
     lfmButton:Hide()
@@ -2034,8 +2158,10 @@ function LFT.fixMainButton()
     LFT.inGroup = GetNumRaidMembers() == 0 and GetNumPartyMembers() > 0
 
     local queues = 0
-    for dungeon, data in next, LFT.dungeons do
-        if data.queued then queues = queues + 1 end
+    for _, data in next, LFT.dungeons do
+        if data.queued then
+            queues = queues + 1
+        end
     end
 
     if queues > 0 then
@@ -2045,19 +2171,20 @@ function LFT.fixMainButton()
     if LFT.inGroup then
         lfmButton:Show()
         --GetNumPartyMembers() returns party size-1, doesnt count myself
-        if GetNumPartyMembers() < (DEV_GROUP_SIZE - 1) and LFT.isLeader and queues > 0 then
+        if GetNumPartyMembers() < (LFT.groupSizeMax - 1) and LFT.isLeader and queues > 0 then
             lfmButton:Enable()
             if LFT.LFMDungeonCode ~= '' then
-                LFT.disableDungeonCheckbuttons(LFT.LFMDungeonCode)
+                LFT.disableDungeonCheckButtons(LFT.LFMDungeonCode)
             end
         end
-        if GetNumPartyMembers() == (DEV_GROUP_SIZE - 1) and LFT.isLeader then --group full
+        if GetNumPartyMembers() == (LFT.groupSizeMax - 1) and LFT.isLeader then
+            --group full
             lfmButton:Disable()
-            LFT.disableDungeonCheckbuttons()
+            LFT.disableDungeonCheckButtons()
         end
         if not LFT.isLeader then
             lfmButton:Disable()
-            LFT.disableDungeonCheckbuttons()
+            LFT.disableDungeonCheckButtons()
         end
     else
         lfgButton:Show()
@@ -2067,7 +2194,9 @@ function LFT.fixMainButton()
         leaveQueueButton:Show()
         leaveQueueButton:Enable()
         if LFT.inGroup then
-            if not LFT.isLeader then leaveQueueButton:Disable() end
+            if not LFT.isLeader then
+                leaveQueueButton:Disable()
+            end
         end
         lfgButton:Hide()
         lfmButton:Hide()
@@ -2087,44 +2216,44 @@ end
 function LFT.sendLFMessage()
 
     --v1
---    local keyset = {}
---    for k in pairs(LFT.group) do
---        table.insert(keyset, k)
---    end
---
---    local added = {}
---    local spammedNr = 1
---    for _, _ in next, LFT.group do
---        local newD = keyset[math.random(LFT.tableSize(keyset))]
---        if not added[newD] then
---            added[newD] = true
---            if spammedNr <= DEV_MAX_DUNGEONS_TO_SPAM then
---                SendChatMessage('LFG:' .. newD .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
---                spammedNr = spammedNr + 1
---            end
---        else
---        end
---    end
+    --    local keyset = {}
+    --    for k in pairs(LFT.group) do
+    --        table.insert(keyset, k)
+    --    end
+    --
+    --    local added = {}
+    --    local spammedNr = 1
+    --    for _, _ in next, LFT.group do
+    --        local newD = keyset[math.random(LFT.tableSize(keyset))]
+    --        if not added[newD] then
+    --            added[newD] = true
+    --            if spammedNr <= DEV_MAX_DUNGEONS_TO_SPAM then
+    --                SendChatMessage('LFG:' .. newD .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+    --                spammedNr = spammedNr + 1
+    --            end
+    --        else
+    --        end
+    --    end
 
     --v2
     local lfg_text = ''
-    for code, data in pairs(LFT.group) do
---        if math.random(0, 1) == 1 then
---            SendChatMessage('LFG:' .. code .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
---        ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
---            'LFG:' .. code .. ':' .. LFT_ROLE,
---            "CHANNEL",
---            DEFAULT_CHAT_FRAME.editBox.languageID,
---            GetChannelName(LFT.channel))
---        end
+    for code, _ in pairs(LFT.group) do
+        --        if math.random(0, 1) == 1 then
+        --            SendChatMessage('LFG:' .. code .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+        --        ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
+        --            'LFG:' .. code .. ':' .. LFT_ROLE,
+        --            "CHANNEL",
+        --            DEFAULT_CHAT_FRAME.editBox.languageID,
+        --            GetChannelName(LFT.channel))
+        --        end
         lfg_text = 'LFG:' .. code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
     end
     lfg_text = string.sub(lfg_text, 1, string.len(lfg_text) - 1)
     ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
-        lfg_text,
-        "CHANNEL",
-        DEFAULT_CHAT_FRAME.editBox.languageID,
-        GetChannelName(LFT.channel))
+            lfg_text,
+            "CHANNEL",
+            DEFAULT_CHAT_FRAME.editBox.languageID,
+            GetChannelName(LFT.channel))
 end
 
 function LFT.isNeededInLFMGroup(role, name, code)
@@ -2160,47 +2289,75 @@ function LFT.inviteInLFMGroup(name)
 end
 
 function LFT.checkLFMGroupReady(code)
-    if not LFT.isLeader then return end
+    if not LFT.isLeader then
+        return
+    end
 
     local members = 0
 
-    if LFT.group[code].tank ~= '' then members = members + 1 end
-    if LFT.group[code].healer ~= '' then members = members + 1 end
-    if LFT.group[code].damage1 ~= '' then members = members + 1 end
-    if LFT.group[code].damage2 ~= '' then members = members + 1 end
-    if LFT.group[code].damage3 ~= '' then members = members + 1 end
+    if LFT.group[code].tank ~= '' then
+        members = members + 1
+    end
+    if LFT.group[code].healer ~= '' then
+        members = members + 1
+    end
+    if LFT.group[code].damage1 ~= '' then
+        members = members + 1
+    end
+    if LFT.group[code].damage2 ~= '' then
+        members = members + 1
+    end
+    if LFT.group[code].damage3 ~= '' then
+        members = members + 1
+    end
 
-    return members == DEV_GROUP_SIZE
+    return members == LFT.groupSizeMax
 end
 
 function LFT.sendMinimapDataToParty(code)
-    if code == '' then return false end
+    if code == '' then
+        return false
+    end
     local tank, healer, damage = 0, 0, 0
-    if LFT.group[code].tank ~= '' then tank = tank + 1 end
-    if LFT.group[code].healer ~= '' then healer = healer + 1 end
-    if LFT.group[code].damage1 ~= '' then damage = damage + 1 end
-    if LFT.group[code].damage2 ~= '' then damage = damage + 1 end
-    if LFT.group[code].damage3 ~= '' then damage = damage + 1 end
+    if LFT.group[code].tank ~= '' then
+        tank = tank + 1
+    end
+    if LFT.group[code].healer ~= '' then
+        healer = healer + 1
+    end
+    if LFT.group[code].damage1 ~= '' then
+        damage = damage + 1
+    end
+    if LFT.group[code].damage2 ~= '' then
+        damage = damage + 1
+    end
+    if LFT.group[code].damage3 ~= '' then
+        damage = damage + 1
+    end
     SendAddonMessage(LFT_ADDON_CHANNEL, "minimap:" .. code .. ":" .. tank .. ":" .. healer .. ":" .. damage, "PARTY")
 end
 
 function LFT.addOnEnterTooltip(frame, title, text1, text2)
-    frame:SetScript("OnEnter", function(self)
+    frame:SetScript("OnEnter", function()
         GameTooltip:SetOwner(this, "ANCHOR_RIGHT", -200, -5)
         GameTooltip:AddLine(title)
-        if text1 then GameTooltip:AddLine(text1, 1, 1, 1) end
-        if text2 then GameTooltip:AddLine(text2, 1, 1, 1) end
+        if text1 then
+            GameTooltip:AddLine(text1, 1, 1, 1)
+        end
+        if text2 then
+            GameTooltip:AddLine(text2, 1, 1, 1)
+        end
         GameTooltip:Show()
     end)
-    frame:SetScript("OnLeave", function(self)
+    frame:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
 end
 
 function LFT.removeOnEnterTooltip(frame)
-    frame:SetScript("OnEnter", function(self)
+    frame:SetScript("OnEnter", function()
     end)
-    frame:SetScript("OnLeave", function(self)
+    frame:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
 end
@@ -2213,18 +2370,30 @@ function LFT.sendMyVersion()
 end
 
 function LFT.removePlayerFromVirtualParty(name, mRole)
-    if not mRole then mRole = 'unknown' end
+    if not mRole then
+        mRole = 'unknown'
+    end
     for dungeonCode, data in next, LFT.group do
-        if data.tank == name and (mRole == 'tank' or mRole == 'unknown') then LFT.group[dungeonCode].tank = '' end
-        if data.healer == name and (mRole == 'healer' or mRole == 'unknown') then LFT.group[dungeonCode].healer = '' end
-        if data.damage1 == name and (mRole == 'damage' or mRole == 'unknown') then LFT.group[dungeonCode].damage1 = '' end
-        if data.damage2 == name and (mRole == 'damage' or mRole == 'unknown') then LFT.group[dungeonCode].damage2 = '' end
-        if data.damage3 == name and (mRole == 'damage' or mRole == 'unknown') then LFT.group[dungeonCode].damage3 = '' end
+        if data.tank == name and (mRole == 'tank' or mRole == 'unknown') then
+            LFT.group[dungeonCode].tank = ''
+        end
+        if data.healer == name and (mRole == 'healer' or mRole == 'unknown') then
+            LFT.group[dungeonCode].healer = ''
+        end
+        if data.damage1 == name and (mRole == 'damage' or mRole == 'unknown') then
+            LFT.group[dungeonCode].damage1 = ''
+        end
+        if data.damage2 == name and (mRole == 'damage' or mRole == 'unknown') then
+            LFT.group[dungeonCode].damage2 = ''
+        end
+        if data.damage3 == name and (mRole == 'damage' or mRole == 'unknown') then
+            LFT.group[dungeonCode].damage3 = ''
+        end
     end
 end
 
 function LFT.deQueueAll()
-    for dungeon, data in next, LFT.dungeons do
+    for _, data in next, LFT.dungeons do
         if data.queued then
             LFT.dungeons[data.code].queued = false
         end
@@ -2233,41 +2402,41 @@ end
 
 function LFT.resetFormedGroups()
     LFT_FORMED_GROUPS = {}
-    for dungeon, data in next, LFT.dungeons do
+    for _, data in next, LFT.dungeons do
         LFT_FORMED_GROUPS[data.code] = 0
     end
 end
 
 function LFT.readyStatusReset()
-    getglobal('LFTReadyStatusReadyTank'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
-    getglobal('LFTReadyStatusReadyHealer'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
-    getglobal('LFTReadyStatusReadyDamage1'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
-    getglobal('LFTReadyStatusReadyDamage1'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
-    getglobal('LFTReadyStatusReadyDamage1'):SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
+    _G['LFTReadyStatusReadyTank']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
+    _G['LFTReadyStatusReadyHealer']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
+    _G['LFTReadyStatusReadyDamage1']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
+    _G['LFTReadyStatusReadyDamage1']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
+    _G['LFTReadyStatusReadyDamage1']:SetTexture('Interface\\addons\\LFT\\images\\readycheck-waiting')
 end
 
 function test_dung_ob()
     LFT.showDungeonObjectives()
 end
 
-local dungIndex = 1
+--local dungIndex = 1
 
 function LFT.showDungeonObjectives()
     --dev
---    local j = 0
---    for dungeon, data in next, LFT.dungeons do
---        j = j + 1
---        if j == dungIndex then
---            LFT.groupFullCode = data.code --dev
---        end
---    end
---
---    local dungeonName, iconCode = LFT.dungeonNameFromCode(LFT.groupFullCode)
---    getglobal('LFTDungeonCompleteIcon'):SetTexture('Interface\\addons\\LFT\\images\\icon\\lfgicon-' .. iconCode)
---    getglobal('LFTDungeonCompleteDungeonName'):SetText(dungeonName)
---    LFTDungeonComplete:Show()
---
---    dungIndex = dungIndex + 1
+    --    local j = 0
+    --    for dungeon, data in next, LFT.dungeons do
+    --        j = j + 1
+    --        if j == dungIndex then
+    --            LFT.groupFullCode = data.code --dev
+    --        end
+    --    end
+    --
+    --    local dungeonName, iconCode = LFT.dungeonNameFromCode(LFT.groupFullCode)
+    --    _G['LFTDungeonCompleteIcon'):SetTexture('Interface\\addons\\LFT\\images\\icon\\lfgicon-' .. iconCode)
+    --    _G['LFTDungeonCompleteDungeonName'):SetText(dungeonName)
+    --    LFTDungeonComplete:Show()
+    --
+    --    dungIndex = dungIndex + 1
     --    LFT.groupFullCode = 'stratlive' --dev
     --    end dev
 
@@ -2277,42 +2446,42 @@ function LFT.showDungeonObjectives()
 
     --hideall
     for index, _ in next, LFT.objectivesFrames do
-        if getglobal("LFTObjective" .. index) then
-            getglobal("LFTObjective" .. index):Hide()
+        if _G["LFTObjective" .. index] then
+            _G["LFTObjective" .. index]:Hide()
         end
     end
 
     if LFT.dungeons[dungeonName] then
         if LFT.bosses[LFT.groupFullCode] then
-            getglobal('LFTDungeonStatusDungeonName'):SetText(dungeonName)
+            _G['LFTDungeonStatusDungeonName']:SetText(dungeonName)
 
             local index = 0
-            for code, boss in next, LFT.bosses[LFT.groupFullCode] do
+            for _, boss in next, LFT.bosses[LFT.groupFullCode] do
                 index = index + 1
                 if not LFT.objectivesFrames[index] then
-                    LFT.objectivesFrames[index] = CreateFrame("Frame", "LFTObjective" .. index, getglobal('LFTDungeonStatus'), "LFTObjectiveBossTemplate")
+                    LFT.objectivesFrames[index] = CreateFrame("Frame", "LFTObjective" .. index, _G['LFTDungeonStatus'], "LFTObjectiveBossTemplate")
                 end
                 LFT.objectivesFrames[index]:Show()
                 LFT.objectivesFrames[index].name = boss
                 LFT.objectivesFrames[index].code = LFT.groupFullCode
                 LFT.objectivesFrames[index].completed = false
 
-                getglobal("LFTObjective" .. index .. 'Swoosh'):SetAlpha(0)
-                getglobal("LFTObjective" .. index .. 'ObjectiveComplete'):Hide()
-                getglobal("LFTObjective" .. index .. 'ObjectivePending'):Show()
-                getglobal("LFTObjective" .. index .. 'Objective'):SetText(COLOR_DISABLED .. '0/1 ' .. boss .. ' defeated')
+                _G["LFTObjective" .. index .. 'Swoosh']:SetAlpha(0)
+                _G["LFTObjective" .. index .. 'ObjectiveComplete']:Hide()
+                _G["LFTObjective" .. index .. 'ObjectivePending']:Show()
+                _G["LFTObjective" .. index .. 'Objective']:SetText(COLOR_DISABLED .. '0/1 ' .. boss .. ' defeated')
 
-                LFT.objectivesFrames[index]:SetPoint("TOPLEFT", getglobal("LFTDungeonStatus"), "TOPLEFT", 10, -110 - 20 * (index))
+                LFT.objectivesFrames[index]:SetPoint("TOPLEFT", _G["LFTDungeonStatus"], "TOPLEFT", 10, -110 - 20 * (index))
             end
 
-            getglobal("LFTDungeonStatusCollapseButton"):Show()
-            getglobal("LFTDungeonStatusExpandButton"):Hide()
-            getglobal("LFTDungeonStatus"):Show()
+            _G["LFTDungeonStatusCollapseButton"]:Show()
+            _G["LFTDungeonStatusExpandButton"]:Hide()
+            _G["LFTDungeonStatus"]:Show()
         else
-            getglobal("LFTDungeonStatus"):Hide()
+            _G["LFTDungeonStatus"]:Hide()
         end
     else
-        getglobal("LFTDungeonStatus"):Hide()
+        _G["LFTDungeonStatus"]:Hide()
     end
 end
 
@@ -2324,13 +2493,13 @@ end
 
 function acceptRole()
     SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
---    getglobal('LFTRoleCheck'):Hide() --moved in hide
+    --    _G['LFTRoleCheck'):Hide() --moved in hide
     LFTRoleCheck:Hide()
 end
 
 function declineRole()
     SendAddonMessage(LFT_ADDON_CHANNEL, "declineRole:", "PARTY")
---    getglobal('LFTRoleCheck'):Hide() --move in hide
+    --    _G['LFTRoleCheck'):Hide() --move in hide
     LFTRoleCheck:Hide()
 end
 
@@ -2338,25 +2507,25 @@ function LFT_Toggle()
     if LFT.level == 0 then
         LFT.level = UnitLevel('player')
     end
-    if getglobal('LFTMain'):IsVisible() then
-        getglobal('LFTMain'):Hide()
+    if _G['LFTMain']:IsVisible() then
+        _G['LFTMain']:Hide()
     else
         LFT.checkLFTChannel()
         if not LFT.findingGroup then
             LFT.fillAvailableDungeons()
         end
 
-        getglobal('LFTMain'):Show()
+        _G['LFTMain']:Show()
         DungeonListFrame_Update()
     end
 end
 
 function sayReady()
     if LFT.inGroup then
-        getglobal('LFTGroupReady'):Hide()
+        _G['LFTGroupReady']:Hide()
         SendAddonMessage(LFT_ADDON_CHANNEL, "readyAs:" .. LFT_ROLE, "PARTY")
-        getglobal('LFT_MinimapEye'):SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking0')
-        getglobal('LFTReadyStatus'):Show()
+        _G['LFT_MinimapEye']:SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking0')
+        _G['LFTReadyStatus']:Show()
         LFTGroupReadyFrameCloser.response = 'ready'
     end
 end
@@ -2367,23 +2536,23 @@ end
 
 function sayNotReady()
     if LFT.inGroup then
-        getglobal('LFTGroupReady'):Hide()
+        _G['LFTGroupReady']:Hide()
         SendAddonMessage(LFT_ADDON_CHANNEL, "notReadyAs:" .. LFT_ROLE, "PARTY")
-        getglobal('LFT_MinimapEye'):SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking0')
-        getglobal('LFTReadyStatus'):Show()
+        _G['LFT_MinimapEye']:SetTexture('Interface\\Addons\\LFT\\images\\eye\\battlenetworking0')
+        _G['LFTReadyStatus']:Show()
         LFTGroupReadyFrameCloser.response = 'notReady'
     end
 end
 
 function LFTsetRole(role, status, readyCheck)
-    local tankCheck = getglobal('RoleTank')
-    local healerCheck = getglobal('RoleHealer')
-    local damageCheck = getglobal('RoleDamage')
+    local tankCheck = _G['RoleTank']
+    local healerCheck = _G['RoleHealer']
+    local damageCheck = _G['RoleDamage']
 
     --ready check window
-    local readyCheckTank = getglobal('roleCheckTank')
-    local readyCheckHealer = getglobal('roleCheckHealer')
-    local readyCheckDamage = getglobal('roleCheckDamage')
+    local readyCheckTank = _G['roleCheckTank']
+    local readyCheckHealer = _G['roleCheckHealer']
+    local readyCheckDamage = _G['roleCheckDamage']
 
     if role == 'tank' then
         readyCheckHealer:SetChecked(false)
@@ -2391,7 +2560,9 @@ function LFTsetRole(role, status, readyCheck)
 
         readyCheckDamage:SetChecked(false)
         damageCheck:SetChecked(false)
-        if not status and not readyCheck then tankCheck:SetChecked(true) end
+        if not status and not readyCheck then
+            tankCheck:SetChecked(true)
+        end
     end
     if role == 'healer' then
         readyCheckTank:SetChecked(false)
@@ -2399,7 +2570,9 @@ function LFTsetRole(role, status, readyCheck)
 
         readyCheckDamage:SetChecked(false)
         damageCheck:SetChecked(false)
-        if not status and not readyCheck then healerCheck:SetChecked(true) end
+        if not status and not readyCheck then
+            healerCheck:SetChecked(true)
+        end
     end
     if role == 'damage' then
         readyCheckTank:SetChecked(false)
@@ -2407,7 +2580,9 @@ function LFTsetRole(role, status, readyCheck)
 
         readyCheckHealer:SetChecked(false)
         healerCheck:SetChecked(false)
-        if not status and not readyCheck then damageCheck:SetChecked(true) end
+        if not status and not readyCheck then
+            damageCheck:SetChecked(true)
+        end
     end
 
     if readyCheck then
@@ -2423,7 +2598,7 @@ function LFTsetRole(role, status, readyCheck)
 end
 
 function DungeonListFrame_Update()
-    local offset = FauxScrollFrame_GetOffset(getglobal('DungeonListScrollFrame'));
+    local offset = FauxScrollFrame_GetOffset(_G['DungeonListScrollFrame']);
     LFT.fillAvailableDungeons(offset)
 end
 
@@ -2434,12 +2609,12 @@ end
 
 function DungeonType_OnClick(a)
     LFT_TYPE = a
-    UIDropDownMenu_SetText(LFT.types[LFT_TYPE], getglobal('LFTTypeSelect'))
-    getglobal('LFTDungeonsText'):SetText(LFT.types[LFT_TYPE])
+    UIDropDownMenu_SetText(LFT.types[LFT_TYPE], _G['LFTTypeSelect'])
+    _G['LFTDungeonsText']:SetText(LFT.types[LFT_TYPE])
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
-            if getglobal("Dungeon_" .. data.code) then
-                getglobal("Dungeon_" .. data.code):SetChecked(false)
+            if _G["Dungeon_" .. data.code] then
+                _G["Dungeon_" .. data.code]:SetChecked(false)
             end
             LFT.dungeons[dungeon].queued = false
         end
@@ -2462,26 +2637,36 @@ function DungeonType_Initialize()
 end
 
 function LFT_HideMinimap()
-    for i, f in LFT.minimapFrames do
+    for i, _ in LFT.minimapFrames do
         LFT.minimapFrames[i]:Hide()
     end
-    getglobal('LFTGroupStatus'):Hide()
+    _G['LFTGroupStatus']:Hide()
 end
 
 function LFT_ShowMinimap()
 
     if LFT.findingGroup or LFT.findingMore then
         local dungeonIndex = 0
-        for dungeonCode, data in next, LFT.group do
+        for dungeonCode, _ in next, LFT.group do
             local tank = 0
             local healer = 0
             local damage = 0
 
-            if LFT.group[dungeonCode].tank ~= '' or (not LFT.inGroup and LFT_ROLE == 'tank') then tank = tank + 1 end
-            if LFT.group[dungeonCode].healer ~= '' or (not LFT.inGroup and LFT_ROLE == 'healer') then healer = healer + 1 end
-            if LFT.group[dungeonCode].damage1 ~= '' or (not LFT.inGroup and LFT_ROLE == 'damage') then damage = damage + 1 end
-            if LFT.group[dungeonCode].damage2 ~= '' then damage = damage + 1 end
-            if LFT.group[dungeonCode].damage3 ~= '' then damage = damage + 1 end
+            if LFT.group[dungeonCode].tank ~= '' or (not LFT.inGroup and LFT_ROLE == 'tank') then
+                tank = tank + 1
+            end
+            if LFT.group[dungeonCode].healer ~= '' or (not LFT.inGroup and LFT_ROLE == 'healer') then
+                healer = healer + 1
+            end
+            if LFT.group[dungeonCode].damage1 ~= '' or (not LFT.inGroup and LFT_ROLE == 'damage') then
+                damage = damage + 1
+            end
+            if LFT.group[dungeonCode].damage2 ~= '' then
+                damage = damage + 1
+            end
+            if LFT.group[dungeonCode].damage3 ~= '' then
+                damage = damage + 1
+            end
 
             if not LFT.minimapFrames[dungeonCode] then
                 LFT.minimapFrames[dungeonCode] = CreateFrame('Frame', "LFTMinimap_" .. dungeonCode, UIParent, "LFTMinimapDungeonTemplate")
@@ -2497,37 +2682,37 @@ function LFT_ShowMinimap()
             end
 
             LFT.minimapFrames[dungeonCode]:Show()
-            LFT.minimapFrames[dungeonCode]:SetPoint("TOP", getglobal("LFTGroupStatus"), "TOP", 0, -25 - 46 * (dungeonIndex))
-            getglobal('LFTMinimap_' .. dungeonCode .. 'Background'):SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
-            getglobal('LFTMinimap_' .. dungeonCode .. 'DungeonName'):SetText(dungeonName)
+            LFT.minimapFrames[dungeonCode]:SetPoint("TOP", _G["LFTGroupStatus"], "TOP", 0, -25 - 46 * (dungeonIndex))
+            _G['LFTMinimap_' .. dungeonCode .. 'Background']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
+            _G['LFTMinimap_' .. dungeonCode .. 'DungeonName']:SetText(dungeonName)
 
-            getglobal('LFTMinimap_' .. dungeonCode .. 'MyRole'):SetTexture('Interface\\addons\\LFT\\images\\ready_' .. LFT_ROLE)
+            _G['LFTMinimap_' .. dungeonCode .. 'MyRole']:SetTexture('Interface\\addons\\LFT\\images\\ready_' .. LFT_ROLE)
 
             if tank == 0 then
-                getglobal('LFTMinimap_' .. dungeonCode .. 'ReadyIconTank'):SetDesaturated(1)
+                _G['LFTMinimap_' .. dungeonCode .. 'ReadyIconTank']:SetDesaturated(1)
             end
             if healer == 0 then
-                getglobal('LFTMinimap_' .. dungeonCode .. 'ReadyIconHealer'):SetDesaturated(1)
+                _G['LFTMinimap_' .. dungeonCode .. 'ReadyIconHealer']:SetDesaturated(1)
             end
             if damage == 0 then
-                getglobal('LFTMinimap_' .. dungeonCode .. 'ReadyIconDamage'):SetDesaturated(1)
+                _G['LFTMinimap_' .. dungeonCode .. 'ReadyIconDamage']:SetDesaturated(1)
             end
-            getglobal('LFTMinimap_' .. dungeonCode .. 'NrTank'):SetText(tank .. '/1')
-            getglobal('LFTMinimap_' .. dungeonCode .. 'NrHealer'):SetText(healer .. '/1')
-            getglobal('LFTMinimap_' .. dungeonCode .. 'NrDamage'):SetText(damage .. '/3')
+            _G['LFTMinimap_' .. dungeonCode .. 'NrTank']:SetText(tank .. '/1')
+            _G['LFTMinimap_' .. dungeonCode .. 'NrHealer']:SetText(healer .. '/1')
+            _G['LFTMinimap_' .. dungeonCode .. 'NrDamage']:SetText(damage .. '/3')
 
             dungeonIndex = dungeonIndex + 1
         end
 
-        getglobal('LFTGroupStatus'):SetPoint("TOPRIGHT", getglobal("LFT_Minimap"), "BOTTOMLEFT", 0, 40)
-        getglobal('LFTGroupStatus'):SetHeight(dungeonIndex * 46 + 95)
-        getglobal('LFTGroupStatusTimeInQueue'):SetText('Time in Queue: ' .. SecondsToTime(time() - LFT.queueStartTime))
+        _G['LFTGroupStatus']:SetPoint("TOPRIGHT", _G["LFT_Minimap"], "BOTTOMLEFT", 0, 40)
+        _G['LFTGroupStatus']:SetHeight(dungeonIndex * 46 + 95)
+        _G['LFTGroupStatusTimeInQueue']:SetText('Time in Queue: ' .. SecondsToTime(time() - LFT.queueStartTime))
         if LFT.averageWaitTime == 0 then
-            getglobal('LFTGroupStatusAverageWaitTime'):SetText('Average Wait Time: Unavailable')
+            _G['LFTGroupStatusAverageWaitTime']:SetText('Average Wait Time: Unavailable')
         else
-            getglobal('LFTGroupStatusAverageWaitTime'):SetText('Average Wait Time: ' .. SecondsToTimeAbbrev(LFT.averageWaitTime))
+            _G['LFTGroupStatusAverageWaitTime']:SetText('Average Wait Time: ' .. SecondsToTimeAbbrev(LFT.averageWaitTime))
         end
-        getglobal('LFTGroupStatus'):Show()
+        _G['LFTGroupStatus']:Show()
     else
 
         GameTooltip:SetOwner(this, "ANCHOR_LEFT", 0, -90)
@@ -2538,16 +2723,18 @@ function LFT_ShowMinimap()
     end
 end
 
-function queueForFromButton(Bcode)
+function queueForFromButton(bCode)
 
-    if true then return false end --dev, disabled for now
+    if true then
+        return false
+    end --dev, disabled for now
 
-    local codeEx = string.split(Bcode, '_')
-    local Qcode = codeEx[2]
+    local codeEx = string.split(bCode, '_')
+    local qCode = codeEx[2]
     for code, data in next, LFT.availableDungeons do
-        if code == Qcode and not LFT.findingGroup then
-            getglobal('Dungeon_' .. data.code):SetChecked(not getglobal('Dungeon_' .. data.code):GetChecked())
-            queueFor(Bcode, getglobal('Dungeon_' .. data.code):GetChecked())
+        if code == qCode and not LFT.findingGroup then
+            _G['Dungeon_' .. data.code]:SetChecked(not _G['Dungeon_' .. data.code]:GetChecked())
+            queueFor(bCode, _G['Dungeon_' .. data.code]:GetChecked())
         end
     end
 end
@@ -2567,25 +2754,27 @@ function queueFor(name, status)
     end
 
     local queues = 0
-    for dungeon, data in next, LFT.dungeons do
-        if data.queued then queues = queues + 1 end
+    for _, data in next, LFT.dungeons do
+        if data.queued then
+            queues = queues + 1
+        end
     end
 
     if queues == 1 and LFT.inGroup then
         LFT.LFMDungeonCode = dungeonCode
-        LFT.disableDungeonCheckbuttons(dungeonCode)
+        LFT.disableDungeonCheckButtons(dungeonCode)
     else
-        LFT.enableDungeonCheckbuttons()
-        if queues >= DEV_MAX_DUNGEONS_TO_QUEUE then
+        LFT.enableDungeonCheckButtons()
+        if queues >= LFT.maxDungeonsInQueue then
 
-            for i, frame in next, LFT.availableDungeons do
+            for _, frame in next, LFT.availableDungeons do
                 local dungeonName = LFT.dungeonNameFromCode(frame.code)
                 if not LFT.dungeons[dungeonName].queued then
-                    getglobal("Dungeon_" .. frame.code):Disable()
-                    getglobal('Dungeon_' .. frame.code .. 'Text'):SetText(COLOR_DISABLED .. dungeonName)
-                    getglobal('Dungeon_' .. frame.code .. 'Levels'):SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
-                    LFT.addOnEnterTooltip(getglobal('Dungeon_' .. frame.code .. '_Button'), 'Queueing for ' .. dungeonName .. ' is unavailable',
-                        'Maximum allowed queued dungeons at a time is ' .. DEV_MAX_DUNGEONS_TO_QUEUE .. '.')
+                    _G["Dungeon_" .. frame.code]:Disable()
+                    _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
+                    _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
+                    LFT.addOnEnterTooltip(_G['Dungeon_' .. frame.code .. '_Button'], 'Queueing for ' .. dungeonName .. ' is unavailable',
+                            'Maximum allowed queued dungeons at a time is ' .. LFT.maxDungeonsInQueue .. '.')
                 end
             end
         end
@@ -2597,8 +2786,8 @@ function findMore()
 
     -- find queueing dungeon
     local qDungeon = ''
-    for i, frame in next, LFT.availableDungeons do
-        if getglobal("Dungeon_" .. frame.code):GetChecked() then
+    for _, frame in next, LFT.availableDungeons do
+        if _G["Dungeon_" .. frame.code]:GetChecked() then
             qDungeon = frame.code
         end
     end
@@ -2616,40 +2805,46 @@ function findGroup()
     LFT.findingGroup = true
     LFTQueue:Show()
 
-    LFT.disableDungeonCheckbuttons()
+    LFT.disableDungeonCheckButtons()
 
-    getglobal('RoleTank'):Disable()
-    getglobal('RoleHealer'):Disable()
-    getglobal('RoleDamage'):Disable()
+    _G['RoleTank']:Disable()
+    _G['RoleHealer']:Disable()
+    _G['RoleDamage']:Disable()
 
     PlaySound('PvpEnterQueue')
 
     local dungeonsText = ''
 
     local roleColor = ''
-    if LFT_ROLE == 'tank' then roleColor = COLOR_TANK end
-    if LFT_ROLE == 'healer' then roleColor = COLOR_HEALER end
-    if LFT_ROLE == 'damage' then roleColor = COLOR_DAMAGE end
+    if LFT_ROLE == 'tank' then
+        roleColor = COLOR_TANK
+    end
+    if LFT_ROLE == 'healer' then
+        roleColor = COLOR_HEALER
+    end
+    if LFT_ROLE == 'damage' then
+        roleColor = COLOR_DAMAGE
+    end
 
     local lfg_text = ''
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
             dungeonsText = dungeonsText .. dungeon .. ', '
---            SendChatMessage('LFG:' .. data.code .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
---            ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
---                'LFG:' .. data.code .. ':' .. LFT_ROLE,
---                "CHANNEL",
---                DEFAULT_CHAT_FRAME.editBox.languageID,
---                GetChannelName(LFT.channel))
+            --            SendChatMessage('LFG:' .. data.code .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+            --            ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
+            --                'LFG:' .. data.code .. ':' .. LFT_ROLE,
+            --                "CHANNEL",
+            --                DEFAULT_CHAT_FRAME.editBox.languageID,
+            --                GetChannelName(LFT.channel))
             lfg_text = 'LFG:' .. data.code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
         end
     end
     lfg_text = string.sub(lfg_text, 1, string.len(lfg_text) - 1)
     ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
-        lfg_text,
-        "CHANNEL",
-        DEFAULT_CHAT_FRAME.editBox.languageID,
-        GetChannelName(LFT.channel))
+            lfg_text,
+            "CHANNEL",
+            DEFAULT_CHAT_FRAME.editBox.languageID,
+            GetChannelName(LFT.channel))
 
     dungeonsText = string.sub(dungeonsText, 1, string.len(dungeonsText) - 2)
     lfprint('You are in the queue for |cff69ccf0' .. dungeonsText ..
@@ -2663,9 +2858,9 @@ end
 
 function leaveQueue()
 
-    getglobal('LFTGroupReady'):Hide()
-    getglobal("LFTDungeonStatus"):Hide()
-    getglobal('LFTRoleCheck'):Hide()
+    _G['LFTGroupReady']:Hide()
+    _G["LFTDungeonStatus"]:Hide()
+    _G['LFTRoleCheck']:Hide()
 
     LFTGroupReadyFrameCloser:Hide()
     LFTGroupReadyFrameCloser.response = ''
@@ -2675,11 +2870,26 @@ function leaveQueue()
 
     local dungeonsText = ''
 
+    --local color = COLOR_GREEN
+    --if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
+    --    color = COLOR_RED
+    --end
+    --if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
+    --    color = COLOR_ORANGE
+    --end
+    --if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
+    --    color = COLOR_GREEN
+    --end
+    --
+    --if LFT.level > data.maxLevel then
+    --    color = COLOR_GREEN
+    --end
+
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
             --            if LFT_TYPE == 2 then --random dungeon, dont uncheck if it comes here from the button
-            if getglobal("Dungeon_" .. data.code) then
-                getglobal("Dungeon_" .. data.code):SetChecked(false)
+            if _G["Dungeon_" .. data.code] then
+                _G["Dungeon_" .. data.code]:SetChecked(false)
             end
             LFT.dungeons[dungeon].queued = false
             dungeonsText = dungeonsText .. dungeon .. ', '
@@ -2705,20 +2915,21 @@ function leaveQueue()
         LFT.findingMore = false
     end
 
-    LFT.enableDungeonCheckbuttons()
+    LFT.enableDungeonCheckButtons()
 
     LFT.GetPossibleRoles()
     LFTsetRole(LFT_ROLE)
 
     if LFT.LFMDungeonCode ~= '' then
-        if getglobal("Dungeon_" .. LFT.LFMDungeonCode) then
-            getglobal("Dungeon_" .. LFT.LFMDungeonCode):SetChecked(true)
+        if _G["Dungeon_" .. LFT.LFMDungeonCode] then
+            _G["Dungeon_" .. LFT.LFMDungeonCode]:SetChecked(true)
             LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].queued = true
         end
-        --        LFT.enableDungeonCheckbuttons()
+        --        LFT.enableDungeonCheckButtons()
     end
 
-    LFT.fixMainButton()
+    DungeonListFrame_Update()
+    --LFT.fixMainButton() --disabled, DungeonListFrame_Update() fillAvailableDungeons, which calls fixMainButton
 end
 
 function LFTObjectives.objectiveComplete(bossName, dontSendToAll)
@@ -2731,9 +2942,9 @@ function LFTObjectives.objectiveComplete(bossName, dontSendToAll)
 
                 LFTObjectives.objectivesComplete = LFTObjectives.objectivesComplete + 1
 
-                getglobal("LFTObjective" .. index .. 'ObjectiveComplete'):Show()
-                getglobal("LFTObjective" .. index .. 'ObjectivePending'):Hide()
-                getglobal("LFTObjective" .. index .. 'Objective'):SetText(COLOR_WHITE .. '1/1 ' .. bossName .. ' defeated')
+                _G["LFTObjective" .. index .. 'ObjectiveComplete']:Show()
+                _G["LFTObjective" .. index .. 'ObjectivePending']:Hide()
+                _G["LFTObjective" .. index .. 'Objective']:SetText(COLOR_WHITE .. '1/1 ' .. bossName .. ' defeated')
 
                 LFTObjectives.lastObjective = index
                 LFTObjectives:Show()
@@ -2758,8 +2969,8 @@ function LFTObjectives.objectiveComplete(bossName, dontSendToAll)
         local dungeonName, iconCode = LFT.dungeonNameFromCode(code)
         if LFTObjectives.objectivesComplete == LFT.tableSize(LFT.objectivesFrames) or
                 (code == 'brdarena' and LFTObjectives.objectivesComplete == 1) then
-            getglobal('LFTDungeonCompleteIcon'):SetTexture('Interface\\addons\\LFT\\images\\icon\\lfgicon-' .. iconCode)
-            getglobal('LFTDungeonCompleteDungeonName'):SetText(dungeonName)
+            _G['LFTDungeonCompleteIcon']:SetTexture('Interface\\addons\\LFT\\images\\icon\\lfgicon-' .. iconCode)
+            _G['LFTDungeonCompleteDungeonName']:SetText(dungeonName)
             LFTDungeonComplete:Show()
         end
     end
@@ -2768,17 +2979,17 @@ end
 function toggleDungeonStatus_OnClick()
     LFTObjectives.collapsed = not LFTObjectives.collapsed
     if LFTObjectives.collapsed then
-        getglobal("LFTDungeonStatusCollapseButton"):Hide()
-        getglobal("LFTDungeonStatusExpandButton"):Show()
+        _G["LFTDungeonStatusCollapseButton"]:Hide()
+        _G["LFTDungeonStatusExpandButton"]:Show()
     else
-        getglobal("LFTDungeonStatusCollapseButton"):Show()
-        getglobal("LFTDungeonStatusExpandButton"):Hide()
+        _G["LFTDungeonStatusCollapseButton"]:Show()
+        _G["LFTDungeonStatusExpandButton"]:Hide()
     end
     for index, _ in next, LFT.objectivesFrames do
         if LFTObjectives.collapsed then
-            getglobal("LFTObjective" .. index):Hide()
+            _G["LFTObjective" .. index]:Hide()
         else
-            getglobal("LFTObjective" .. index):Show()
+            _G["LFTObjective" .. index]:Show()
         end
     end
 end
@@ -2804,17 +3015,19 @@ SlashCmdList["LFT"] = function(cmd)
         end
         if string.sub(cmd, 1, 12) == 'formedgroups' then
             for code, number in next, LFT_FORMED_GROUPS do
-                if number ~= 0 then lfprint(number .. ' - ' .. LFT.dungeonNameFromCode(code)) end
+                if number ~= 0 then
+                    lfprint(number .. ' - ' .. LFT.dungeonNameFromCode(code))
+                end
             end
         end
         if string.sub(cmd, 1, 5) == 'debug' then
             LFT_DEBUG = not LFT_DEBUG
             if LFT_DEBUG then
                 lfprint('debug enabled')
-                getglobal('LFTTitleTime'):Show()
+                _G['LFTTitleTime']:Show()
             else
                 lfprint('debug disabled')
-                getglobal('LFTTitleTime'):Hide()
+                _G['LFTTitleTime']:Hide()
             end
         end
         if string.sub(cmd, 1, 9) == 'advertise' then
@@ -2855,7 +3068,7 @@ LFT.dungeons = {
     ['Temple of Atal\'Hakkar'] = { minLevel = 50, maxLevel = 60, code = 'st', queued = false, canQueue = true, background = 'sunkentemple' },
     ['Blackrock Depths'] = { minLevel = 52, maxLevel = 60, code = 'brd', queued = false, canQueue = true, background = 'blackrockdepths' },
     ['Blackrock Depths Arena'] = { minLevel = 52, maxLevel = 60, code = 'brdarena', queued = false, canQueue = true, background = 'blackrockdepths' },
-    ['Blackrock Depths Emperor Run'] = { minLevel = 52, maxLevel = 60, code = 'brdemp', queued = false, canQueue = true, background = 'blackrockdepths' },
+    ['Blackrock Depths Emperor'] = { minLevel = 52, maxLevel = 60, code = 'brdemp', queued = false, canQueue = true, background = 'blackrockdepths' },
     ['Lower Blackrock Spire'] = { minLevel = 55, maxLevel = 60, code = 'lbrs', queued = false, canQueue = true, background = 'blackrockspire' },
     ['Dire Maul East'] = { minLevel = 55, maxLevel = 60, code = 'dme', queued = false, canQueue = true, background = 'diremaul' },
     ['Dire Maul North'] = { minLevel = 57, maxLevel = 60, code = 'dmn', queued = false, canQueue = true, background = 'diremaul' },
