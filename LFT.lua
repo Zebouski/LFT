@@ -1,13 +1,11 @@
 local _G, _ = _G or getfenv()
 
-LFT = CreateFrame("Frame")
+local LFT = CreateFrame("Frame")
 local me = UnitName('player')
 local addonVer = '0.0.2.0'
 local LFT_ADDON_CHANNEL = 'LFT'
 --local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
 local groupsFormedThisSession = 0
-
-
 
 --one group LFM,    one tank lfg,  one dps lfg
 --see if lfm leader invites dps if tank from lfg picked dps, or dps picked the tank
@@ -86,7 +84,7 @@ local COLOR_HEALER = COLOR_GREEN
 local COLOR_DAMAGE = COLOR_RED
 
 -- dungeon complete animation
-LFTDungeonComplete = CreateFrame("Frame")
+local LFTDungeonComplete = CreateFrame("Frame")
 LFTDungeonComplete:Hide()
 LFTDungeonComplete.frameIndex = 0
 
@@ -131,7 +129,7 @@ LFTDungeonComplete:SetScript("OnUpdate", function()
 end)
 
 -- objectives
-LFTObjectives = CreateFrame("Frame")
+local LFTObjectives = CreateFrame("Frame")
 LFTObjectives:Hide()
 LFTObjectives:RegisterEvent("CHAT_MSG_COMBAT_HOSTILE_DEATH")
 LFTObjectives.collapsed = false
@@ -194,7 +192,7 @@ LFTObjectives:SetScript("OnEvent", function()
 end)
 
 -- fill available dungeons delayer because UnitLevel(member who just joined) returns 0
-LFTFillAvailableDungeonsDelay = CreateFrame("Frame")
+local LFTFillAvailableDungeonsDelay = CreateFrame("Frame")
 LFTFillAvailableDungeonsDelay.offset = 0
 LFTFillAvailableDungeonsDelay.triggers = 0
 LFTFillAvailableDungeonsDelay.queueAfterIfPossible = false
@@ -222,7 +220,7 @@ end)
 
 -- channel join delayer
 
-LFTChannelJoinDelay = CreateFrame("Frame")
+local LFTChannelJoinDelay = CreateFrame("Frame")
 LFTChannelJoinDelay:Hide()
 
 LFTChannelJoinDelay:SetScript("OnShow", function()
@@ -242,12 +240,12 @@ LFTChannelJoinDelay:SetScript("OnUpdate", function()
     end
 end)
 
-LFTQueue = CreateFrame("Frame")
+local LFTQueue = CreateFrame("Frame")
 LFTQueue:Hide()
 
 -- group invite timer
 
-LFTInvite = CreateFrame("Frame")
+local LFTInvite = CreateFrame("Frame")
 LFTInvite:Hide()
 LFTInvite.inviteIndex = 1
 LFTInvite:SetScript("OnShow", function()
@@ -294,7 +292,7 @@ end)
 
 -- role check timer
 
-LFTRoleCheck = CreateFrame("Frame")
+local LFTRoleCheck = CreateFrame("Frame")
 LFTRoleCheck:Hide()
 
 LFTRoleCheck:SetScript("OnShow", function()
@@ -307,6 +305,7 @@ LFTRoleCheck:SetScript("OnHide", function()
         else
             lfprint('A member of your group has not confirmed his role.')
             PlaySoundFile("Interface\\Addons\\LFT\\sound\\lfg_denied.ogg")
+            _G['findMoreButton']:Enable()
         end
     end
     _G['LFTRoleCheck']:Hide()
@@ -336,7 +335,7 @@ end)
 
 -- who counter timer
 
-LFTWhoCounter = CreateFrame("Frame")
+local LFTWhoCounter = CreateFrame("Frame")
 LFTWhoCounter:Hide()
 LFTWhoCounter.people = 0
 LFTWhoCounter.listening = false
@@ -363,7 +362,7 @@ LFTWhoCounter:SetScript("OnUpdate", function()
 end)
 
 --closes the group ready frame when someone leaves queue from the button
-LFTGroupReadyFrameCloser = CreateFrame("Frame")
+local LFTGroupReadyFrameCloser = CreateFrame("Frame")
 LFTGroupReadyFrameCloser:Hide()
 LFTGroupReadyFrameCloser.response = ''
 LFTGroupReadyFrameCloser:SetScript("OnShow", function()
@@ -401,7 +400,7 @@ end)
 
 -- communication
 
-LFTComms = CreateFrame("Frame")
+local LFTComms = CreateFrame("Frame")
 LFTComms:Hide()
 LFTComms:RegisterEvent("CHAT_MSG_CHANNEL")
 LFTComms:RegisterEvent("CHAT_MSG_WHISPER")
@@ -922,18 +921,23 @@ LFTComms:SetScript("OnEvent", function()
 
                             if LFT.isLeader then
                                 if mRole == 'tank' then
-                                    LFT.addTank(mDungeonCode, arg2) --todo cred ca trebuie if addtank then foundmessage
-                                    foundMessage = foundMessage .. 'found:tank:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                    if LFT.addTank(mDungeonCode, arg2) then
+                                        foundMessage = foundMessage .. 'found:tank:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                    end
                                 end
                                 if mRole == 'healer' then
-                                    LFT.addHealer(mDungeonCode, arg2)
-                                    foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                    if LFT.addHealer(mDungeonCode, arg2) then
+                                        foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                    end
                                 end
                                 if mRole == 'damage' then
-                                    LFT.addDamage(mDungeonCode, arg2)
-                                    foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                    if LFT.addDamage(mDungeonCode, arg2) then
+                                        foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                    end
                                 end
-                                SendChatMessage(foundMessage, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                                if foundMessage ~= '' then
+                                    SendChatMessage(foundMessage, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                                end
                                 return false
                             end
 
@@ -2498,7 +2502,7 @@ function acceptRole()
 end
 
 function declineRole()
-    SendAddonMessage(LFT_ADDON_CHANNEL, "declineRole:", "PARTY")
+    SendAddonMessage(LFT_ADDON_CHANNEL, "declineRole:" .. LFT_ROLE, "PARTY")
     --    _G['LFTRoleCheck'):Hide() --move in hide
     LFTRoleCheck:Hide()
 end
@@ -2797,6 +2801,9 @@ function findMore()
     SendAddonMessage(LFT_ADDON_CHANNEL, "roleCheck:" .. qDungeon, "PARTY")
 
     LFT.fixMainButton()
+
+    -- disable the button disable spam clicking it
+    _G['findMoreButton']:Disable()
 end
 
 function findGroup()
