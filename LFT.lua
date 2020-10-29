@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.2.0'
+local addonVer = '0.0.2.1'
 local LFT_ADDON_CHANNEL = 'LFT'
 --local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
 local groupsFormedThisSession = 0
