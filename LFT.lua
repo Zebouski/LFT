@@ -2812,10 +2812,17 @@ SlashCmdList["LFT"] = function(cmd)
             end
         end
         if string.sub(cmd, 1, 9) == 'advertise' then
-            SendChatMessage('I am using Looking For Turtles - LFG Addon for Turtle WoW', "PARTY", DEFAULT_CHAT_FRAME.editBox.languageID)
-            SendChatMessage('Get it at: https://github.com/CosminPOP/LFT', "PARTY", DEFAULT_CHAT_FRAME.editBox.languageID)
+            LFT.sendAdvertisement("PARTY")
+        end
+        if string.sub(cmd, 1, 8) == 'sayguild' then
+            LFT.sendAdvertisement("GUILD")
         end
     end
+end
+
+function LFT.sendAdvertisement(chan)
+    SendChatMessage('I am using LFT - Looking For Turtles - LFG Addon for Turtle WoW v' .. addonVer, chan, DEFAULT_CHAT_FRAME.editBox.languageID)
+    SendChatMessage('Get it at: https://github.com/CosminPOP/LFT', chan, DEFAULT_CHAT_FRAME.editBox.languageID)
 end
 
 -- dungeons
