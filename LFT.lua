@@ -340,11 +340,12 @@ LFTWhoCounter:SetScript("OnShow", function()
     this.startTime = GetTime()
     LFTWhoCounter.people = 0
     LFTWhoCounter.listening = true
+    lfprint('Checking people online with the addon (5secs)...')
 end)
 
 LFTWhoCounter:SetScript("OnHide", function()
     LFTWhoCounter.people = LFTWhoCounter.people + 1 -- + me
-    lfprint('Found ' .. LFTWhoCounter.people .. ' online using LFT addon.')
+    lfprint('Found ' .. COLOR_GREEN .. LFTWhoCounter.people .. COLOR_WHITE .. ' online using LFT addon.')
     LFTWhoCounter.listening = false
 end)
 
@@ -796,6 +797,13 @@ LFTComms:SetScript("OnEvent", function()
                 --lfdebug(arg1)
                 if LFTWhoCounter.listening then
                     LFTWhoCounter.people = LFTWhoCounter.people + 1
+                    if me == 'Er' then
+                        local verEx = string.split(arg1, ':')
+                        local ver = verEx[2]
+                        local color = COLOR_GREEN
+                        if LFT.ver(ver) < LFT.ver(addonVer) then color = COLOR_ORANGE end
+                        lfprint(arg2 .. ' - ' .. color .. 'v' .. ver)
+                    end
                 end
             end
         end
@@ -1699,7 +1707,7 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
                 getglobal("Dungeon_" .. frame.code):Disable()
                 getglobal('Dungeon_' .. frame.code .. 'Text'):SetText(COLOR_DISABLED .. dungeonName)
                 getglobal('Dungeon_' .. frame.code .. 'Levels'):SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
-                LFT.addOnEnterTooltip(getglobal('Dungeon_' .. frame.code .. '_Button'), 'Queueing for ' .. dungeonName ..' is unavailable',
+                LFT.addOnEnterTooltip(getglobal('Dungeon_' .. frame.code .. '_Button'), 'Queueing for ' .. dungeonName .. ' is unavailable',
                     'Maximum allowed queued dungeons at a time is ' .. DEV_MAX_DUNGEONS_TO_QUEUE .. '.')
             end
         end
@@ -1799,7 +1807,6 @@ function LFT.addTank(dungeon, name, faux, add)
         return true
     end
     return false
-
 end
 
 function LFT.addHealer(dungeon, name, faux, add)
@@ -2307,7 +2314,6 @@ function LFT.showDungeonObjectives()
     else
         getglobal("LFTDungeonStatus"):Hide()
     end
-
 end
 
 -- XML called methods
@@ -2578,7 +2584,7 @@ function queueFor(name, status)
                     getglobal("Dungeon_" .. frame.code):Disable()
                     getglobal('Dungeon_' .. frame.code .. 'Text'):SetText(COLOR_DISABLED .. dungeonName)
                     getglobal('Dungeon_' .. frame.code .. 'Levels'):SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
-                    LFT.addOnEnterTooltip(getglobal('Dungeon_' .. frame.code .. '_Button'), 'Queueing for ' .. dungeonName ..' is unavailable',
+                    LFT.addOnEnterTooltip(getglobal('Dungeon_' .. frame.code .. '_Button'), 'Queueing for ' .. dungeonName .. ' is unavailable',
                         'Maximum allowed queued dungeons at a time is ' .. DEV_MAX_DUNGEONS_TO_QUEUE .. '.')
                 end
             end
