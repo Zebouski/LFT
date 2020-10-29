@@ -7,9 +7,6 @@ local LFT_ADDON_CHANNEL = 'LFT'
 --local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
 local groupsFormedThisSession = 0
 
---one group LFM,    one tank lfg,  one dps lfg
---see if lfm leader invites dps if tank from lfg picked dps, or dps picked the tank
-
 LFT.showedUpdateNotification = false
 LFT.maxDungeonsInQueue = 5
 LFT.groupSizeMax = 5
@@ -71,6 +68,35 @@ LFT.classColors = {
     ["warlock"] = { r = 0.58, g = 0.51, b = 0.79, c = "|cff9482c9" },
     ["paladin"] = { r = 0.96, g = 0.55, b = 0.73, c = "|cfff58cba" }
 }
+
+local LFTGoingWithPicker = CreateFrame("Frame")
+LFTGoingWithPicker:Hide()
+LFTGoingWithPicker.candidate = ''
+LFTGoingWithPicker.priority = 0
+LFTGoingWithPicker.dungeon = ''
+
+LFTGoingWithPicker:SetScript("OnShow", function()
+    this.startTime = GetTime()
+end)
+
+LFTGoingWithPicker:SetScript("OnHide", function()
+end)
+
+LFTGoingWithPicker:SetScript("OnUpdate", function()
+    local plus = 1 --seconds
+    local gt = GetTime() * 1000
+    local st = (this.startTime + plus) * 1000
+    if gt >= st then
+
+        SendChatMessage('goingWith:' .. LFTGoingWithPicker.candidate .. ':' .. LFTGoingWithPicker.dungeon .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+        LFT.foundGroup = true
+
+        LFTGoingWithPicker.candidate = ''
+        LFTGoingWithPicker.priority = 0
+        LFTGoingWithPicker.dungeon = ''
+        LFTGoingWithPicker:Hide()
+    end
+end)
 
 local COLOR_RED = '|cffff222a'
 local COLOR_ORANGE = '|cffff8000'
@@ -848,10 +874,33 @@ LFTComms:SetScript("OnEvent", function()
                     local mRole = foundEx[2]
                     local mDungeon = foundEx[3]
                     local name = foundEx[4]
+                    local prio = nil
+                    if foundEx[5] then
+                        if tonumber(foundEx[5]) then
+                            prio = tonumber(foundEx[5])
+                        end
+                    end
 
                     if LFT_ROLE == mRole and not LFT.foundGroup and name == me then
-                        SendChatMessage('goingWith:' .. arg2 .. ':' .. mDungeon .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
-                        LFT.foundGroup = true
+                        if prio then
+                            if LFTGoingWithPicker.candidate == '' then
+                                LFTGoingWithPicker.candidate = arg2
+                                LFTGoingWithPicker.priority = prio
+                                LFTGoingWithPicker.dungeon = mDungeon
+                                LFTGoingWithPicker:Show()
+                            else
+                                if prio > LFTGoingWithPicker.priority then
+                                    LFTGoingWithPicker.candidate = arg2
+                                    LFTGoingWithPicker.priority = prio
+                                    LFTGoingWithPicker.dungeon = mDungeon
+                                end
+                            end
+                        else
+                            SendChatMessage('goingWith:' .. arg2 .. ':' .. mDungeon .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                            LFT.foundGroup = true
+                        end
+                        --SendChatMessage('goingWith:' .. arg2 .. ':' .. mDungeon .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                        --LFT.foundGroup = true
                     end
                 end
             end
@@ -919,20 +968,21 @@ LFTComms:SetScript("OnEvent", function()
                     for _, data in next, LFT.dungeons do
                         if data.queued and data.code == mDungeonCode then
 
+                            --LFM forming
                             if LFT.isLeader then
                                 if mRole == 'tank' then
                                     if LFT.addTank(mDungeonCode, arg2) then
-                                        foundMessage = foundMessage .. 'found:tank:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                        foundMessage = foundMessage .. 'found:tank:' .. mDungeonCode .. ':' .. arg2 .. ':' .. (GetNumPartyMembers() + 1) .. ' '
                                     end
                                 end
                                 if mRole == 'healer' then
                                     if LFT.addHealer(mDungeonCode, arg2) then
-                                        foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                        foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ':' .. (GetNumPartyMembers() + 1) .. ' '
                                     end
                                 end
                                 if mRole == 'damage' then
                                     if LFT.addDamage(mDungeonCode, arg2) then
-                                        foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                        foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ':' .. (GetNumPartyMembers() + 1) .. ' '
                                     end
                                 end
                                 if foundMessage ~= '' then
@@ -941,16 +991,19 @@ LFTComms:SetScript("OnEvent", function()
                                 return false
                             end
 
+                            -- LFG forming
                             if LFT_ROLE == 'tank' then
                                 LFT.group[mDungeonCode].tank = me
 
                                 if mRole == 'healer' then
-                                    LFT.addHealer(mDungeonCode, arg2, false, true)
-                                    foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                    if LFT.addHealer(mDungeonCode, arg2, false, true) then
+                                        foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ':0 '
+                                    end
                                 end
                                 if mRole == 'damage' then
-                                    LFT.addDamage(mDungeonCode, arg2, false, true)
-                                    foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ' '
+                                    if LFT.addDamage(mDungeonCode, arg2, false, true) then
+                                        foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ':0 '
+                                    end
                                 end
                             end
 
@@ -1887,7 +1940,7 @@ function LFT.addTank(dungeon, name, faux, add)
             LFT.group[dungeon].tank = name
         end
         if not faux then
-            SendChatMessage('found:tank:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+            --SendChatMessage('found:tank:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
         end
         return true
     end
@@ -1905,7 +1958,7 @@ function LFT.addHealer(dungeon, name, faux, add)
             LFT.group[dungeon].healer = name
         end
         if not faux then
-            SendChatMessage('found:healer:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+            --SendChatMessage('found:healer:' .. dungeon .. ':' .. name, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
         end
         return true
     end
