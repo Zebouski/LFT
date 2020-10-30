@@ -2495,11 +2495,17 @@ function LFT.fixMainButton()
 end
 
 function LFT.sendCancelMeMessage()
-    ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
-            'leftQueue:' .. LFT_ROLE,
+    --ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
+    --        'leftQueue:' .. LFT_ROLE,
+    --        "CHANNEL",
+    --        DEFAULT_CHAT_FRAME.editBox.languageID,
+    --        GetChannelName(LFT.channel))
+
+    SendChatMessage('leftQueue:' .. LFT_ROLE,
             "CHANNEL",
             DEFAULT_CHAT_FRAME.editBox.languageID,
             GetChannelName(LFT.channel))
+
 end
 
 function LFT.sendLFMessage()
@@ -2527,19 +2533,15 @@ function LFT.sendLFMessage()
     --v2
     local lfg_text = ''
     for code, _ in pairs(LFT.group) do
-        --        if math.random(0, 1) == 1 then
-        --            SendChatMessage('LFG:' .. code .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
-        --        ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
-        --            'LFG:' .. code .. ':' .. LFT_ROLE,
-        --            "CHANNEL",
-        --            DEFAULT_CHAT_FRAME.editBox.languageID,
-        --            GetChannelName(LFT.channel))
-        --        end
         lfg_text = 'LFG:' .. code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
     end
     lfg_text = string.sub(lfg_text, 1, string.len(lfg_text) - 1)
-    ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
-            lfg_text,
+    --ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
+    --        lfg_text,
+    --        "CHANNEL",
+    --        DEFAULT_CHAT_FRAME.editBox.languageID,
+    --        GetChannelName(LFT.channel))
+    SendChatMessage(lfg_text,
             "CHANNEL",
             DEFAULT_CHAT_FRAME.editBox.languageID,
             GetChannelName(LFT.channel))
@@ -3179,18 +3181,17 @@ function findGroup()
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
             dungeonsText = dungeonsText .. dungeon .. ', '
-            --            SendChatMessage('LFG:' .. data.code .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
-            --            ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
-            --                'LFG:' .. data.code .. ':' .. LFT_ROLE,
-            --                "CHANNEL",
-            --                DEFAULT_CHAT_FRAME.editBox.languageID,
-            --                GetChannelName(LFT.channel))
             lfg_text = 'LFG:' .. data.code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
         end
     end
     lfg_text = string.sub(lfg_text, 1, string.len(lfg_text) - 1)
-    ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
-            lfg_text,
+    --ChatThrottleLib:SendChatMessage('ALERT', 'LFT',
+    --        lfg_text,
+    --        "CHANNEL",
+    --        DEFAULT_CHAT_FRAME.editBox.languageID,
+    --        GetChannelName(LFT.channel))
+
+    SendChatMessage(lfg_text,
             "CHANNEL",
             DEFAULT_CHAT_FRAME.editBox.languageID,
             GetChannelName(LFT.channel))
