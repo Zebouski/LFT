@@ -585,7 +585,7 @@ LFTComms:SetScript("OnEvent", function()
 
         if event == 'CHAT_MSG_ADDON' and arg1 == 'LFT' then
             lfdebug(arg4 .. ' says : ' .. arg2)
-            if string.sub(arg2, 1, 11) == 'objectives:' then
+            if string.sub(arg2, 1, 11) == 'objectives:' and arg4 ~= me then
                 local objEx = string.split(arg2, ':')
                 if LFT.groupFullCode ~= objEx[2] then
                     LFT.groupFullCode = objEx[2]
@@ -593,13 +593,12 @@ LFTComms:SetScript("OnEvent", function()
 
                 local objectivesString = string.split(objEx[3], '-')
 
-                if not LFTObjectives.closedByUser and not _G["LFTDungeonStatus"]:IsVisible() then
-                    LFT.showDungeonObjectives()
-                end
+                local complete = 0
 
                 for stringIndex, s in next, objectivesString do
                     if s then
                         if s == '1' then
+                            complete = complete + 1
                             local index = 0
                             for _, boss in next, LFT.bosses[LFT.groupFullCode] do
                                 index = index + 1
@@ -609,6 +608,10 @@ LFTComms:SetScript("OnEvent", function()
                             end
                         end
                     end
+                end
+
+                if not LFTObjectives.closedByUser and not _G["LFTDungeonStatus"]:IsVisible() then
+                    LFT.showDungeonObjectives('code_for_debug_only', complete)
                 end
             end
             if string.sub(arg2, 1, 11) == 'notReadyAs:' then
@@ -659,7 +662,8 @@ LFTComms:SetScript("OnEvent", function()
                         _G['LFTReadyStatusReadyDamage3']:GetTexture() == 'Interface\\addons\\LFT\\images\\readycheck-ready' then
                     _G['LFTReadyStatus']:Hide()
                     LFTGroupReadyFrameCloser:Hide()
-                    LFT.showDungeonObjectives()
+                    local _, numCompletedObjectives = LFT.getDungeonCompletion()
+                    LFT.showDungeonObjectives('dummy', numCompletedObjectives)
                     --promote the tank to leader
                     if LFT.isLeader and role == 'tank' and arg4 ~= me then
                         PromoteByName(arg4)
@@ -2710,7 +2714,8 @@ end
 
 --local dungIndex = 1
 
-function LFT.showDungeonObjectives(code)
+function LFT.showDungeonObjectives(code, numObjectivesComplete)
+
     --dev
     --    local j = 0
     --    for dungeon, data in next, LFT.dungeons do
@@ -2736,7 +2741,15 @@ function LFT.showDungeonObjectives(code)
 
 
     local dungeonName = LFT.dungeonNameFromCode(LFT.groupFullCode)
-    LFTObjectives.objectivesComplete = 0
+    if numObjectivesComplete then
+        lfdebug('showdungeons obj call with numObjectivesComplete = ' .. numObjectivesComplete)
+        LFTObjectives.objectivesComplete = numObjectivesComplete
+    else
+        lfdebug('showdungeons obj call without numObjectivesComplete')
+        LFTObjectives.objectivesComplete = 0
+    end
+
+    lfdebug('LFTObjectives.objectivesComplete = ' .. LFTObjectives.objectivesComplete)
 
     --hideall
     for index, _ in next, LFT.objectivesFrames do
@@ -2798,9 +2811,9 @@ function LFT.getDungeonCompletion()
         total = total + 1
     end
     if completed == 0 then
-        return 0
+        return 0, 0
     end
-    return math.floor((completed * 100) / total)
+    return math.floor((completed * 100) / total), completed
 end
 
 -- XML called methods
