@@ -897,11 +897,6 @@
                         </Offset>
                     </Anchor>
                 </Anchors>
-                <Scripts>
-                    <OnClick>
-                            close_lft_objectives()
-                    </OnClick>
-                </Scripts>
             </Button>
         </Frames>
     </Frame>
@@ -1048,6 +1043,11 @@
                         </Offset>
                     </Anchor>
                 </Anchors>
+                <Scripts>
+                    <OnClick>
+                        close_lft_objectives()
+                    </OnClick>
+                </Scripts>
             </Button>
 
         </Frames>
