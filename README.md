@@ -6,7 +6,8 @@ _Important note: Remove `-master` when extracting into your `interface/addons` f
 This addon will not teleport you and your group inside the dungeon.
 
 ## Public Test Stage ##
-This version is for testing purposes. If you encounter any lua errors or other addon problems please take a screenshot and send it to me (Xerron/Er) on Discord with a short explanation of what you were doing when you encountered the problem.
+This version is for testing purposes. <br>
+If you encounter any lua errors or other addon problems please take a screenshot and send it to me (Xerron/Er) on Discord with a short explanation of what you were doing when you encountered the problem breaks your gameplay disable the addon until a new version comes out.
 
 ## Features ##
 Todo: option to choose: fresh groups only / any groups
@@ -52,7 +53,10 @@ Once the leader clicks find more, a role check will be initiated and when the ad
 
 
 _Note: addon communications are made in LFT chat channel, don't manually leave or check it in your main chat frame, its very spammy!_<Br>
-_Your channels messed up ? type /leave LFT (or any channel that's not in his place) and relog._
+
+### Known bugs ###
+Addon textures don't load or just load a white texture: type `/run ReloadUI()`<br>
+Chat channels order messed up: type `/leave LFT` (or any channel that's not in his place) and relog<br>
 
 
 If you like my work consider buying me a coffee !<br> 
