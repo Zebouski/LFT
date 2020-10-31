@@ -1,14 +1,15 @@
 # LFT - a LFG Addon for Turtle WoW, v0.0.2.2rc
 
-
-## NO, this addon will not teleport you and your group inside the dungeon ##
-
 _Important note: Remove `-master` when extracting into your `interface/addons` folder and fully restart your client after each update !_<BR><BR><Br>
+
+#### What it does NOT do ####
+This addon will not teleport you and your group inside the dungeon.
 
 ## Public Test Stage ##
 This version is for testing purposes. If you encounter any lua errors or other addon problems please take a screenshot and send it to me (Xerron/Er) on Discord with a short explanation of what you were doing when you encountered the problem.
 
 ## Features ##
+Todo: option to choose: fresh groups only / any groups
 
 #### Minimap Button ####
 Brings up the main addon frame, allowing you to Look for a gorup or Look for more.<Br>
