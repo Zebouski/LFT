@@ -18,34 +18,34 @@ Brings up the main addon frame, allowing you to Look for a gorup or Look for mor
 ![queuesolo](https://imgur.com/ZWd7awX.png)
 
 ### InQueue Minimap Tooltip ###
-Once queued, you can check your queue status by hovering over the minimap icon.
+Once queued, you can check your queue status by hovering over the minimap icon.<br>
 ![queuesolo](https://imgur.com/O0MNsKv.png)
 
 
 ### Group Formed ####
 When a group is found you will be prompted with this readycheck.<br>
-The button will become available once all 5 members of the group are in.
+The button will become available once all 5 members of the group are in.<br>
 ![queuesolo](https://imgur.com/9rHbnfQ.png)
 
 #### Ready Check ####
-Clicking *Let's do this!* on the ready check will show you the readycheck status of your group.
+Clicking *Let's do this!* on the ready check will show you the readycheck status of your group.<br>
 ![queuesolo](https://imgur.com/1h3FDYG.png)
 
 #### Dungeon Status ####
 Once every member of your group is ready you will get a list of dungeon objectives, based on which dungeon your group decided to face.<br>
 Once all objectives are met, the dungeon is considered complete, and the window will close.<br>
-_Note:_ objectives can be moved, collapsed, or closed.
+_Note:_ objectives can be moved, collapsed, or closed.<br>
 ![queuesolo](https://imgur.com/UGRDmzm.png)
 
 
 
 #### Find More ####
 As a leader of a group you can look for more members.<br>
-_Note:_ the default 5man group role composition(only one tank, only one healer, no more than 3 dps) must be met in order to look for more. This is limited to one dungeon at a time.
+_Note:_ the default 5man group role composition(only one tank, only one healer, no more than 3 dps) must be met in order to look for more. This is limited to one dungeon at a time.<Br>
 ![queuesolo](https://imgur.com/iOkkHks.png)
 
 #### Role Check ####
-Once the leader clicks find more, a role check will be initiated and when the addon finds the missing roles you will be prompted with a Group Formed window.
+Once the leader clicks find more, a role check will be initiated and when the addon finds the missing roles you will be prompted with a Group Formed window.<br>
 ![queuesolo](https://imgur.com/62LdVAT.png)
 
 
