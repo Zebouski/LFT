@@ -7,6 +7,9 @@ local LFT_ADDON_CHANNEL = 'LFT'
 --local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
 local groupsFormedThisSession = 0
 
+-- check: on readycheck, everyone in the party should send dungeon status.
+-- check: while in group, window closes at 0 and 30
+
 LFT.showedUpdateNotification = false
 LFT.maxDungeonsInQueue = 5
 LFT.groupSizeMax = 5
@@ -174,7 +177,7 @@ local COLOR_GREEN = '|cff1fba1f'
 local COLOR_HUNTER = '|cffabd473'
 local COLOR_YELLOW = '|cffffff00'
 local COLOR_WHITE = '|cffffffff'
-local COLOR_DISABLED = '|cff888888'
+local COLOR_DISABLED = '|cffaaaaaa'
 local COLOR_TANK = '|cff0070de'
 local COLOR_HEALER = COLOR_GREEN
 local COLOR_DAMAGE = COLOR_RED
