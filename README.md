@@ -6,7 +6,7 @@
 _Important note: Remove `-master` when extracting into your `interface/addons` folder and fully restart your client after each update !_<BR><BR><Br>
 
 ## Public Test Stage ##
-This version is for testing purposes. If you encounter any lua errors please take a screenshot and send it to me (Xerron/Er) on Discord.
+This version is for testing purposes. If you encounter any lua errors or other addon problems please take a screenshot and send it to me (Xerron/Er) on Discord with a short explanation of what you were doing when you encountered the problem.
 
 ## Features ##
 
