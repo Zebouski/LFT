@@ -3403,10 +3403,18 @@ SlashCmdList["LFT"] = function(cmd)
             lfprint('Formed groups history reset.')
         end
         if string.sub(cmd, 1, 12) == 'formedgroups' then
+            lfprint('Listing formed groups history')
+            local totalGroups = 0
             for code, number in next, LFT_FORMED_GROUPS do
                 if number ~= 0 then
+                    totalGroups = totalGroups + number
                     lfprint(number .. ' - ' .. LFT.dungeonNameFromCode(code))
                 end
+            end
+            if totalGroups == 0 then
+                lfprint('There are no recorded formed groups.')
+            else
+                lfprint('There are ' .. totalGroups .. ' recorded formed groups.')
             end
         end
         if string.sub(cmd, 1, 5) == 'debug' then
@@ -3453,7 +3461,7 @@ LFT.dungeons = {
     ['Maraudon Orange'] = { minLevel = 47, maxLevel = 55, code = 'maraorange', queued = false, canQueue = true, background = 'maraudon' },
     ['Maraudon Purple'] = { minLevel = 47, maxLevel = 55, code = 'marapurple', queued = false, canQueue = true, background = 'maraudon' },
     ['Maraudon Princess'] = { minLevel = 47, maxLevel = 55, code = 'maraprincess', queued = false, canQueue = true, background = 'maraudon' },
-    ['Uldaman'] = { minLevel = 50, maxLevel = 51, code = 'ulda', queued = false, canQueue = true, background = 'uldaman' },
+    ['Uldaman'] = { minLevel = 40, maxLevel = 51, code = 'ulda', queued = false, canQueue = true, background = 'uldaman' },
     ['Temple of Atal\'Hakkar'] = { minLevel = 50, maxLevel = 60, code = 'st', queued = false, canQueue = true, background = 'sunkentemple' },
     ['Blackrock Depths'] = { minLevel = 52, maxLevel = 60, code = 'brd', queued = false, canQueue = true, background = 'blackrockdepths' },
     ['Blackrock Depths Arena'] = { minLevel = 52, maxLevel = 60, code = 'brdarena', queued = false, canQueue = true, background = 'blackrockdepths' },
