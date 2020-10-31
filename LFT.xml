@@ -286,7 +286,7 @@
         <Layers>
             <Layer level="BORDER">
                 <Texture name="$parentBackground"
-                         file="Interface\addons\LFT\images\background\ui-lfg-background-gnomeregan">
+                         file="Interface\addons\LFT\images\background\ui-lfg-background-scarletmonastery">
                     <Size>
                         <AbsDimension x="288" y="128"/>
                     </Size>
@@ -374,7 +374,7 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
-                <FontString name="$parentObjectivesCompleted" inherits="GameFontNormal" text="Bosses Defeated">
+                <FontString name="$parentObjectivesCompleted" inherits="GameFontNormal" text="0/3 Bosses Defeated">
                     <Size>
                         <AbsDimension x="150" y="24"/>
                     </Size>
@@ -529,7 +529,7 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
-                <FontString name="$parentQForText" inherits="GameFontNormalSmall" text="Queued for ">
+                <FontString name="$parentQForText" inherits="GameFontNormalSmall" text="|cffffffffQueued for |cffffff00Scarlet Monastery Armory">
                     <Size>
                         <AbsDimension x="250" y="24"/>
                     </Size>
@@ -968,7 +968,7 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
-                <FontString name="$parentDungeonName" text="Scarlet Monastery"
+                <FontString name="$parentDungeonName" text="Scarlet Monastery Cathedral"
                             font="Interface\addons\LFT\fonts\MORPHEUS.TTF">
                     <Color r="0.86" g="0.81" b="0.69" a=".9"/>
                     <FontHeight val="20"/>
@@ -1049,6 +1049,133 @@
                     </OnClick>
                 </Scripts>
             </Button>
+
+<!--            <Frame name="Tempboss1">-->
+<!--                <Size>-->
+<!--                    <AbsDimension x="250" y="20"/>-->
+<!--                </Size>-->
+<!--                <Anchors>-->
+<!--                    <Anchor point="TOPLEFT">-->
+<!--                        <Offset>-->
+<!--                            <AbsDimension x="0" y="-130"/>-->
+<!--                        </Offset>-->
+<!--                    </Anchor>-->
+<!--                </Anchors>-->
+<!--                <Layers>-->
+<!--                    <Layer level="BACKGROUND">-->
+<!--                        <Texture name="$parentObjectiveComplete" file="Interface\addons\LFT\images\objective_1">-->
+<!--                            <Size>-->
+<!--                                <AbsDimension x="16" y="16"/>-->
+<!--                            </Size>-->
+<!--                            <Anchors>-->
+<!--                                <Anchor point="TOPLEFT">-->
+<!--                                    <Offset>-->
+<!--                                        <AbsDimension x="-7" y="0"/>-->
+<!--                                    </Offset>-->
+<!--                                </Anchor>-->
+<!--                            </Anchors>-->
+<!--                        </Texture>-->
+<!--                        <FontString name="$parentObjective" inherits="GameFontWhite" text="1/1 High Inquisitor Fairbanks"-->
+<!--                                    justifyH="LEFT">-->
+<!--                            <Size>-->
+<!--                                <AbsDimension x="250" y="24"/>-->
+<!--                            </Size>-->
+<!--                            <Color r="1" g="1" b="1" a="1"/>-->
+<!--                            <Anchors>-->
+<!--                                <Anchor point="TOPLEFT">-->
+<!--                                    <Offset>-->
+<!--                                        <AbsDimension x="11" y="4"/>-->
+<!--                                    </Offset>-->
+<!--                                </Anchor>-->
+<!--                            </Anchors>-->
+<!--                        </FontString>-->
+<!--                    </Layer>-->
+<!--                </Layers>-->
+<!--            </Frame>-->
+<!--            <Frame name="Tempboss2">-->
+<!--                <Size>-->
+<!--                    <AbsDimension x="250" y="20"/>-->
+<!--                </Size>-->
+<!--                <Anchors>-->
+<!--                    <Anchor point="TOPLEFT">-->
+<!--                        <Offset>-->
+<!--                            <AbsDimension x="0" y="-150"/>-->
+<!--                        </Offset>-->
+<!--                    </Anchor>-->
+<!--                </Anchors>-->
+<!--                <Layers>-->
+<!--                    <Layer level="BACKGROUND">-->
+<!--                        <Texture name="$parentObjectiveComplete" file="Interface\addons\LFT\images\objective_0">-->
+<!--                            <Size>-->
+<!--                                <AbsDimension x="16" y="16"/>-->
+<!--                            </Size>-->
+<!--                            <Anchors>-->
+<!--                                <Anchor point="TOPLEFT">-->
+<!--                                    <Offset>-->
+<!--                                        <AbsDimension x="-7" y="0"/>-->
+<!--                                    </Offset>-->
+<!--                                </Anchor>-->
+<!--                            </Anchors>-->
+<!--                        </Texture>-->
+<!--                        <FontString name="$parentObjective" inherits="GameFontWhite" text="|cffaaaaaa0/1 Scarlet Commander Mograine"-->
+<!--                                    justifyH="LEFT">-->
+<!--                            <Size>-->
+<!--                                <AbsDimension x="250" y="24"/>-->
+<!--                            </Size>-->
+<!--                            <Color r="1" g="1" b="1" a="1"/>-->
+<!--                            <Anchors>-->
+<!--                                <Anchor point="TOPLEFT">-->
+<!--                                    <Offset>-->
+<!--                                        <AbsDimension x="11" y="4"/>-->
+<!--                                    </Offset>-->
+<!--                                </Anchor>-->
+<!--                            </Anchors>-->
+<!--                        </FontString>-->
+<!--                    </Layer>-->
+<!--                </Layers>-->
+<!--            </Frame>-->
+<!--            <Frame name="Tempboss3">-->
+<!--                <Size>-->
+<!--                    <AbsDimension x="250" y="20"/>-->
+<!--                </Size>-->
+<!--                <Anchors>-->
+<!--                    <Anchor point="TOPLEFT">-->
+<!--                        <Offset>-->
+<!--                            <AbsDimension x="0" y="-170"/>-->
+<!--                        </Offset>-->
+<!--                    </Anchor>-->
+<!--                </Anchors>-->
+<!--                <Layers>-->
+<!--                    <Layer level="BACKGROUND">-->
+<!--                        <Texture name="$parentObjectiveComplete" file="Interface\addons\LFT\images\objective_0">-->
+<!--                            <Size>-->
+<!--                                <AbsDimension x="16" y="16"/>-->
+<!--                            </Size>-->
+<!--                            <Anchors>-->
+<!--                                <Anchor point="TOPLEFT">-->
+<!--                                    <Offset>-->
+<!--                                        <AbsDimension x="-7" y="0"/>-->
+<!--                                    </Offset>-->
+<!--                                </Anchor>-->
+<!--                            </Anchors>-->
+<!--                        </Texture>-->
+<!--                        <FontString name="$parentObjective" inherits="GameFontWhite" text="|cffaaaaaa0/1 High Inquisitor Whitemane"-->
+<!--                                    justifyH="LEFT">-->
+<!--                            <Size>-->
+<!--                                <AbsDimension x="250" y="24"/>-->
+<!--                            </Size>-->
+<!--                            <Color r="1" g="1" b="1" a="1"/>-->
+<!--                            <Anchors>-->
+<!--                                <Anchor point="TOPLEFT">-->
+<!--                                    <Offset>-->
+<!--                                        <AbsDimension x="11" y="4"/>-->
+<!--                                    </Offset>-->
+<!--                                </Anchor>-->
+<!--                            </Anchors>-->
+<!--                        </FontString>-->
+<!--                    </Layer>-->
+<!--                </Layers>-->
+<!--            </Frame>-->
 
         </Frames>
         <Scripts>
