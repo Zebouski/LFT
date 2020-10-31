@@ -58,6 +58,7 @@ LFT.LFMDungeonCode = ''
 LFT.currentGroupSize = 0
 
 LFT.objectivesFrames = {}
+LFT.peopleLookingForGroups = 0
 
 LFT.classColors = {
     ["warrior"] = { r = 0.78, g = 0.61, b = 0.43, c = "|cffc79c6e" },
@@ -997,6 +998,12 @@ LFTComms:SetScript("OnEvent", function()
             LFT.fixMainButton()
         end
 
+        if event == 'CHAT_MSG_CHANNEL' and arg8 == LFT.channelIndex then
+            if string.sub(arg1, 1, 7) == 'timeIs:' then
+                LFT.peopleLookingForGroups = 0
+            end
+        end
+
         if event == 'CHAT_MSG_CHANNEL' and arg8 == LFT.channelIndex and arg2 ~= me then
             if string.sub(arg1, 1, 7) == 'timeIs:' and not LFT.channelOwner then
                 local timeEx = string.split(arg1, ':')
@@ -1029,6 +1036,12 @@ LFTComms:SetScript("OnEvent", function()
                         lfprint(arg2 .. ' - ' .. color .. 'v' .. ver)
                     end
                 end
+            end
+        end
+
+        if event == 'CHAT_MSG_CHANNEL' and arg8 == LFT.channelIndex then
+            if string.sub(arg1, 1, 4) == 'LFG:' then
+                LFT.peopleLookingForGroups = LFT.peopleLookingForGroups + 1
             end
         end
 
@@ -1636,6 +1649,7 @@ LFTQueue:SetScript("OnUpdate", function()
 
         if (cSecond == LFT.RESET_TIME or cSecond == LFT.RESET_TIME + LFT.TIME_MARGIN) and not this.spammed.reset then
             lfdebug('reset -- call -- spam')
+            LFT.peopleLookingForGroups = 0
             this.spammed = {
                 tank = false,
                 damage = false,
@@ -3066,10 +3080,18 @@ function LFT_ShowMinimap()
         _G['LFTGroupStatus']:Show()
     else
 
-        GameTooltip:SetOwner(this, "ANCHOR_LEFT", 0, -90)
+        GameTooltip:SetOwner(this, "ANCHOR_LEFT", 0, -110)
         GameTooltip:AddLine('Looking For Turtles - LFT', 1, 1, 1)
-        GameTooltip:AddLine('Left-click to toggle frame')
-        GameTooltip:AddLine('Not queued for any dungeons.')
+        GameTooltip:AddLine('Left-click to open LFT.')
+        GameTooltip:AddLine('Drag to move.')
+        GameTooltip:AddLine('You are not queued for any dungeons.')
+        if LFT.peopleLookingForGroups == 0 then
+            GameTooltip:AddLine('No players are looking for groups at the moment.')
+        elseif LFT.peopleLookingForGroups == 1 then
+            GameTooltip:AddLine(LFT.peopleLookingForGroups .. ' player is looking for groups at the moment.')
+        else
+            GameTooltip:AddLine(LFT.peopleLookingForGroups .. ' players are looking for groups at the moment.')
+        end
         GameTooltip:Show()
     end
 end
