@@ -1016,7 +1016,9 @@ LFTComms:SetScript("OnEvent", function()
                 if LFTTime.second == -1 then
                     LFTTime.spamWhenAvailable = true
                 else
-                    SendChatMessage('timeIs:' .. LFTTime.second, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                    if LFT.channelOwner then
+                        SendChatMessage('timeIs:' .. LFTTime.second, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                    end
                 end
             end
             if string.sub(arg1, 1, 7) == 'whoLFT:' then
@@ -3465,7 +3467,7 @@ LFT.dungeons = {
     ['Temple of Atal\'Hakkar'] = { minLevel = 50, maxLevel = 60, code = 'st', queued = false, canQueue = true, background = 'sunkentemple' },
     ['Blackrock Depths'] = { minLevel = 52, maxLevel = 60, code = 'brd', queued = false, canQueue = true, background = 'blackrockdepths' },
     ['Blackrock Depths Arena'] = { minLevel = 52, maxLevel = 60, code = 'brdarena', queued = false, canQueue = true, background = 'blackrockdepths' },
-    ['Blackrock Depths Emperor'] = { minLevel = 52, maxLevel = 60, code = 'brdemp', queued = false, canQueue = true, background = 'blackrockdepths' },
+    ['Blackrock Depths Emperor'] = { minLevel = 54, maxLevel = 60, code = 'brdemp', queued = false, canQueue = true, background = 'blackrockdepths' },
     ['Lower Blackrock Spire'] = { minLevel = 55, maxLevel = 60, code = 'lbrs', queued = false, canQueue = true, background = 'blackrockspire' },
     ['Dire Maul East'] = { minLevel = 55, maxLevel = 60, code = 'dme', queued = false, canQueue = true, background = 'diremaul' },
     ['Dire Maul North'] = { minLevel = 57, maxLevel = 60, code = 'dmn', queued = false, canQueue = true, background = 'diremaul' },
