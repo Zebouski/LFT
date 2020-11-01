@@ -77,6 +77,7 @@ LFT.channelOwner = false
 local LFTTime = CreateFrame("Frame")
 LFTTime:Hide()
 LFTTime.second = -1
+LFTTime.sentNeedTime = false
 LFTTime.spamWhenAvailable = false
 
 LFTTime:SetScript("OnShow", function()
@@ -566,8 +567,9 @@ LFTComms:SetScript("OnEvent", function()
             end
             if arg1 == 'PLAYER_ALREADY_MEMBER' then
                 -- probably only used when reloadui
-                if not LFT.channelOwner then
+                if not LFT.channelOwner and not LFTTime.sentNeedTime then
                     SendChatMessage("needTime:", "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                    LFTTime.sentNeedTime = true
                 end
                 LFT.checkLFTChannel()
             end
@@ -583,8 +585,9 @@ LFTComms:SetScript("OnEvent", function()
             if arg9 == LFT.channel and arg1 == 'YOU_JOINED' then
                 LFT.channelIndex = arg8
                 DisplayChannelOwner(LFT.channel)
-                if not LFT.channelOwner then
+                if not LFT.channelOwner and not LFTTime.sentNeedTime then
                     SendChatMessage("needTime:", "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                    LFTTime.sentNeedTime = true
                 end
             end
         end
@@ -1195,25 +1198,27 @@ LFTComms:SetScript("OnEvent", function()
 
                             --pseudo fill group for tooltip display
                             if LFT_ROLE == 'healer' then
-                                LFT.addHealer(mDungeonCode, me, true) --faux
+                                LFT.addHealer(mDungeonCode, me, true, true) --faux, me
 
-                                if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
-                                    LFT.group[mDungeonCode].tank = arg2
+                                if mRole == 'tank' then
+                                    LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
                                 end
-
                                 if mRole == 'damage' then
-                                    LFT.addDamage(mDungeonCode, arg2, true) --faux
+                                    LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
                                 end
                             end
 
                             if LFT_ROLE == 'damage' then
-                                LFT.addDamage(mDungeonCode, me, true) --faux
+                                LFT.addDamage(mDungeonCode, me, true, true) --faux
 
                                 if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
-                                    LFT.group[mDungeonCode].tank = arg2
+                                    LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
                                 end
                                 if mRole == 'healer' and LFT.group[mDungeonCode].healer == '' then
-                                    LFT.group[mDungeonCode].healer = arg2
+                                    LFT.addHealer(mDungeonCode, arg2, true, true) -- fause healer
+                                end
+                                if mRole == 'damage' then
+                                    LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
                                 end
                             end
                         end
