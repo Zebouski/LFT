@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.2.2'
+local addonVer = '0.0.2.3'
 local LFT_ADDON_CHANNEL = 'LFT'
 --local LFTTypeDropDown = CreateFrame('Frame', 'LFTTypeDropDown', UIParent, 'UIDropDownMenuTemplate')
 local groupsFormedThisSession = 0
@@ -548,7 +548,8 @@ LFTComms:SetScript("OnEvent", function()
     if event then
         if event == 'CHAT_MSG_CHANNEL_NOTICE_USER' then
             if arg1 == 'OWNER_CHANGED' then
-                LFT.channelOwner = arg2 == me
+
+                LFT.channelOwner = arg2 == me and string.lower(arg4) == LFT.channelIndex .. '. ' .. string.lower(LFT.channel)
                 if LFT.channelOwner then
                     lfdebug('changed iam channel owner')
                 else
@@ -556,7 +557,7 @@ LFTComms:SetScript("OnEvent", function()
                 end
             end
             if arg1 == 'CHANNEL_OWNER' then
-                LFT.channelOwner = arg2 == me
+                LFT.channelOwner = arg2 == me and string.lower(arg4) == LFT.channelIndex .. '. ' .. string.lower(LFT.channel)
                 if LFT.channelOwner then
                     lfdebug(' iam channel owner')
                 else
@@ -576,6 +577,7 @@ LFTComms:SetScript("OnEvent", function()
             --lfdebug(arg3) -- blank
             --lfdebug(arg4) -- 6.Lft
             --lfdebug(arg5) -- blank
+            --lfdebug('channel index = ' .. LFT.channelIndex) -- blank
         end
         if event == 'CHAT_MSG_CHANNEL_NOTICE' then
             if arg9 == LFT.channel and arg1 == 'YOU_JOINED' then
@@ -1016,9 +1018,7 @@ LFTComms:SetScript("OnEvent", function()
                 if LFTTime.second == -1 then
                     LFTTime.spamWhenAvailable = true
                 else
-                    if LFT.channelOwner then
-                        SendChatMessage('timeIs:' .. LFTTime.second, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
-                    end
+                    SendChatMessage('timeIs:' .. LFTTime.second, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
                 end
             end
             if string.sub(arg1, 1, 7) == 'whoLFT:' then
