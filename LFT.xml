@@ -1673,4 +1673,96 @@
         </Scripts>
     </Frame>
 
+    <Frame name="LFTPartyRoleIcons" hidden="false" toplevel="true"
+           parent="UIParent">
+        <Size>
+            <AbsDimension x="1" y="1"/>
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="OVERLAY">
+
+                <Texture name="$parentPlayer" hidden="true"
+                         file="Interface\addons\LFT\images\tank_small">
+                    <Size>
+                        <AbsDimension x="32" y="32"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="PlayerPortrait" relativePoint="TOPRIGHT">
+                            <Offset>
+                                <AbsDimension x="-15" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+
+                <Texture name="$parentParty1" hidden="true"
+                         file="Interface\addons\LFT\images\damage_small">
+                    <Size>
+                        <AbsDimension x="32" y="32"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="PartyMemberFrame1Portrait" relativePoint="BOTTOMLEFT">
+                            <Offset>
+                                <AbsDimension x="-5" y="10"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+
+                <Texture name="$parentParty2" hidden="true"
+                         file="Interface\addons\LFT\images\damage_small">
+                    <Size>
+                        <AbsDimension x="32" y="32"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="PartyMemberFrame2Portrait" relativePoint="BOTTOMLEFT">
+                            <Offset>
+                                <AbsDimension x="-5" y="10"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+
+                <Texture name="$parentParty3" hidden="true"
+                         file="Interface\addons\LFT\images\damage_small">
+                    <Size>
+                        <AbsDimension x="32" y="32"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="PartyMemberFrame3Portrait" relativePoint="BOTTOMLEFT">
+                            <Offset>
+                                <AbsDimension x="-5" y="10"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+
+                <Texture name="$parentParty4" hidden="true"
+                         file="Interface\addons\LFT\images\damage_small">
+                    <Size>
+                        <AbsDimension x="32" y="32"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="PartyMemberFrame4Portrait" relativePoint="BOTTOMLEFT">
+                            <Offset>
+                                <AbsDimension x="-5" y="10"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+
+            </Layer>
+        </Layers>
+        <Frames>
+
+        </Frames>
+
+    </Frame>
 </Ui>
