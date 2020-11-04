@@ -1,4 +1,4 @@
-# LFT - a LFG Addon for Turtle WoW, v0.0.2.4rc
+# LFT - a LFG Addon for Turtle WoW, v0.0.2.5rc
 
 [Download link](https://github.com/CosminPOP/LFT/archive/master.zip) <br>
 _Important note: Remove `-master` when extracting into your `interface/addons` folder and fully restart your client after each update !_<BR><BR><Br>
@@ -12,6 +12,10 @@ If you encounter any lua errors or other addon problems please take a screenshot
 
 ## Features ##
 Todo: option to choose: fresh groups only / any groups
+
+#### Dungeon Groups Browser (v.0.0.2.5) ####
+Shows a list of available dungeons and how many people are queueing.<Br>
+![browser](https://imgur.com/wpefzYP.png)
 
 #### Minimap Button ####
 Brings up the main addon frame, allowing you to Look for a group or Look for more.<Br>
