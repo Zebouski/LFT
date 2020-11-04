@@ -14,7 +14,7 @@ If you encounter any lua errors or other addon problems please take a screenshot
 Todo: option to choose: fresh groups only / any groups
 
 #### Minimap Button ####
-Brings up the main addon frame, allowing you to Look for a gorup or Look for more.<Br>
+Brings up the main addon frame, allowing you to Look for a group or Look for more.<Br>
 ![minimap](https://imgur.com/Z1uRxqz.png)
 
 #### Queue-ing solo (maximum 5 dungeons at a time) ####
