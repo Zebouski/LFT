@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.2.4'
+local addonVer = '0.0.2.5'
 local LFT_ADDON_CHANNEL = 'LFT'
 local groupsFormedThisSession = 0
 
@@ -10,6 +10,12 @@ local groupsFormedThisSession = 0
 -- check: rare case when goingWith is sent but i join a manual group and someone with lft
 --   will invite me (maybe add a not inGroup check before sending goingWith)
 
+-- todo : stats like "x players is looking for groups at the moment" available at all times
+
+LFT.tab = 1
+LFT.dungeonsSpam = {}
+LFT.dungeonsSpamDisplay = {}
+LFT.browseFrames = {}
 LFT.showedUpdateNotification = false
 LFT.maxDungeonsInQueue = 5
 LFT.groupSizeMax = 5
@@ -55,7 +61,7 @@ LFT.inGroup = false
 LFT.isLeader = false
 LFT.LFMGroup = {}
 LFT.LFMDungeonCode = ''
-LFT.currentGroupSize = 0
+LFT.currentGroupSize = 1
 
 LFT.objectivesFrames = {}
 LFT.peopleLookingForGroups = 0
@@ -121,6 +127,7 @@ LFTTime:SetScript("OnShow", function()
     lfdebug('lfttime SHOW call LFTTime.second = ' .. LFTTime.second .. ' my:' .. tonumber(date("%S", time())))
     lfdebug('diff = ' .. LFTTime.diff)
     this.startTime = GetTime()
+    this.execAt = {}
 end)
 
 LFTTime:SetScript("OnUpdate", function()
@@ -139,15 +146,47 @@ LFTTime:SetScript("OnUpdate", function()
         end
         --lfdebug('update call second = ' .. LFTTime.second)
 
-        if LFTTime.second == 0 or LFTTime == LFT.TIME_MARGIN then
-            --lfdebug('0 30 check in timIs')
-            --lfdebug('peopleLookingForGroups = ' .. LFT.peopleLookingForGroups)
-            --lfdebug('peopleLookingForGroupsDisplay = ' .. LFT.peopleLookingForGroupsDisplay)
+        if LFTTime.second == LFT.RESET_TIME or LFTTime.second == LFT.TIME_MARGIN then
+
             if LFT.peopleLookingForGroupsDisplay < LFT.peopleLookingForGroups or LFT.peopleLookingForGroups == 0 then
                 LFT.peopleLookingForGroupsDisplay = LFT.peopleLookingForGroups
             end
+
             LFT.peopleLookingForGroups = 0
+
+            lfdebug("RESET --- TIME IS 0 OR 30")
+
+            --reset dungeon spam at 0 and 30
+            for dungeon, data in next, LFT.dungeons do
+                LFT.dungeonsSpam[data.code] = { tank = 0, healer = 0, damage = 0 }
+            end
+            this.execAt = {}
         end
+
+        if (LFTTime.second > 2 and LFTTime.second < 27) or
+                (LFTTime.second > 32 and LFTTime.second < 57) then
+            if not this.execAt[LFTTime.second] then
+                BrowseDungeonListFrame_Update()
+                this.execAt[LFTTime.second] = true
+            end
+
+        end
+
+        if LFTTime.second == 28 or LFTTime.second == 58 then
+            --check for 0 at 28 and 58
+            for dungeon, data in next, LFT.dungeons do
+                if LFT.dungeonsSpam[data.code].tank == 0 then
+                    LFT.dungeonsSpamDisplay[data.code].tank = LFT.dungeonsSpam[data.code].tank
+                end
+                if LFT.dungeonsSpam[data.code].healer == 0 then
+                    LFT.dungeonsSpamDisplay[data.code].healer = LFT.dungeonsSpam[data.code].healer
+                end
+                if LFT.dungeonsSpam[data.code].damage == 0 then
+                    LFT.dungeonsSpamDisplay[data.code].damage = LFT.dungeonsSpam[data.code].damage
+                end
+            end
+        end
+
 
     end
 end)
@@ -188,6 +227,7 @@ local COLOR_HUNTER = '|cffabd473'
 local COLOR_YELLOW = '|cffffff00'
 local COLOR_WHITE = '|cffffffff'
 local COLOR_DISABLED = '|cffaaaaaa'
+local COLOR_DISABLED2 = '|cff666666'
 local COLOR_TANK = '|cff0070de'
 local COLOR_HEALER = COLOR_GREEN
 local COLOR_DAMAGE = COLOR_RED
@@ -252,7 +292,7 @@ end)
 -- objectives
 local LFTObjectives = CreateFrame("Frame")
 LFTObjectives:Hide()
-LFTObjectives:RegisterEvent("CHAT_MSG_COMBAT_HOSTILE_DEATH")
+--LFTObjectives:RegisterEvent("CHAT_MSG_COMBAT_HOSTILE_DEATH")
 LFTObjectives.collapsed = false
 LFTObjectives.closedByUser = false
 LFTObjectives.lastObjective = 0
@@ -304,7 +344,6 @@ LFTObjectives:SetScript("OnEvent", function()
     if event == "CHAT_MSG_COMBAT_HOSTILE_DEATH" then
         local creatureDied = arg1
         --lfdebug(creatureDied)
-        --        if LFT.dungeons[zoneText] then
         if LFT.bosses[LFT.groupFullCode] then
             for _, boss in next, LFT.bosses[LFT.groupFullCode] do
                 --creatureDied == 'You have slain ' .. boss .. '!'
@@ -314,7 +353,6 @@ LFTObjectives:SetScript("OnEvent", function()
                 end
             end
         end
-        --        end
     end
 end)
 
@@ -1050,6 +1088,17 @@ LFTComms:SetScript("OnEvent", function()
                 if LFT.peopleLookingForGroupsDisplay < LFT.peopleLookingForGroups then
                     LFT.peopleLookingForGroupsDisplay = LFT.peopleLookingForGroups
                 end
+
+                local lfgEx = string.split(arg1, ' ')
+
+                for _, lfg in lfgEx do
+                    local spamSplit = string.split(lfg, ':')
+                    local mDungeonCode = spamSplit[2]
+                    local mRole = spamSplit[3] --other's role
+
+                    LFT.incDungeonssSpamRole(mDungeonCode, mRole)
+                    LFT.updateDungeonsSpamDisplay(mDungeonCode)
+                end
             end
         end
 
@@ -1331,7 +1380,14 @@ LFT:SetScript("OnEvent", function()
             --lfdebug(arg2)
         end
         if event == "PARTY_LEADER_CHANGED" then
-            lfdebug('PARTY_LEADER_CHANGED')
+
+            BrowseDungeonListFrame_Update()
+
+            if LFT.isLeader and IsPartyLeader() then
+                lfdebug('end PARTY_LEADER_CHANGED - missfire ?')
+                return false
+            end
+
             LFT.isLeader = IsPartyLeader()
             if GetNumPartyMembers() + 1 == LFT.groupSizeMax then
             else
@@ -1350,6 +1406,13 @@ LFT:SetScript("OnEvent", function()
             LFT.currentGroupSize = GetNumPartyMembers() + 1
             LFT.inGroup = GetNumRaidMembers() == 0 and GetNumPartyMembers() > 0
 
+            BrowseDungeonListFrame_Update()
+
+            if not someoneLeft and not someoneJoined then
+                lfdebug('end PARTY_MEMBERS_CHANGED - missfire ?')
+                return false
+            end
+
             if LFT.inGroup then
                 if LFT.isLeader then
                 else
@@ -1365,7 +1428,7 @@ LFT:SetScript("OnEvent", function()
 
                 -- i left when there was a dungeon in progress
                 if LFTDungeonComplete.dungeonInProgress then
-                    -- todo i guess...
+                    -- todo: ban player for 5 minutes
                     LFTDungeonComplete.dungeonInProgress = false
                 end
 
@@ -1599,13 +1662,12 @@ function LFT.init()
     LFT.level = UnitLevel('player')
     LFT.findingGroup = false
     LFT.findingMore = false
-    LFT:RegisterEvent("ADDON_LOADED")
     LFT.availableDungeons = {}
     LFT.group = {}
     LFT.oneGroupFull = false
     LFT.groupFullCode = ''
     LFT.acceptNextInvite = false
-    LFT.currentGroupSize = GetNumPartyMembers() + 1
+    LFT.currentGroupSize = GetNumPartyMembers()
 
     LFT.isLeader = IsPartyLeader() or false
 
@@ -1622,6 +1684,42 @@ function LFT.init()
     _G['LFTGroupReadyAwesome']:Disable()
 
     lfprint(COLOR_HUNTER .. 'Looking For Turtles v' .. addonVer .. COLOR_WHITE .. ' - LFG Addon for Turtle WoW loaded.')
+
+    local dungeonsButton = _G['LFTBrowseButton']
+
+    dungeonsButton:SetScript("OnEnter", function()
+        _G['LFTBrowseButtonHighlight']:Show()
+    end)
+    dungeonsButton:SetScript("OnLeave", function()
+        _G['LFTBrowseButtonHighlight']:Hide()
+    end)
+
+    local dungeonsButton = _G['LFTDungeonsButton']
+
+    dungeonsButton:SetScript("OnEnter", function()
+        _G['LFTDungeonsButtonHighlight']:Show()
+    end)
+    dungeonsButton:SetScript("OnLeave", function()
+        _G['LFTDungeonsButtonHighlight']:Hide()
+    end)
+
+    for dungeon, data in next, LFT.dungeons do
+        if not LFT.dungeonsSpam[data.code] then
+            LFT.dungeonsSpam[data.code] = {
+                tank = 0,
+                healer = 0,
+                damage = 0
+            }
+        end
+        if not LFT.dungeonsSpamDisplay[data.code] then
+            LFT.dungeonsSpamDisplay[data.code] = {
+                tank = 0,
+                healer = 0,
+                damage = 0
+            }
+        end
+
+    end
 
 end
 
@@ -1651,9 +1749,7 @@ LFTQueue:SetScript("OnUpdate", function()
             return false
         end
 
-        local cSecond = LFTTime.second
-
-        _G['LFTTitleTime']:SetText(cSecond)
+        _G['LFTTitleTime']:SetText(LFTTime.second)
         _G['LFTGroupStatusTimeInQueue']:SetText('Time in Queue: ' .. SecondsToTime(time() - LFT.queueStartTime))
         if LFT.averageWaitTime == 0 then
             _G['LFTGroupStatusAverageWaitTime']:SetText('Average Wait Time: Unavailable')
@@ -1661,7 +1757,7 @@ LFTQueue:SetScript("OnUpdate", function()
             _G['LFTGroupStatusAverageWaitTime']:SetText('Average Wait Time: ' .. SecondsToTimeAbbrev(LFT.averageWaitTime))
         end
 
-        if (cSecond == LFT.RESET_TIME or cSecond == LFT.RESET_TIME + LFT.TIME_MARGIN) and not this.spammed.reset then
+        if (LFTTime.second == LFT.RESET_TIME or LFTTime.second == LFT.RESET_TIME + LFT.TIME_MARGIN) and not this.spammed.reset then
             lfdebug('reset -- call -- spam')
             this.spammed = {
                 tank = false,
@@ -1675,7 +1771,7 @@ LFTQueue:SetScript("OnUpdate", function()
             end
         end
 
-        if (cSecond == LFT.TANK_TIME + LFT.myRandomTime or cSecond == LFT.TANK_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'tank' and not this.spammed.tank then
+        if (LFTTime.second == LFT.TANK_TIME + LFT.myRandomTime or LFTTime.second == LFT.TANK_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'tank' and not this.spammed.tank then
             this.spammed.tank = true
             if not LFT.inGroup then
                 -- only start forming group if im not already grouped
@@ -1689,7 +1785,7 @@ LFTQueue:SetScript("OnUpdate", function()
             end
         end
 
-        if (cSecond == LFT.HEALER_TIME + LFT.myRandomTime or cSecond == LFT.HEALER_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'healer' and not this.spammed.heal then
+        if (LFTTime.second == LFT.HEALER_TIME + LFT.myRandomTime or LFTTime.second == LFT.HEALER_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'healer' and not this.spammed.heal then
             this.spammed.heal = true
             if not LFT.inGroup then
                 -- dont spam lfm if im already in a group, because leader will pick up new players
@@ -1697,7 +1793,7 @@ LFTQueue:SetScript("OnUpdate", function()
             end
         end
 
-        if (cSecond == LFT.DAMAGE_TIME + LFT.myRandomTime or cSecond == LFT.DAMAGE_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'damage' and not this.spammed.damage then
+        if (LFTTime.second == LFT.DAMAGE_TIME + LFT.myRandomTime or LFTTime.second == LFT.DAMAGE_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'damage' and not this.spammed.damage then
             this.spammed.damage = true
             if not LFT.inGroup then
                 -- dont spam lfm if im already in a group, because leader will pick up new players
@@ -1705,7 +1801,7 @@ LFTQueue:SetScript("OnUpdate", function()
             end
         end
 
-        if (cSecond == LFT.FULLCHECK_TIME or cSecond == LFT.FULLCHECK_TIME + LFT.TIME_MARGIN) and LFT_ROLE == 'tank' and not this.spammed.checkGroupFull then
+        if (LFTTime.second == LFT.FULLCHECK_TIME or LFTTime.second == LFT.FULLCHECK_TIME + LFT.TIME_MARGIN) and LFT_ROLE == 'tank' and not this.spammed.checkGroupFull then
             this.spammed.checkGroupFull = true
             if not LFT.inGroup then
 
@@ -2052,6 +2148,13 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
                 LFT.availableDungeons[data.code].maxLevel = data.maxLevel
             end
         end
+
+        if LFT.findingGroup then
+            if _G['Dungeon_' .. data.code] then
+                _G['Dungeon_' .. data.code]:Disable()
+            end
+        end
+
         if LFT.findingMore then
             if _G['Dungeon_' .. data.code] then
                 _G['Dungeon_' .. data.code]:Disable()
@@ -2390,14 +2493,21 @@ function LFT.DeclineGroupInvite()
     StaticPopup_Hide("PARTY_INVITE")
 end
 
-function LFT.fuckingSortAlready(t)
+function LFT.fuckingSortAlready(t, reverse)
     local a = {}
     for n, l in pairs(t) do
         table.insert(a, { ['code'] = l.code, ['minLevel'] = l.minLevel, ['name'] = n })
     end
-    table.sort(a, function(a, b)
-        return a['minLevel'] < b['minLevel']
-    end)
+    if reverse then
+        table.sort(a, function(a, b)
+            return a['minLevel'] > b['minLevel']
+        end)
+    else
+        table.sort(a, function(a, b)
+            return a['minLevel'] < b['minLevel']
+        end)
+    end
+
     local i = 0 -- iterator variable
     local iter = function()
         -- iterator function
@@ -2591,27 +2701,6 @@ end
 
 function LFT.sendLFMessage()
 
-    --v1
-    --    local keyset = {}
-    --    for k in pairs(LFT.group) do
-    --        table.insert(keyset, k)
-    --    end
-    --
-    --    local added = {}
-    --    local spammedNr = 1
-    --    for _, _ in next, LFT.group do
-    --        local newD = keyset[math.random(LFT.tableSize(keyset))]
-    --        if not added[newD] then
-    --            added[newD] = true
-    --            if spammedNr <= DEV_MAX_DUNGEONS_TO_SPAM then
-    --                SendChatMessage('LFG:' .. newD .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
-    --                spammedNr = spammedNr + 1
-    --            end
-    --        else
-    --        end
-    --    end
-
-    --v2
     local lfg_text = ''
     for code, _ in pairs(LFT.group) do
         lfg_text = 'LFG:' .. code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
@@ -2795,30 +2884,6 @@ end
 
 function LFT.showDungeonObjectives(code, numObjectivesComplete)
 
-    --dev
-    --    local j = 0
-    --    for dungeon, data in next, LFT.dungeons do
-    --        j = j + 1
-    --        if j == dungIndex then
-    --            LFT.groupFullCode = data.code --dev
-    --        end
-    --    end
-    --
-    --    local dungeonName, iconCode = LFT.dungeonNameFromCode(LFT.groupFullCode)
-    --    _G['LFTDungeonCompleteIcon'):SetTexture('Interface\\addons\\LFT\\images\\icon\\lfgicon-' .. iconCode)
-    --    _G['LFTDungeonCompleteDungeonName'):SetText(dungeonName)
-    --    LFTDungeonComplete:Show()
-    --
-    --    dungIndex = dungIndex + 1
-    if not code then
-        --LFT.groupFullCode = 'scholo' --dev
-    else
-        --LFT.groupFullCode = code
-    end
-    --lfdebug(LFT.groupFullCode)
-    --    end dev
-
-
     local dungeonName = LFT.dungeonNameFromCode(LFT.groupFullCode)
     if numObjectivesComplete then
         lfdebug('showdungeons obj call with numObjectivesComplete = ' .. numObjectivesComplete)
@@ -2895,6 +2960,138 @@ function LFT.getDungeonCompletion()
     return math.floor((completed * 100) / total), completed
 end
 
+function LFT.LFTBrowse_Update(offset)
+    --lfdebug('LFTBrowse_Update time is ' .. LFTTime.second)
+    if not offset then
+        offset = 0
+    end
+
+    --hide all
+    for _, frame in next, LFT.browseFrames do
+        _G["BrowseFrame_" .. frame.code]:Hide()
+    end
+
+    local dungeonIndex = 0
+    for dungeon, data in LFT.fuckingSortAlready(LFT.dungeons, true) do
+
+        if LFT.dungeonsSpam[data.code] and LFT.level >= data.minLevel then
+
+            if LFT.dungeonsSpamDisplay[data.code].tank > 0 or LFT.dungeonsSpamDisplay[data.code].healer > 0 or LFT.dungeonsSpamDisplay[data.code].damage > 0 then
+
+                dungeonIndex = dungeonIndex + 1
+
+                if dungeonIndex > offset and dungeonIndex <= offset + 8 then
+                    if not LFT.browseFrames[data.code] then
+                        LFT.browseFrames[data.code] = CreateFrame("Frame", "BrowseFrame_" .. data.code, _G["LFTBrowse"], "LFTBrowseDungeonTemplate")
+                    end
+
+                    _G['BrowseFrame_' .. data.code .. 'Background']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. data.background)
+                    _G['BrowseFrame_' .. data.code .. 'Background']:SetAlpha(0.5)
+
+                    LFT.browseFrames[data.code]:Show()
+
+                    local color = COLOR_GREEN
+                    if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
+                        color = COLOR_RED
+                    end
+                    if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
+                        color = COLOR_ORANGE
+                    end
+                    if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
+                        color = COLOR_GREEN
+                    end
+
+                    if LFT.level > data.maxLevel then
+                        color = COLOR_GREEN
+                    end
+
+                    _G["BrowseFrame_" .. data.code .. "DungeonName"]:SetText(color .. dungeon)
+                    local tank_color = ''
+                    local healer_color = ''
+                    local damage_color = ''
+
+                    _G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(0)
+
+                    if LFT.dungeonsSpamDisplay[data.code].tank == 0 then
+                        tank_color = COLOR_DISABLED2
+                        _G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(1)
+                    end
+                    _G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(0)
+                    if LFT.dungeonsSpamDisplay[data.code].healer == 0 then
+                        healer_color = COLOR_DISABLED2
+                        _G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(1)
+                    end
+                    _G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(0)
+                    if LFT.dungeonsSpamDisplay[data.code].damage == 0 then
+                        damage_color = COLOR_DISABLED2
+                        _G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(1)
+                    end
+
+                    _G["BrowseFrame_" .. data.code .. "NrTank"]:SetText(tank_color .. LFT.dungeonsSpamDisplay[data.code].tank)
+                    _G["BrowseFrame_" .. data.code .. "NrHealer"]:SetText(healer_color .. LFT.dungeonsSpamDisplay[data.code].healer)
+                    _G["BrowseFrame_" .. data.code .. "NrDamage"]:SetText(damage_color .. LFT.dungeonsSpamDisplay[data.code].damage)
+
+                    _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Hide()
+
+                    if data.queued and (LFT.findingMore or LFT.findingGroup) then
+                        _G["BrowseFrame_" .. data.code .. "InQueue"]:Show()
+                    else
+                        _G["BrowseFrame_" .. data.code .. "InQueue"]:Hide()
+
+                        local queues = 0
+                        for dungeon, data in LFT.dungeons do
+                            if data.queued then
+                                queues = queues + 1
+                            end
+                        end
+
+                        if not LFT.inGroup and queues < 5 then
+
+                            if LFT.dungeonsSpamDisplay[data.code].tank == 0 and LFT_ROLE == 'tank' then
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(1)
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Tank')
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
+                            end
+                            if LFT.dungeonsSpamDisplay[data.code].healer == 0 and LFT_ROLE == 'healer' then
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(2)
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Healer')
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
+                            end
+                            if LFT_ROLE == 'damage' then
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(3)
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Damage')
+                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
+                            end
+                        end
+                    end
+
+                    LFT.browseFrames[data.code]:SetPoint("TOPLEFT", _G["LFTBrowse"], "TOPLEFT", 26, -35 - 41 * (dungeonIndex - offset))
+                    LFT.browseFrames[data.code].code = data.code
+
+                end
+            end
+        end
+    end
+
+    if dungeonIndex > 0 then
+        _G['LFTBrowseNoPeople']:Hide()
+        _G['LFTBrowseBrowseText']:SetText('Browse (' .. dungeonIndex .. ')')
+        _G['LFTMainBrowseText']:SetText('Browse (' .. dungeonIndex .. ')')
+    else
+        _G['LFTBrowseNoPeople']:Show()
+        _G['LFTBrowseBrowseText']:SetText('Browse')
+        _G['LFTMainBrowseText']:SetText('Browse')
+    end
+
+    if dungeonIndex > 8 then
+        _G['BrowseDungeonListScrollFrame']:Show()
+    else
+        _G['BrowseDungeonListScrollFrame']:Hide()
+    end
+
+    FauxScrollFrame_Update(_G['BrowseDungeonListScrollFrame'], dungeonIndex, 8, 40)
+end
+
 -- XML called methods
 
 function lft_replace(s, c, cc)
@@ -2921,22 +3118,51 @@ function LFT_Toggle()
     if LFT.level == 0 then
         LFT.level = UnitLevel('player')
     end
-    if _G['LFTMain']:IsVisible() then
-        _G['LFTMain']:Hide()
-    else
-        LFT.checkLFTChannel()
-        if not LFT.findingGroup then
-            LFT.fillAvailableDungeons()
-        end
 
-        if not LFT.sentServerInfoRequest then
-            hookChatFrame(ChatFrame1)
-            LFT.sentServerInfoRequest = true
+    for dungeon, data in next, LFT.dungeons do
+        if not LFT.dungeonsSpam[data.code] then
+            LFT.dungeonsSpam[data.code] = { tank = 0, healer = 0, damage = 0 }
         end
-
-        _G['LFTMain']:Show()
-        DungeonListFrame_Update()
+        if not LFT.dungeonsSpamDisplay[data.code] then
+            LFT.dungeonsSpamDisplay[data.code] = { tank = 0, healer = 0, damage = 0 }
+        end
     end
+
+    if LFT.tab == 1 then
+
+        if _G['LFTMain']:IsVisible() then
+            _G['LFTMain']:Hide()
+            PlaySound("igCharacterInfoClose")
+        else
+            lft_moved()
+            _G['LFTBrowse']:Hide()
+            _G['LFTMain']:Show()
+            PlaySound("igCharacterInfoOpen")
+
+            LFT.checkLFTChannel()
+            if not LFT.findingGroup then
+                LFT.fillAvailableDungeons()
+            end
+
+            if not LFT.sentServerInfoRequest then
+                hookChatFrame(ChatFrame1)
+                LFT.sentServerInfoRequest = true
+            end
+
+            DungeonListFrame_Update()
+        end
+
+    elseif LFT.tab == 2 then
+        if _G['LFTBrowse']:IsVisible() then
+            _G['LFTBrowse']:Hide()
+            PlaySound("igCharacterInfoClose")
+        else
+            _G['LFTMain']:Hide()
+            _G['LFTBrowse']:Show()
+            PlaySound("igCharacterInfoOpen")
+        end
+    end
+
 end
 
 function sayReady()
@@ -3016,11 +3242,17 @@ function LFTsetRole(role, status, readyCheck)
         readyCheckDamage:SetChecked(damageCheck:GetChecked())
     end
     LFT_ROLE = role
+    BrowseDungeonListFrame_Update()
 end
 
 function DungeonListFrame_Update()
     local offset = FauxScrollFrame_GetOffset(_G['DungeonListScrollFrame']);
     LFT.fillAvailableDungeons(offset)
+end
+
+function BrowseDungeonListFrame_Update()
+    local offset = FauxScrollFrame_GetOffset(_G['BrowseDungeonListScrollFrame']);
+    LFT.LFTBrowse_Update(offset)
 end
 
 function DungeonType_OnLoad()
@@ -3170,9 +3402,9 @@ end
 
 function queueFor(name, status)
     local dungeonCode = ''
+    local dung = string.split(name, '_')
+    dungeonCode = dung[2]
     for dungeon, data in next, LFT.dungeons do
-        local dung = string.split(name, '_')
-        dungeonCode = dung[2]
         if dungeonCode == data.code then
             if status then
                 LFT.dungeons[dungeon].queued = true
@@ -3229,6 +3461,26 @@ function findMore()
 
     -- disable the button disable spam clicking it
     _G['findMoreButton']:Disable()
+
+    BrowseDungeonListFrame_Update()
+end
+
+function joinQueue(roleID, name)
+
+    lfdebug('join queue call ' .. name)
+
+    local nameEx = string.split(name, '_')
+    local mCode = nameEx[2]
+
+    leaveQueue('from join queue')
+
+    if _G['Dungeon_' .. mCode] ~= nil then
+        _G['Dungeon_' .. mCode]:SetChecked(true)
+    end
+
+    queueFor(name, true)
+
+    findGroup()
 end
 
 function findGroup()
@@ -3246,8 +3498,6 @@ function findGroup()
 
     PlaySound('PvpEnterQueue')
 
-    local dungeonsText = ''
-
     local roleColor = ''
     if LFT_ROLE == 'tank' then
         roleColor = COLOR_TANK
@@ -3259,19 +3509,22 @@ function findGroup()
         roleColor = COLOR_DAMAGE
     end
 
-    local lfg_text = ''
+    --disable on click advertise for now
+    --local lfg_text = ''
+    local dungeonsText = ''
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
             dungeonsText = dungeonsText .. dungeon .. ', '
-            lfg_text = 'LFG:' .. data.code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
+            --lfg_text = 'LFG:' .. data.code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
         end
     end
-    lfg_text = string.sub(lfg_text, 1, string.len(lfg_text) - 1)
-
-    SendChatMessage(lfg_text,
-            "CHANNEL",
-            DEFAULT_CHAT_FRAME.editBox.languageID,
-            GetChannelName(LFT.channel))
+    --lfg_text = string.sub(lfg_text, 1, string.len(lfg_text) - 1)
+    --
+    --if not dontAdvertise then
+    --    SendChatMessage(lfg_text, "CHANNEL",
+    --            DEFAULT_CHAT_FRAME.editBox.languageID,
+    --            GetChannelName(LFT.channel))
+    --end
 
     dungeonsText = string.sub(dungeonsText, 1, string.len(dungeonsText) - 2)
     lfprint('You are in the queue for |cff69ccf0' .. dungeonsText ..
@@ -3282,6 +3535,7 @@ function findGroup()
 
     LFT.fixMainButton()
 
+    BrowseDungeonListFrame_Update()
 end
 
 function leaveQueue(callData)
@@ -3303,28 +3557,27 @@ function leaveQueue(callData)
 
     local dungeonsText = ''
 
-    --local color = COLOR_GREEN
-    --if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
-    --    color = COLOR_RED
-    --end
-    --if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
-    --    color = COLOR_ORANGE
-    --end
-    --if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
-    --    color = COLOR_GREEN
-    --end
-    --
-    --if LFT.level > data.maxLevel then
-    --    color = COLOR_GREEN
-    --end
-
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
             --            if LFT_TYPE == 2 then --random dungeon, dont uncheck if it comes here from the button
-            if _G["Dungeon_" .. data.code] then
-                _G["Dungeon_" .. data.code]:SetChecked(false)
+
+            -- substract 1
+            --if LFT_ROLE == 'tank' then
+            --    LFT.dungeonsSpam[code].tank = LFT.dungeonsSpam[code].tank - 1
+            --end
+            --if LFT_ROLE == 'healer' then
+            --    LFT.dungeonsSpam[code].healer = LFT.dungeonsSpam[code].healer - 1
+            --end
+            --if LFT_ROLE == 'damage' then
+            --    LFT.dungeonsSpam[code].damage = LFT.dungeonsSpam[code].damage - 1
+            --end
+
+            if callData ~= 'from join queue' then
+                if _G["Dungeon_" .. data.code] then
+                    _G["Dungeon_" .. data.code]:SetChecked(false)
+                end
+                LFT.dungeons[dungeon].queued = false
             end
-            LFT.dungeons[dungeon].queued = false
             dungeonsText = dungeonsText .. dungeon .. ', '
         end
     end
@@ -3340,7 +3593,9 @@ function leaveQueue(callData)
             end
             lfprint('Your group has left the queue for |cff69ccf0' .. dungeonsText .. COLOR_WHITE .. '.')
         else
-            lfprint('You have left the queue for |cff69ccf0' .. dungeonsText .. COLOR_WHITE .. '.')
+            if callData ~= 'from join queue' then
+                lfprint('You have left the queue for |cff69ccf0' .. dungeonsText .. COLOR_WHITE .. '.')
+            end
         end
 
         LFT.sendCancelMeMessage()
@@ -3358,11 +3613,10 @@ function leaveQueue(callData)
             _G["Dungeon_" .. LFT.LFMDungeonCode]:SetChecked(true)
             LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].queued = true
         end
-        --        LFT.enableDungeonCheckButtons()
     end
 
     DungeonListFrame_Update()
-    --LFT.fixMainButton() --disabled, DungeonListFrame_Update() fillAvailableDungeons, which calls fixMainButton
+    BrowseDungeonListFrame_Update()
 end
 
 function LFTObjectives.objectiveComplete(bossName, dontSendToAll)
@@ -3432,7 +3686,25 @@ function toggleDungeonStatus_OnClick()
     end
 end
 
+function lft_moved()
+    if LFT.tab == 1 then
+        _G['LFTBrowse']:SetPoint("TOPLEFT", _G["LFTMain"], "TOPLEFT", 0, 0)
+    elseif LFT.tab == 2 then
+        _G['LFTMain']:SetPoint("TOPLEFT", _G["LFTBrowse"], "TOPLEFT", 0, 0)
+    end
+end
 
+function lft_switch_tab(t)
+    LFT.tab = t
+    PlaySound("igCharacterInfoTab");
+    if t == 1 then
+        _G['LFTBrowse']:Hide()
+        _G['LFTMain']:Show()
+    elseif t == 2 then
+        _G['LFTMain']:Hide()
+        _G['LFTBrowse']:Show()
+    end
+end
 
 -- slash commands
 
@@ -3525,6 +3797,39 @@ function LFT.removeChannelFromWindows()
     end
 end
 
+function LFT.incDungeonssSpamRole(dungeon, role)
+
+    if not role then
+        role = LFT_ROLE
+    end
+
+    if role == 'tank' then
+        LFT.dungeonsSpam[dungeon].tank = LFT.dungeonsSpam[dungeon].tank + 1
+    end
+    if role == 'healer' then
+        LFT.dungeonsSpam[dungeon].healer = LFT.dungeonsSpam[dungeon].healer + 1
+    end
+    if role == 'damage' then
+        LFT.dungeonsSpam[dungeon].damage = LFT.dungeonsSpam[dungeon].damage + 1
+    end
+end
+
+function LFT.updateDungeonsSpamDisplay(code)
+
+    if LFT.dungeonsSpam[code].tank ~= 0 then
+        LFT.dungeonsSpamDisplay[code].tank = LFT.dungeonsSpam[code].tank
+    end
+
+    if LFT.dungeonsSpam[code].healer ~= 0 then
+        LFT.dungeonsSpamDisplay[code].healer = LFT.dungeonsSpam[code].healer
+    end
+
+    if LFT.dungeonsSpam[code].damage ~= 0 then
+        LFT.dungeonsSpamDisplay[code].damage = LFT.dungeonsSpam[code].damage
+    end
+
+end
+
 -- dungeons
 
 LFT.dungeons = {
@@ -3544,7 +3849,7 @@ LFT.dungeons = {
     ['Uldaman'] = { minLevel = 40, maxLevel = 51, code = 'ulda', queued = false, canQueue = true, background = 'uldaman' },
     ['Zul\'Farrak'] = { minLevel = 44, maxLevel = 54, code = 'zf', queued = false, canQueue = true, background = 'zulfarak' },
     ['Maraudon Orange'] = { minLevel = 47, maxLevel = 55, code = 'maraorange', queued = false, canQueue = true, background = 'maraudon' },
-    ['Maraudon Purple'] = { minLevel = 47, maxLevel = 55, code = 'marapurple', queued = false, canQueue = true, background = 'maraudon' },
+    ['Maraudon Purple'] = { minLevel = 45, maxLevel = 55, code = 'marapurple', queued = false, canQueue = true, background = 'maraudon' },
     ['Maraudon Princess'] = { minLevel = 47, maxLevel = 55, code = 'maraprincess', queued = false, canQueue = true, background = 'maraudon' },
     ['Temple of Atal\'Hakkar'] = { minLevel = 50, maxLevel = 60, code = 'st', queued = false, canQueue = true, background = 'sunkentemple' },
     ['Blackrock Depths'] = { minLevel = 52, maxLevel = 60, code = 'brd', queued = false, canQueue = true, background = 'blackrockdepths' },
@@ -3560,9 +3865,8 @@ LFT.dungeons = {
     --['GM Test'] = { minLevel = 1, maxLevel = 60, code = 'gmtest', queued = false, canQueue = true, background = 'stratholme' },
 }
 
---needs work
 LFT.bosses = {
-    ['gmtest'] = {
+    ['gmtest'] = { --dev only
         'Duros',
         'Draka',
     },
