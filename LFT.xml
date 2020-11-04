@@ -282,18 +282,6 @@
                 </Texture>
             </Layer>
             <Layer level="BACKGROUND">
-                <Texture name="$parentSelected" hidden="true" file="Interface\addons\LFT\images\ui-character-tab-highlight-yellow" alphaMode="ADD">
-                    <Size>
-                        <AbsDimension x="315" y="40"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOPLEFT">
-                            <Offset>
-                                <AbsDimension x="0" y="0"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
             </Layer>
             <Layer level="ARTWORK">
                 <Texture name="$parentIconTank" file="Interface\addons\LFT\images\ready_tank">
@@ -413,43 +401,7 @@
                     </OnClick>
                 </Scripts>
             </Button>
-<!--            <Button name="$parentJoinAsHealer" inherits="UIPanelButtonTemplate2" text="Join as Healer">-->
-<!--                <Size>-->
-<!--                    <AbsDimension x="90" y="16"/>-->
-<!--                </Size>-->
-<!--                <Anchors>-->
-<!--                    <Anchor point="LEFT" relativeTo="$parentJoinAsTank" relativePoint="RIGHT">-->
-<!--                        <Offset>-->
-<!--                            <AbsDimension x="3" y="0"/>-->
-<!--                        </Offset>-->
-<!--                    </Anchor>-->
-<!--                </Anchors>-->
-<!--                <Scripts>-->
-<!--                    <OnClick>-->
-<!--                    </OnClick>-->
-<!--                </Scripts>-->
-<!--            </Button>-->
 
-<!--            <Button name="$parent_Big" inherits="UIPanelButtonTemplate">-->
-<!--                <PushedTexture/>-->
-<!--                <NormalTexture/>-->
-<!--                <HighlightTexture file="Interface\addons\LFT\images\ui-character-tab-highlight-yellow" alphaMode="ADD"/>-->
-<!--                <Size>-->
-<!--                    <AbsDimension x="315" y="40"/>-->
-<!--                </Size>-->
-<!--                <Anchors>-->
-<!--                    <Anchor point="TOPLEFT">-->
-<!--                        <Offset>-->
-<!--                            <AbsDimension x="0" y="0"/>-->
-<!--                        </Offset>-->
-<!--                    </Anchor>-->
-<!--                </Anchors>-->
-<!--                <Scripts>-->
-<!--                    <OnClick>-->
-<!--                        select_browsed_dungeon(this:GetName())-->
-<!--                    </OnClick>-->
-<!--                </Scripts>-->
-<!--            </Button>-->
         </Frames>
     </Frame>
 
@@ -1343,7 +1295,7 @@
         </Anchors>
         <Layers>
             <Layer level="BACKGROUND">
-                <Texture file="Interface\addons\LFT\images\ui-character-activetab.blp">
+                <Texture file="Interface\addons\LFT\images\ui-character-activetab">
                     <Size>
                         <AbsDimension x="128" y="64"/>
                     </Size>
@@ -1356,7 +1308,7 @@
                     </Anchors>
                 </Texture>
 
-                <Texture file="Interface\addons\LFT\images\ui-character-inactivetab.blp">
+                <Texture file="Interface\addons\LFT\images\ui-character-inactivetab">
                     <Size>
                         <AbsDimension x="128" y="32"/>
                     </Size>
@@ -1382,7 +1334,7 @@
                         </Anchor>
                     </Anchors>
                 </Texture>
-                <Texture file="interface\addons\LFT\images\ui-lfg-background-dungeonwall.blp">
+                <Texture file="interface\addons\LFT\images\ui-lfg-background-dungeonwall">
                     <Size>
                         <AbsDimension x="512" y="256"/>
                     </Size>
@@ -1396,7 +1348,6 @@
                 </Texture>
             </Layer>
             <Layer level="ARTWORK">
-
                 <Texture name="LFTBrowseButtonHighlight" hidden="true"
                          file="Interface\addons\LFT\images\ui-character-tab-realhighlight">
                     <Size>
@@ -1838,7 +1789,7 @@
         </Anchors>
         <Layers>
             <Layer level="BACKGROUND">
-                <Texture file="Interface\addons\LFT\images\ui-character-activetab.blp">
+                <Texture file="Interface\addons\LFT\images\ui-character-activetab">
                     <Size>
                         <AbsDimension x="128" y="64"/>
                     </Size>
@@ -1851,7 +1802,7 @@
                     </Anchors>
                 </Texture>
 
-                <Texture file="Interface\addons\LFT\images\ui-character-inactivetab.blp">
+                <Texture file="Interface\addons\LFT\images\ui-character-inactivetab">
                     <Size>
                         <AbsDimension x="128" y="32"/>
                     </Size>
@@ -1864,8 +1815,7 @@
                     </Anchors>
                 </Texture>
 
-                <Texture file="Interface\addons\LFT\images\ui-lfg-portrait">
-                    <!--                <Texture file="Interface\Addons\LFT\images\damage">-->
+                <Texture file="Interface\addons\LFT\images\battlenet-portrait">
                     <Size>
                         <AbsDimension x="64" y="64"/>
                     </Size>
