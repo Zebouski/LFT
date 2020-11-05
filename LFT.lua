@@ -1076,7 +1076,7 @@ LFTComms:SetScript("OnEvent", function()
                         if LFT.ver(ver) < LFT.ver(addonVer) then
                             color = COLOR_ORANGE
                         end
-                        lfprint(arg2 .. ' - ' .. color .. 'v' .. ver)
+                        lfprint('[' .. LFTWhoCounter.people .. '] ' .. arg2 .. ' - ' .. color .. 'v' .. ver)
                     end
                 end
             end
@@ -1096,8 +1096,10 @@ LFTComms:SetScript("OnEvent", function()
                     local mDungeonCode = spamSplit[2]
                     local mRole = spamSplit[3] --other's role
 
-                    LFT.incDungeonssSpamRole(mDungeonCode, mRole)
-                    LFT.updateDungeonsSpamDisplay(mDungeonCode)
+                    if mDungeonCode and mRole then
+                        LFT.incDungeonssSpamRole(mDungeonCode, mRole)
+                        LFT.updateDungeonsSpamDisplay(mDungeonCode)
+                    end
                 end
             end
         end
@@ -1205,74 +1207,78 @@ LFTComms:SetScript("OnEvent", function()
                     local mDungeonCode = spamSplit[2]
                     local mRole = spamSplit[3] --other's role
 
-                    for _, data in next, LFT.dungeons do
-                        if data.queued and data.code == mDungeonCode then
+                    if mDungeonCode and mRole then
 
-                            --LFM forming
-                            if LFT.isLeader then
-                                if mRole == 'tank' then
-                                    if LFT.addTank(mDungeonCode, arg2) then
-                                        foundMessage = foundMessage .. 'found:tank:' .. mDungeonCode .. ':' .. arg2 .. ':' .. prioMembers .. ':' .. prioObjectives .. ' '
+                        for _, data in next, LFT.dungeons do
+                            if data.queued and data.code == mDungeonCode then
+
+                                --LFM forming
+                                if LFT.isLeader then
+                                    if mRole == 'tank' then
+                                        if LFT.addTank(mDungeonCode, arg2) then
+                                            foundMessage = foundMessage .. 'found:tank:' .. mDungeonCode .. ':' .. arg2 .. ':' .. prioMembers .. ':' .. prioObjectives .. ' '
+                                        end
+                                    end
+                                    if mRole == 'healer' then
+                                        if LFT.addHealer(mDungeonCode, arg2) then
+                                            foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ':' .. prioMembers .. ':' .. prioObjectives .. ' '
+                                        end
+                                    end
+                                    if mRole == 'damage' then
+                                        if LFT.addDamage(mDungeonCode, arg2) then
+                                            foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ':' .. prioMembers .. ':' .. prioObjectives .. ' '
+                                        end
+                                    end
+                                    if foundMessage ~= '' then
+                                        SendChatMessage(foundMessage, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                                    end
+                                    return false
+                                end
+
+                                -- LFG forming
+                                if LFT_ROLE == 'tank' then
+                                    LFT.group[mDungeonCode].tank = me
+
+                                    if mRole == 'healer' then
+                                        if LFT.addHealer(mDungeonCode, arg2, false, true) then
+                                            foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ':0:0 '
+                                        end
+                                    end
+                                    if mRole == 'damage' then
+                                        if LFT.addDamage(mDungeonCode, arg2, false, true) then
+                                            foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ':0:0 '
+                                        end
                                     end
                                 end
-                                if mRole == 'healer' then
-                                    if LFT.addHealer(mDungeonCode, arg2) then
-                                        foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ':' .. prioMembers .. ':' .. prioObjectives .. ' '
+
+                                --pseudo fill group for tooltip display
+                                if LFT_ROLE == 'healer' then
+                                    LFT.addHealer(mDungeonCode, me, true, true) --faux, me
+
+                                    if mRole == 'tank' then
+                                        LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
+                                    end
+                                    if mRole == 'damage' then
+                                        LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
                                     end
                                 end
-                                if mRole == 'damage' then
-                                    if LFT.addDamage(mDungeonCode, arg2) then
-                                        foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ':' .. prioMembers .. ':' .. prioObjectives .. ' '
+
+                                if LFT_ROLE == 'damage' then
+                                    LFT.addDamage(mDungeonCode, me, true, true) --faux
+
+                                    if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
+                                        LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
                                     end
-                                end
-                                if foundMessage ~= '' then
-                                    SendChatMessage(foundMessage, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
-                                end
-                                return false
-                            end
-
-                            -- LFG forming
-                            if LFT_ROLE == 'tank' then
-                                LFT.group[mDungeonCode].tank = me
-
-                                if mRole == 'healer' then
-                                    if LFT.addHealer(mDungeonCode, arg2, false, true) then
-                                        foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ':0:0 '
+                                    if mRole == 'healer' and LFT.group[mDungeonCode].healer == '' then
+                                        LFT.addHealer(mDungeonCode, arg2, true, true) -- fause healer
                                     end
-                                end
-                                if mRole == 'damage' then
-                                    if LFT.addDamage(mDungeonCode, arg2, false, true) then
-                                        foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ':0:0 '
+                                    if mRole == 'damage' then
+                                        LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
                                     end
-                                end
-                            end
-
-                            --pseudo fill group for tooltip display
-                            if LFT_ROLE == 'healer' then
-                                LFT.addHealer(mDungeonCode, me, true, true) --faux, me
-
-                                if mRole == 'tank' then
-                                    LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
-                                end
-                                if mRole == 'damage' then
-                                    LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
-                                end
-                            end
-
-                            if LFT_ROLE == 'damage' then
-                                LFT.addDamage(mDungeonCode, me, true, true) --faux
-
-                                if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
-                                    LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
-                                end
-                                if mRole == 'healer' and LFT.group[mDungeonCode].healer == '' then
-                                    LFT.addHealer(mDungeonCode, arg2, true, true) -- fause healer
-                                end
-                                if mRole == 'damage' then
-                                    LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
                                 end
                             end
                         end
+
                     end
                 end
 
@@ -3803,6 +3809,11 @@ function LFT.incDungeonssSpamRole(dungeon, role)
         role = LFT_ROLE
     end
 
+    if not LFT.dungeonsSpam[dungeon] then
+        lfdebug('error in incDugeon, ' .. dungeon .. ' not init')
+        return false
+    end
+
     if role == 'tank' then
         LFT.dungeonsSpam[dungeon].tank = LFT.dungeonsSpam[dungeon].tank + 1
     end
@@ -3815,6 +3826,16 @@ function LFT.incDungeonssSpamRole(dungeon, role)
 end
 
 function LFT.updateDungeonsSpamDisplay(code)
+
+    if not LFT.dungeonsSpam[code] then
+        lfdebug('error in updateDungeons, ' .. code .. ' not init')
+        return false
+    end
+
+    if not LFT.dungeonsSpamDisplay[code] then
+        lfdebug('error in updateDungeons, ' .. code .. ' not init, display')
+        return false
+    end
 
     if LFT.dungeonsSpam[code].tank ~= 0 then
         LFT.dungeonsSpamDisplay[code].tank = LFT.dungeonsSpam[code].tank
