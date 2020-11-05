@@ -12,6 +12,11 @@ local groupsFormedThisSession = 0
 
 -- todo : stats like "x players is looking for groups at the moment" available at all times
 
+--- [5:09 PM] Dogenovi: LFM Idea: Group forming for elite quests.
+--- Group forms when 3 players accumulate
+--- Doesn't respect class roles (They are not too important for outdoor content as you don't engage a lot of mobs at once)
+--- Keeps looking for players after a party of 3 is formed.
+
 LFT.tab = 1
 LFT.dungeonsSpam = {}
 LFT.dungeonsSpamDisplay = {}
@@ -30,6 +35,7 @@ LFT:RegisterEvent("PLAYER_ENTERING_WORLD")
 LFT:RegisterEvent("PARTY_MEMBERS_CHANGED")
 LFT:RegisterEvent("PARTY_LEADER_CHANGED")
 LFT:RegisterEvent("PLAYER_LEVEL_UP")
+LFT:RegisterEvent("PLAYER_TARGET_CHANGED")
 LFT.availableDungeons = {}
 LFT.group = {}
 LFT.oneGroupFull = false
@@ -138,6 +144,9 @@ LFTTime:SetScript("OnUpdate", function()
     if gt >= st then
 
         this.startTime = GetTime()
+
+        LFT.currentGroupSize = GetNumPartyMembers() + 1
+
         LFTTime.second = tonumber(date("%S", time())) + LFTTime.diff
         if LFTTime.second < 0 then
             LFTTime.second = LFTTime.second + 60
@@ -161,9 +170,13 @@ LFTTime:SetScript("OnUpdate", function()
 
                 lfdebug("RESET --- TIME IS 0 OR 30")
 
-                --reset dungeon spam at 0 and 30
                 for dungeon, data in next, LFT.dungeons do
+                    --reset dungeon spam
                     LFT.dungeonsSpam[data.code] = { tank = 0, healer = 0, damage = 0 }
+                    --reset myRole
+                    if LFT.groupFullCode == '' and not LFT.inGroup then
+                        LFT.dungeons[dungeon].myRole = ''
+                    end
                 end
                 this.execAt = {}
 
@@ -206,6 +219,7 @@ LFTGoingWithPicker:Hide()
 LFTGoingWithPicker.candidate = ''
 LFTGoingWithPicker.priority = 0
 LFTGoingWithPicker.dungeon = ''
+LFTGoingWithPicker.myRole = ''
 
 LFTGoingWithPicker:SetScript("OnShow", function()
     this.startTime = GetTime()
@@ -220,10 +234,15 @@ LFTGoingWithPicker:SetScript("OnUpdate", function()
     local st = (this.startTime + plus) * 1000
     if gt >= st then
 
-        SendChatMessage('goingWith:' .. LFTGoingWithPicker.candidate .. ':' .. LFTGoingWithPicker.dungeon .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+        LFT.dungeons[LFT.dungeonNameFromCode(LFTGoingWithPicker.dungeon)].myRole = LFTGoingWithPicker.myRole
+
+        SendChatMessage('goingWith:' .. LFTGoingWithPicker.candidate .. ':' .. LFTGoingWithPicker.dungeon
+                .. ':' .. LFTGoingWithPicker.myRole, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+
         LFT.foundGroup = true
 
         LFTGoingWithPicker.candidate = ''
+        LFTGoingWithPicker.myRole = ''
         LFTGoingWithPicker.priority = 0
         LFTGoingWithPicker.dungeon = ''
         LFTGoingWithPicker:Hide()
@@ -312,7 +331,6 @@ LFTObjectives.objectivesComplete = 0
 
 function close_lft_objectives()
     LFTObjectives.closedByUser = true
-    --lfdebug('LFTObjectives.closedByUser = true')
     _G['LFTDungeonStatus']:Hide()
 end
 
@@ -475,7 +493,6 @@ LFTRoleCheck:SetScript("OnShow", function()
 end)
 
 LFTRoleCheck:SetScript("OnHide", function()
-    --lfdebug('lftrolecheck onhide')
     if LFT.isLeader then
         if LFT.findingMore then
         else
@@ -495,7 +512,6 @@ LFTRoleCheck:SetScript("OnUpdate", function()
     local gt = GetTime() * 1000
     local st = (this.startTime + plus) * 1000
     if gt >= st then
-        --lfdebug(' lftrolecheck > ' .. plus)
         LFTRoleCheck:Hide()
 
         if LFT.isLeader then
@@ -514,6 +530,7 @@ end)
 local LFTWhoCounter = CreateFrame("Frame")
 LFTWhoCounter:Hide()
 LFTWhoCounter.people = 0
+LFTWhoCounter.total = 0
 LFTWhoCounter.listening = false
 LFTWhoCounter:SetScript("OnShow", function()
     this.startTime = GetTime()
@@ -524,7 +541,7 @@ end)
 
 LFTWhoCounter:SetScript("OnHide", function()
     LFTWhoCounter.people = LFTWhoCounter.people + 1 -- + me
-    lfprint('Found ' .. COLOR_GREEN .. LFTWhoCounter.people .. COLOR_WHITE .. ' online using LFT addon.')
+    lfprint('Found ' .. COLOR_GREEN .. LFTWhoCounter.people .. COLOR_WHITE .. '/' .. LFTWhoCounter.total .. ' online using LFT addon.')
     LFTWhoCounter.listening = false
 end)
 
@@ -735,9 +752,9 @@ LFTComms:SetScript("OnEvent", function()
                     local _, numCompletedObjectives = LFT.getDungeonCompletion()
                     LFT.showDungeonObjectives('dummy', numCompletedObjectives)
                     --promote the tank to leader
-                    if LFT.isLeader and role == 'tank' and arg4 ~= me then
-                        PromoteByName(arg4)
-                    end
+                end
+                if LFT.isLeader and role == 'tank' and arg4 ~= me then
+                    PromoteByName(arg4)
                 end
             end
             if string.sub(arg2, 1, 11) == 'LFTVersion:' and arg4 ~= me then
@@ -764,6 +781,9 @@ LFTComms:SetScript("OnEvent", function()
                     local tank = tonumber(miniEx[3])
                     local healer = tonumber(miniEx[4])
                     local damage = tonumber(miniEx[5])
+
+                    LFT.LFMDungeonCode = code
+
                     LFT.group = {} --reset old entries
                     LFT.group[code] = {
                         tank = '',
@@ -795,11 +815,12 @@ LFTComms:SetScript("OnEvent", function()
                 local mCode = queueEx[2]
                 local objectivesCompleted = queueEx[3]
                 local objectivesTotal = queueEx[4]
+
                 LFT.groupFullCode = mCode
+                LFT.LFMDungeonCode = mCode
+
                 --uncheck everything
-                --for i, frame in LFT.availableDungeons do
                 _G['Dungeon_' .. LFT.groupFullCode]:SetChecked(false)
-                --end
                 LFT.findingGroup = false
                 LFT.findingMore = false
                 local background = ''
@@ -810,9 +831,15 @@ LFTComms:SetScript("OnEvent", function()
                         dungeonName = d
                     end
                 end
+
+                local myRole = LFT.dungeons[LFT.dungeonNameFromCode(mCode)].myRole
+
+                lfdebug('myrole in LFMPartyReady = ' .. myRole)
+                lfdebug('mCode in LFMPartyReady = ' .. mCode)
+
                 _G['LFTGroupReadyBackground']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
-                _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
-                _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(LFT_ROLE))
+                _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. myRole .. '2')
+                _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(myRole))
                 _G['LFTGroupReadyDungeonName']:SetText(dungeonName)
                 _G['LFTGroupReadyObjectivesCompleted']:SetText(objectivesCompleted .. '/' .. objectivesTotal .. ' Bosses Defeated')
                 LFT.readyStatusReset()
@@ -844,31 +871,56 @@ LFTComms:SetScript("OnEvent", function()
                 LFT.LFMDungeonCode = mCode
                 LFT.resetGroup()
 
-                if LFT.isLeader then
-                    lfdebug('is leader')
-                    if LFT_ROLE == 'tank' then
-                        LFT.LFMGroup.tank = me
-                        SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
+                --if we dont know my prev role
+                if LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole == '' then
+
+                    if _G['RoleTank']:GetChecked() then
+                        LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole = 'tank'
+                    elseif _G['RoleHealer']:GetChecked() then
+                        LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole = 'healer'
+                    elseif _G['RoleDamage']:GetChecked() then
+                        LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole = 'damage'
+                    else
+                        LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole = LFT.GetPossibleRoles()
                     end
-                    if LFT_ROLE == 'healer' then
-                        LFT.LFMGroup.healer = me
-                        SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
-                    end
-                    if LFT_ROLE == 'damage' then
-                        LFT.LFMGroup.damage1 = me
-                        SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
-                    end
-                else
-                    _G['LFTRoleCheckQForText']:SetText(COLOR_WHITE .. "Queued for " .. COLOR_YELLOW .. LFT.dungeonNameFromCode(mCode))
-                    _G['LFTRoleCheck']:Show()
-                    _G['LFTGroupReady']:Hide()
                 end
+
+                _G['roleCheckTank']:SetChecked(LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole == 'tank')
+                _G['roleCheckHealer']:SetChecked(LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole == 'healer')
+                _G['roleCheckDamage']:SetChecked(LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole == 'damage')
+
+                _G['LFTRoleCheckAcceptRole']:Enable()
+
+                --commented this to show my rolecheck window
+                --if LFT.isLeader then
+                --    lfdebug('is leader')
+                --    if LFT_ROLE == 'tank' then
+                --        LFT.LFMGroup.tank = me
+                --        SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
+                --    end
+                --    if LFT_ROLE == 'healer' then
+                --        LFT.LFMGroup.healer = me
+                --        SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
+                --    end
+                --    if LFT_ROLE == 'damage' then
+                --        LFT.LFMGroup.damage1 = me
+                --        SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
+                --    end
+                --else
+                _G['LFTRoleCheckQForText']:SetText(COLOR_WHITE .. "Queued for " .. COLOR_YELLOW .. LFT.dungeonNameFromCode(mCode))
+                _G['LFTRoleCheck']:Show()
+                _G['LFTGroupReady']:Hide()
+                --end
                 LFTRoleCheck:Show()
             end
 
             if string.sub(arg2, 1, 11) == 'acceptRole:' then
                 local roleEx = string.split(arg2, ':')
                 local roleColor = ''
+
+                if arg4 == me and not LFT.isLeader then
+                    LFTRoleCheck:Hide()
+                end
 
                 LFT.showPartyRoleIcons(roleEx[2], arg4)
 
@@ -889,86 +941,115 @@ LFTComms:SetScript("OnEvent", function()
 
                 if roleEx[2] == 'tank' then
                     if LFT_ROLE == 'tank' then
-                        if LFT.isLeader then
-                            if arg4 == me then
-                                --                                might as well tank = me/arg4, but LFT.LFMGroup.tank is already me
-                            else
-                                lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen ' .. COLOR_TANK .. 'Tank' .. COLOR_WHITE .. ' but you already confirmed this role.')
-                                lfprint('Queueing aborted.')
-                                leaveQueue(' two tanks')
-                                return false
-                            end
+                        if _G['LFTRoleCheck']:IsVisible() then
+                            _G['LFTRoleCheckAcceptRole']:Disable()
+                            _G['roleCheckTank']:SetChecked(false)
+                            _G['roleCheckTank']:Disable()
                         else
-                            if LFT.LFMGroup.tank ~= '' then
-                                lfprint(COLOR_TANK .. 'Tank ' .. COLOR_WHITE .. 'role has already been filled by ' .. LFT.classColors[LFT.playerClass(LFT.LFMGroup.tank)].c .. LFT.LFMGroup.tank
-                                        .. COLOR_WHITE .. '. Please select a different role to rejoin the queue.')
-                                return false
+                            --not visible means confirmed by me
+                            --for me
+                            --should not get here i think, button will be disabled
+                            if LFT.isLeader then
+                                if arg4 ~= me then
+                                    lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen '
+                                            .. COLOR_TANK .. 'Tank' .. COLOR_WHITE .. ' but you already confirmed this role.')
+                                    lfprint('Queueing aborted.')
+                                    leaveQueue(' two tanks')
+                                    return false
+                                end
+                            else
+                                --for other tank
+                                if LFT.LFMGroup.tank ~= '' and LFT.LFMGroup.tank ~= me then
+                                    lfprint(COLOR_TANK .. 'Tank ' .. COLOR_WHITE .. 'role has already been filled by ' .. LFT.classColors[LFT.playerClass(LFT.LFMGroup.tank)].c .. LFT.LFMGroup.tank
+                                            .. COLOR_WHITE .. '. Please select a different role to rejoin the queue.')
+                                    return false
+                                end
                             end
                         end
-                    else
                     end
                     LFT.LFMGroup.tank = arg4
                 end
 
                 if roleEx[2] == 'healer' then
                     if LFT_ROLE == 'healer' then
-                        if LFT.isLeader then
-                            if arg4 == me then
-                                --                                might as well healer = me/arg4, but LFT.LFMGroup.healer is already me
-                            else
-                                lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen ' .. COLOR_HEALER .. 'Healer' .. COLOR_WHITE .. ' but you already confirmed this role.')
-                                lfprint('Queueing aborted.')
-                                leaveQueue('two healers')
-                                return false
-                            end
+                        if _G['LFTRoleCheck']:IsVisible() then
+                            _G['LFTRoleCheckAcceptRole']:Disable()
+                            _G['roleCheckHealer']:SetChecked(false)
+                            _G['roleCheckHealer']:Disable()
                         else
-                            if LFT.LFMGroup.healer ~= '' then
-                                lfprint(COLOR_HEALER .. 'Healer ' .. COLOR_WHITE .. 'role has already been filled by ' .. LFT.classColors[LFT.playerClass(LFT.LFMGroup.healer)].c .. LFT.LFMGroup.healer
-                                        .. COLOR_WHITE .. '. Please select a different role to rejoin the queue.')
-                                return false
+                            --not visible means confirmed by me
+                            --for me
+                            --should not get here i think, button will be disabled
+                            if LFT.isLeader then
+                                if arg4 ~= me then
+                                    lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen '
+                                            .. COLOR_HEALER .. 'Healer' .. COLOR_WHITE .. ' but you already confirmed this role.')
+                                    lfprint('Queueing aborted.')
+                                    leaveQueue('two healers')
+                                    return false
+                                end
+                            else
+                                --for other healer
+                                if LFT.LFMGroup.healer ~= '' then
+                                    lfprint(COLOR_HEALER .. 'Healer ' .. COLOR_WHITE .. 'role has already been filled by ' .. LFT.classColors[LFT.playerClass(LFT.LFMGroup.healer)].c .. LFT.LFMGroup.healer
+                                            .. COLOR_WHITE .. '. Please select a different role to rejoin the queue.')
+                                    return false
+                                end
                             end
                         end
-                    else
                     end
                     LFT.LFMGroup.healer = arg4
                 end
 
                 if roleEx[2] == 'damage' then
+
+                    local tooManyDps = false
+
+                    if LFT.LFMGroup.damage1 == '' then
+                        LFT.LFMGroup.damage1 = arg4
+                    elseif LFT.LFMGroup.damage2 == '' then
+                        LFT.LFMGroup.damage2 = arg4
+                    elseif LFT.LFMGroup.damage3 == '' then
+                        LFT.LFMGroup.damage3 = arg4
+                    else
+                        tooManyDps = true
+                    end
+
                     if LFT_ROLE == 'damage' then
-                        if LFT.isLeader then
-                            if arg4 == me then
-                                --                                might as well healer = me/arg4, but LFT.LFMGroup.healer is already me
-                            else
-                                if LFT.LFMGroup.damage1 ~= '' and LFT.LFMGroup.damage2 ~= '' and LFT.LFMGroup.damage3 ~= '' then
-                                    lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen ' .. COLOR_DAMAGE .. 'Damage' .. COLOR_WHITE
-                                            .. ' but the group already has ' .. COLOR_DAMAGE .. '3' .. COLOR_WHITE .. ' confirmed ' .. COLOR_DAMAGE .. 'Damage' .. COLOR_WHITE .. ' members.')
-                                    lfprint('Queueing aborted.')
-                                    leaveQueue('4 dps')
-                                    return false
+
+                        if _G['LFTRoleCheck']:IsVisible() then
+
+                            -- lock accept buttons if we have 3 dps already
+                            if LFT.LFMGroup.damage1 ~= '' and
+                                    LFT.LFMGroup.damage2 ~= '' and
+                                    LFT.LFMGroup.damage3 ~= '' then
+                                _G['LFTRoleCheckAcceptRole']:Disable()
+                                _G['roleCheckDamage']:SetChecked(false)
+                                _G['roleCheckDamage']:Disable()
+                            end
+
+                        else
+                            if tooManyDps then
+                                if LFT.isLeader then
+                                    if arg4 ~= me then
+                                        if LFT.LFMGroup.damage1 ~= '' and LFT.LFMGroup.damage2 ~= '' and LFT.LFMGroup.damage3 ~= '' then
+                                            lfprint(LFT.classColors[LFT.playerClass(arg4)].c .. arg4 .. COLOR_WHITE .. ' has chosen ' .. COLOR_DAMAGE .. 'Damage' .. COLOR_WHITE
+                                                    .. ' but the group already has ' .. COLOR_DAMAGE .. '3' .. COLOR_WHITE .. ' confirmed ' .. COLOR_DAMAGE .. 'Damage' .. COLOR_WHITE .. ' members.')
+                                            lfprint('Queueing aborted.')
+                                            leaveQueue('4 dps')
+                                            return false
+                                        end
+                                    end
+                                else
+                                    if LFT.LFMGroup.damage1 ~= '' and LFT.LFMGroup.damage2 ~= '' and LFT.LFMGroup.damage3 ~= '' then
+                                        lfprint(COLOR_DAMAGE .. 'Damage ' .. COLOR_WHITE .. 'role has already been filled by ' .. COLOR_DAMAGE .. '3' .. COLOR_WHITE .. ' members. Please select a different role to rejoin the queue.')
+                                        return false
+                                    end
                                 end
                             end
-                        else
-                            if LFT.LFMGroup.damage1 ~= '' and LFT.LFMGroup.damage2 ~= '' and LFT.LFMGroup.damage3 ~= '' then
-                                lfprint(COLOR_DAMAGE .. 'Damage ' .. COLOR_WHITE .. 'role has already been filled by ' .. COLOR_DAMAGE .. '3' .. COLOR_WHITE .. ' members. Please select a different role to rejoin the queue.')
-                                return false
-                            end
                         end
                     end
 
-                    if arg4 ~= me then
-                        --im already in the LFMGroup
-                        if LFT.LFMGroup.damage1 == '' then
-                            lfdebug('set LFT.LFMGroup.damage1 = ' .. arg4)
-                            LFT.LFMGroup.damage1 = arg4
-                        elseif LFT.LFMGroup.damage2 == '' then
-                            lfdebug('set LFT.LFMGroup.damage2 = ' .. arg4)
-                            LFT.LFMGroup.damage2 = arg4
-                        elseif LFT.LFMGroup.damage3 == '' then
-                            lfdebug('set LFT.LFMGroup.damage3 = ' .. arg4)
-                            LFT.LFMGroup.damage3 = arg4
-                        end
-
-                    end
                 end
 
                 if arg4 ~= me then
@@ -1031,6 +1112,7 @@ LFTComms:SetScript("OnEvent", function()
                 string.find(arg1, 'party:ready', 1, true) then
             local mEx = string.split(arg1, ':')
             LFT.groupFullCode = mEx[2] --code
+
             local healer = mEx[5]
             local damage1 = mEx[6]
             local damage2 = mEx[7]
@@ -1039,6 +1121,13 @@ LFTComms:SetScript("OnEvent", function()
             --check if party ready message is for me
             if me ~= healer and me ~= damage1 and me ~= damage2 and me ~= damage3 then
                 return
+            end
+
+            if me == healer then
+                LFT.dungeons[LFT.dungeonNameFromCode(LFT.groupFullCode)].myRole = 'healer'
+            end
+            if me == damage1 or me == damage2 or me == damage3 then
+                LFT.dungeons[LFT.dungeonNameFromCode(LFT.groupFullCode)].myRole = 'damage'
             end
 
             LFT.onlyAcceptFrom = arg2
@@ -1052,9 +1141,12 @@ LFTComms:SetScript("OnEvent", function()
                     dungeonName = d
                 end
             end
+
+            local myRole = LFT.dungeons[LFT.dungeonNameFromCode(LFT.groupFullCode)].myRole
+
             _G['LFTGroupReadyBackground']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
-            _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
-            _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(LFT_ROLE))
+            _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. myRole .. '2')
+            _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(myRole))
             _G['LFTGroupReadyDungeonName']:SetText(dungeonName)
             LFT.readyStatusReset()
             _G['LFTGroupReady']:Show()
@@ -1113,6 +1205,29 @@ LFTComms:SetScript("OnEvent", function()
                 end
             end
         end
+        if event == 'CHAT_MSG_CHANNEL' and arg8 == LFT.channelIndex then
+            if string.sub(arg1, 1, 4) == 'LFM:' then
+
+                local lfmEx = string.split(arg1, ':')
+                local mDungeonCode = lfmEx[2]
+                local lfmTank = tonumber(lfmEx[3])
+                local lfmHealer = tonumber(lfmEx[4])
+                local lfmDamage = tonumber(lfmEx[5])
+
+                if mDungeonCode then
+
+                    LFT.peopleLookingForGroups = LFT.peopleLookingForGroups + lfmTank + lfmHealer + lfmDamage
+                    if LFT.peopleLookingForGroupsDisplay < LFT.peopleLookingForGroups then
+                        LFT.peopleLookingForGroupsDisplay = LFT.peopleLookingForGroups
+                    end
+
+                    LFT.incDungeonssSpamRole(mDungeonCode, 'tank', lfmTank)
+                    LFT.incDungeonssSpamRole(mDungeonCode, 'healer', lfmHealer)
+                    LFT.incDungeonssSpamRole(mDungeonCode, 'damage', lfmDamage)
+                    LFT.updateDungeonsSpamDisplay(mDungeonCode)
+                end
+            end
+        end
 
         if event == 'CHAT_MSG_CHANNEL' and arg8 == LFT.channelIndex and not LFT.oneGroupFull and (LFT.findingGroup or LFT.findingMore) and arg2 ~= me then
 
@@ -1121,50 +1236,56 @@ LFTComms:SetScript("OnEvent", function()
                 local foundLongEx = string.split(arg1, ' ')
 
                 for _, found in foundLongEx do
-                    local foundEx = string.split(found, ':')
-                    local mRole = foundEx[2]
-                    local mDungeon = foundEx[3]
-                    local name = foundEx[4]
-                    local prio = nil
-                    if foundEx[5] then
-                        if tonumber(foundEx[5]) then
-                            prio = tonumber(foundEx[5])
-                        end
-                    end
-
-                    if LFT_ROLE == mRole and not LFT.foundGroup and name == me then
-                        if prio then
-                            if LFTGoingWithPicker.candidate == '' then
-                                LFTGoingWithPicker.candidate = arg2
-                                LFTGoingWithPicker.priority = prio
-                                LFTGoingWithPicker.dungeon = mDungeon
-                                LFTGoingWithPicker:Show()
-                            else
-                                if prio > LFTGoingWithPicker.priority then
-                                    LFTGoingWithPicker.candidate = arg2
-                                    LFTGoingWithPicker.priority = prio
-                                    LFTGoingWithPicker.dungeon = mDungeon
-                                end
+                    if string.len(found) > 0 then
+                        local foundEx = string.split(found, ':')
+                        local mRole = foundEx[2]
+                        local mDungeon = foundEx[3]
+                        local name = foundEx[4]
+                        local prio = nil
+                        if foundEx[5] then
+                            if tonumber(foundEx[5]) then
+                                prio = tonumber(foundEx[5])
                             end
-                        else
-                            --should not get here in latest versions
-                            SendChatMessage('goingWith:' .. arg2 .. ':' .. mDungeon .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
-                            LFT.foundGroup = true
                         end
-                        --SendChatMessage('goingWith:' .. arg2 .. ':' .. mDungeon .. ':' .. LFT_ROLE, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
-                        --LFT.foundGroup = true
+
+                        if string.find(LFT_ROLE, mRole, 1, true) and not LFT.foundGroup and name == me then
+                            --if prio then
+                            --    if LFTGoingWithPicker.candidate == '' then
+                            --        LFTGoingWithPicker.candidate = arg2
+                            --        LFTGoingWithPicker.priority = prio
+                            --        LFTGoingWithPicker.dungeon = mDungeon
+                            --        LFTGoingWithPicker.myRole = mRole
+                            --        LFTGoingWithPicker:Show()
+                            --    else
+                            --        if prio > LFTGoingWithPicker.priority then
+                            --            LFTGoingWithPicker.candidate = arg2
+                            --            LFTGoingWithPicker.priority = prio
+                            --            LFTGoingWithPicker.dungeon = mDungeon
+                            --            LFTGoingWithPicker.myRole = mRole
+                            --        end
+                            --    end
+                            --else
+                            --should not get here in latest versions
+                            LFT.dungeons[LFT.dungeonNameFromCode(mDungeon)].myRole = mRole
+                            lfdebug('myRole for ' .. mDungeon .. ' set to ' .. mRole)
+
+                            SendChatMessage('goingWith:' .. arg2 .. ':' .. mDungeon .. ':' .. mRole, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                            LFT.foundGroup = true
+                            --end
+
+                        end
                     end
                 end
             end
 
             if string.sub(arg1, 1, 10) == 'leftQueue:' then
                 local leftEx = string.split(arg1, ':')
-                local name = arg2
                 local mRole = leftEx[2]
-                LFT.removePlayerFromVirtualParty(name, mRole)
+                LFT.removePlayerFromVirtualParty(arg2, mRole)
             end
 
-            if string.sub(arg1, 1, 10) == 'goingWith:' and (LFT_ROLE == 'tank' or LFT.isLeader) then
+            if string.sub(arg1, 1, 10) == 'goingWith:' and
+                    (string.find(LFT_ROLE, 'tank', 1, true) or LFT.isLeader) then
 
                 local withEx = string.split(arg1, ':')
                 local leader = withEx[2]
@@ -1246,49 +1367,50 @@ LFTComms:SetScript("OnEvent", function()
                                 end
 
                                 -- LFG forming
-                                if LFT_ROLE == 'tank' then
-                                    LFT.group[mDungeonCode].tank = me
+                                if not LFT.inGroup then
+                                    if string.find(LFT_ROLE, 'tank', 1, true) then
+                                        LFT.group[mDungeonCode].tank = me
 
-                                    if mRole == 'healer' then
-                                        if LFT.addHealer(mDungeonCode, arg2, false, true) then
-                                            foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ':0:0 '
+                                        if mRole == 'healer' then
+                                            if LFT.addHealer(mDungeonCode, arg2, false, true) then
+                                                foundMessage = foundMessage .. 'found:healer:' .. mDungeonCode .. ':' .. arg2 .. ':0:0 '
+                                            end
                                         end
-                                    end
-                                    if mRole == 'damage' then
-                                        if LFT.addDamage(mDungeonCode, arg2, false, true) then
-                                            foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ':0:0 '
+                                        if mRole == 'damage' then
+                                            if LFT.addDamage(mDungeonCode, arg2, false, true) then
+                                                foundMessage = foundMessage .. 'found:damage:' .. mDungeonCode .. ':' .. arg2 .. ':0:0 '
+                                            end
                                         end
-                                    end
-                                end
+                                        --end
 
-                                --pseudo fill group for tooltip display
-                                if LFT_ROLE == 'healer' then
-                                    LFT.addHealer(mDungeonCode, me, true, true) --faux, me
+                                        --pseudo fill group for tooltip display
+                                    elseif string.find(LFT_ROLE, 'healer', 1, true) then
+                                        LFT.addHealer(mDungeonCode, me, true, true) --faux, me
 
-                                    if mRole == 'tank' then
-                                        LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
-                                    end
-                                    if mRole == 'damage' then
-                                        LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
-                                    end
-                                end
+                                        if mRole == 'tank' then
+                                            LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
+                                        end
+                                        if mRole == 'damage' then
+                                            LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
+                                        end
+                                        --end
 
-                                if LFT_ROLE == 'damage' then
-                                    LFT.addDamage(mDungeonCode, me, true, true) --faux
+                                    elseif string.find(LFT_ROLE, 'damage', 1, true) then
+                                        LFT.addDamage(mDungeonCode, me, true, true) --faux
 
-                                    if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
-                                        LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
-                                    end
-                                    if mRole == 'healer' and LFT.group[mDungeonCode].healer == '' then
-                                        LFT.addHealer(mDungeonCode, arg2, true, true) -- fause healer
-                                    end
-                                    if mRole == 'damage' then
-                                        LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
+                                        if mRole == 'tank' and LFT.group[mDungeonCode].tank == '' then
+                                            LFT.addTank(mDungeonCode, arg2, true, true) --faux, tank
+                                        end
+                                        if mRole == 'healer' and LFT.group[mDungeonCode].healer == '' then
+                                            LFT.addHealer(mDungeonCode, arg2, true, true) -- fause healer
+                                        end
+                                        if mRole == 'damage' then
+                                            LFT.addDamage(mDungeonCode, arg2, true, true) --faux, dps
+                                        end
                                     end
                                 end
                             end
                         end
-
                     end
                 end
 
@@ -1350,8 +1472,12 @@ local hookChatFrame = function(frame)
             LFT.hookExecutions = LFT.hookExecutions + 1
 
             if string.find(message, 'Players online:', 1, true) and
-                    string.find(arg1, 'Max online:', 1, true) and
+                    string.find(message, 'Max online:', 1, true) and
                     not LFT.gotOnline then
+                local onlineNr = string.split(message, ' ')
+                if tonumber(onlineNr[3]) then
+                    LFTWhoCounter.total = tonumber(onlineNr[3])
+                end
                 LFT.gotOnline = true
                 return false --hide this message
             end
@@ -1387,6 +1513,16 @@ LFT:SetScript("OnEvent", function()
         if event == "ADDON_LOADED" and arg1 == 'LFT' then
             LFT.init()
         end
+        if event == "PLAYER_TARGET_CHANGED" and LFT.inGroup then
+            if _G['TargetFrame']:IsVisible() then
+                if LFT.currentGroupRoles[UnitName('target')] then
+                    _G['LFTPartyRoleIconsTarget']:SetTexture('Interface\\addons\\LFT\\images\\' .. LFT.currentGroupRoles[UnitName('target')] .. '_small')
+                    _G['LFTPartyRoleIconsTarget']:Show()
+                end
+            else
+                _G['LFTPartyRoleIconsTarget']:Hide()
+            end
+        end
         if event == "PLAYER_ENTERING_WORLD" then
             LFT.level = UnitLevel('player')
             LFT.sendMyVersion()
@@ -1414,7 +1550,7 @@ LFT:SetScript("OnEvent", function()
             end
         end
         if event == "PARTY_MEMBERS_CHANGED" then
-            lfdebug('PARTY_MEMBERS_CHANGED') --check -- triggers in raids too
+            --lfdebug('PARTY_MEMBERS_CHANGED') --check -- triggers in raids too
             DungeonListFrame_Update()
             local someoneJoined = GetNumPartyMembers() + 1 > LFT.currentGroupSize
             local someoneLeft = GetNumPartyMembers() + 1 < LFT.currentGroupSize
@@ -1426,6 +1562,11 @@ LFT:SetScript("OnEvent", function()
 
             if not someoneLeft and not someoneJoined then
                 lfdebug('end PARTY_MEMBERS_CHANGED - missfire ?')
+
+                if not LFT.inGroup then
+                    leaveQueue('i left grou --- i think')
+                end
+
                 return false
             end
 
@@ -1437,6 +1578,7 @@ LFT:SetScript("OnEvent", function()
             else
                 -- i left the group OR everybody left
                 lfdebug('LFTInvite.inviteIndex = ' .. LFTInvite.inviteIndex)
+                LFT.GetPossibleRoles()
                 LFT.hidePartyRoleIcons()
 
                 _G['LFTDungeonStatus']:Hide()
@@ -1454,6 +1596,7 @@ LFT:SetScript("OnEvent", function()
                 if LFT.findingGroup or LFT.findingMore then
                     leaveQueue('not group and finding group/more')
                 end
+
                 return false
             end
 
@@ -1499,7 +1642,7 @@ LFT:SetScript("OnEvent", function()
                                 return false -- so it goes into check full in timer
                             end
                             leaveQueue(' someone joined manually')
-                            --                      findMore()
+                            findMore()
                         else
                             --joined from the queue, we know his role, check if group is full
                             --  lfdebug('player ' .. newName .. ' joined from queue')
@@ -1519,7 +1662,8 @@ LFT:SetScript("OnEvent", function()
                 _G['LFTReadyStatus']:Hide()
                 _G['LFTGroupReady']:Hide()
                 -- find who left and update virtual group
-                if LFT.findingMore and LFT.isLeader then
+                if LFT.findingMore --then
+                        and LFT.isLeader then
 
                     --inc some getto code
                     lfdebug('someone left')
@@ -1611,7 +1755,7 @@ LFT:SetScript("OnEvent", function()
                     end
                 end
             end
-            lfdebug('ajunge aici ??')
+            --lfdebug('ajunge aici ??')
             if LFT.isLeader then
                 LFT.sendMinimapDataToParty(LFT.LFMDungeonCode)
             end
@@ -1624,7 +1768,7 @@ LFT:SetScript("OnEvent", function()
                 awesomeButton:SetText('Let\'s do this!')
                 awesomeButton:Enable()
             end
-            lfdebug(' end PARTY_MEMBERS_CHANGED')
+            --lfdebug(' end PARTY_MEMBERS_CHANGED')
         end
         if event == 'PLAYER_LEVEL_UP' then
             LFT.level = arg1
@@ -1683,7 +1827,7 @@ function LFT.init()
     LFT.oneGroupFull = false
     LFT.groupFullCode = ''
     LFT.acceptNextInvite = false
-    LFT.currentGroupSize = GetNumPartyMembers()
+    LFT.currentGroupSize = GetNumPartyMembers() + 1
 
     LFT.isLeader = IsPartyLeader() or false
 
@@ -1746,6 +1890,7 @@ LFTQueue:SetScript("OnShow", function()
         damage = false,
         heal = false,
         reset = false,
+        lfm = false,
         checkGroupFull = false
     }
 end)
@@ -1780,6 +1925,7 @@ LFTQueue:SetScript("OnUpdate", function()
                 damage = false,
                 heal = false,
                 reset = false,
+                lfm = false,
                 checkGroupFull = false
             }
             if not LFT.inGroup then
@@ -1787,7 +1933,15 @@ LFTQueue:SetScript("OnUpdate", function()
             end
         end
 
-        if (LFTTime.second == LFT.TANK_TIME + LFT.myRandomTime or LFTTime.second == LFT.TANK_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'tank' and not this.spammed.tank then
+        if (LFTTime.second == LFT.RESET_TIME + 2 or LFTTime.second == LFT.RESET_TIME + 2 + LFT.TIME_MARGIN) and not this.spammed.lfm then
+            if LFT.isLeader then
+                LFT.sendLFMStats(LFT.LFMDungeonCode)
+                this.spammed.lfm = true
+            end
+        end
+
+        if (LFTTime.second == LFT.TANK_TIME + LFT.myRandomTime or LFTTime.second == LFT.TANK_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and
+                string.find(LFT_ROLE, 'tank', 1, true) and not this.spammed.tank then
             this.spammed.tank = true
             if not LFT.inGroup then
                 -- only start forming group if im not already grouped
@@ -1797,27 +1951,30 @@ LFTQueue:SetScript("OnUpdate", function()
                     end
                 end
                 --new: but do send lfg message if im a tank, to be picked up by LFM party leader
-                LFT.sendLFMessage()
+                LFT.sendLFGMessage('tank')
             end
         end
 
-        if (LFTTime.second == LFT.HEALER_TIME + LFT.myRandomTime or LFTTime.second == LFT.HEALER_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'healer' and not this.spammed.heal then
+        if (LFTTime.second == LFT.HEALER_TIME + LFT.myRandomTime or LFTTime.second == LFT.HEALER_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and
+                string.find(LFT_ROLE, 'healer', 1, true) and not this.spammed.heal then
             this.spammed.heal = true
             if not LFT.inGroup then
                 -- dont spam lfm if im already in a group, because leader will pick up new players
-                LFT.sendLFMessage()
+                LFT.sendLFGMessage('healer')
             end
         end
 
-        if (LFTTime.second == LFT.DAMAGE_TIME + LFT.myRandomTime or LFTTime.second == LFT.DAMAGE_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and LFT_ROLE == 'damage' and not this.spammed.damage then
+        if (LFTTime.second == LFT.DAMAGE_TIME + LFT.myRandomTime or LFTTime.second == LFT.DAMAGE_TIME + LFT.TIME_MARGIN + LFT.myRandomTime) and
+                string.find(LFT_ROLE, 'damage', 1, true) and not this.spammed.damage then
             this.spammed.damage = true
             if not LFT.inGroup then
                 -- dont spam lfm if im already in a group, because leader will pick up new players
-                LFT.sendLFMessage()
+                LFT.sendLFGMessage('damage')
             end
         end
 
-        if (LFTTime.second == LFT.FULLCHECK_TIME or LFTTime.second == LFT.FULLCHECK_TIME + LFT.TIME_MARGIN) and LFT_ROLE == 'tank' and not this.spammed.checkGroupFull then
+        if (LFTTime.second == LFT.FULLCHECK_TIME or LFTTime.second == LFT.FULLCHECK_TIME + LFT.TIME_MARGIN) and
+                string.find(LFT_ROLE, 'tank', 1, true) and not this.spammed.checkGroupFull then
             this.spammed.checkGroupFull = true
             if not LFT.inGroup then
 
@@ -1825,6 +1982,8 @@ LFTQueue:SetScript("OnUpdate", function()
 
                 if groupFull then
                     LFT.groupFullCode = code
+
+                    LFT.dungeons[LFT.dungeonNameFromCode(LFT.groupFullCode)].myRole = 'tank'
 
                     SendChatMessage("[LFT]:" .. code .. ":party:ready:" .. healer .. ":" .. damage1 .. ":" .. damage2 .. ":" .. damage3,
                             "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
@@ -1850,9 +2009,12 @@ LFTQueue:SetScript("OnUpdate", function()
                             dungeonName = d
                         end
                     end
+
+                    local myRole = LFT.dungeons[LFT.dungeonNameFromCode(LFT.groupFullCode)].myRole
+
                     _G['LFTGroupReadyBackground']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
-                    _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '2')
-                    _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(LFT_ROLE))
+                    _G['LFTGroupReadyRole']:SetTexture('Interface\\addons\\LFT\\images\\' .. myRole .. '2')
+                    _G['LFTGroupReadyMyRole']:SetText(LFT.ucFirst(myRole))
                     _G['LFTGroupReadyDungeonName']:SetText(dungeonName)
                     LFT.readyStatusReset()
                     _G['LFTGroupReady']:Show()
@@ -1933,6 +2095,11 @@ function LFT.GetPossibleRoles()
 
         readyCheckDamage:SetChecked(false)
         damageCheck:SetChecked(false)
+
+        tankCheck:SetChecked(string.find(LFT_ROLE, 'tank', 1, true))
+        healerCheck:SetChecked(string.find(LFT_ROLE, 'healer', 1, true))
+        damageCheck:SetChecked(string.find(LFT_ROLE, 'damage', 1, true))
+
         return 'tank'
     end
     if LFT.class == 'paladin' or LFT.class == 'druid' or LFT.class == 'shaman' then
@@ -1950,6 +2117,11 @@ function LFT.GetPossibleRoles()
         damageCheck:Enable()
         readyCheckDamage:SetChecked(false)
         damageCheck:SetChecked(false)
+
+        tankCheck:SetChecked(string.find(LFT_ROLE, 'tank', 1, true))
+        healerCheck:SetChecked(string.find(LFT_ROLE, 'healer', 1, true))
+        damageCheck:SetChecked(string.find(LFT_ROLE, 'damage', 1, true))
+
         return 'healer'
     end
     if LFT.class == 'priest' then
@@ -1962,6 +2134,11 @@ function LFT.GetPossibleRoles()
         damageCheck:Enable()
         readyCheckDamage:SetChecked(false)
         damageCheck:SetChecked(false)
+
+        tankCheck:SetChecked(string.find(LFT_ROLE, 'tank', 1, true))
+        healerCheck:SetChecked(string.find(LFT_ROLE, 'healer', 1, true))
+        damageCheck:SetChecked(string.find(LFT_ROLE, 'damage', 1, true))
+
         return 'healer'
     end
     if LFT.class == 'warlock' or LFT.class == 'hunter' or LFT.class == 'mage' or LFT.class == 'rogue' then
@@ -1969,8 +2146,18 @@ function LFT.GetPossibleRoles()
         damageCheck:Enable()
         readyCheckDamage:SetChecked(true)
         damageCheck:SetChecked(true)
+
+        tankCheck:SetChecked(string.find(LFT_ROLE, 'tank', 1, true))
+        healerCheck:SetChecked(string.find(LFT_ROLE, 'healer', 1, true))
+        damageCheck:SetChecked(string.find(LFT_ROLE, 'damage', 1, true))
+
         return 'damage'
     end
+
+    tankCheck:SetChecked(string.find(LFT_ROLE, 'tank', 1, true))
+    healerCheck:SetChecked(string.find(LFT_ROLE, 'healer', 1, true))
+    damageCheck:SetChecked(string.find(LFT_ROLE, 'damage', 1, true))
+
     return 'damage'
 end
 
@@ -2261,7 +2448,6 @@ function LFT.resetGroup()
     LFT.group = {};
     if not LFT.oneGroupFull then
         LFT.groupFullCode = ''
-        LFT.oneGroupFull = false
     end
     LFT.acceptNextInvite = false
     LFT.onlyAcceptFrom = ''
@@ -2274,10 +2460,13 @@ function LFT.resetGroup()
 
     LFTGroupReadyFrameCloser.response = ''
 
-    for _, data in next, LFT.dungeons do
+    for dungeon, data in next, LFT.dungeons do
+
+        LFT.dungeons[dungeon].myRole = ''
+
         if data.queued then
             local tank = ''
-            if LFT_ROLE == 'tank' then
+            if string.find(LFT_ROLE, 'tank', 1, true) then
                 tank = me
             end
             LFT.group[data.code] = {
@@ -2314,8 +2503,12 @@ function LFT.addTank(dungeon, name, faux, add)
 end
 
 function LFT.addHealer(dungeon, name, faux, add)
-    --prevent adding same person twice
-    if LFT.group[dungeon].healer == name then
+    --prevent adding same person twice, added damage too, multiple roles
+    if LFT.group[dungeon].healer == name or
+            LFT.group[dungeon].damage1 == name or
+            LFT.group[dungeon].damage2 == name or
+            LFT.group[dungeon].damage3 == name then
+
         return false
     end
 
@@ -2358,8 +2551,10 @@ function LFT.addDamage(dungeon, name, faux, add)
         }
     end
 
-    --prevent adding same person twice
-    if LFT.group[dungeon].damage1 == name or
+    --prevent adding same person twice, added tank and healer too, for 2.5+ multipleroles
+    if LFT.group[dungeon].tank == name or
+            LFT.group[dungeon].healer == name or
+            LFT.group[dungeon].damage1 == name or
             LFT.group[dungeon].damage2 == name or
             LFT.group[dungeon].damage3 == name then
         return false
@@ -2431,9 +2626,9 @@ function LFT.checkGroupFull()
     return false, false, nil, nil, nil, nil
 end
 
-function LFT.showMyRoleIcon()
+function LFT.showMyRoleIcon(myRole)
     if _G['PlayerPortrait']:IsVisible() then
-        _G['LFTPartyRoleIconsPlayer']:SetTexture('Interface\\addons\\LFT\\images\\' .. LFT_ROLE .. '_small')
+        _G['LFTPartyRoleIconsPlayer']:SetTexture('Interface\\addons\\LFT\\images\\' .. myRole .. '_small')
         _G['LFTPartyRoleIconsPlayer']:Show()
     else
         _G['LFTPartyRoleIconsPlayer']:Hide()
@@ -2705,26 +2900,89 @@ function LFT.fixMainButton()
         lfmButton:Disable()
         leaveQueueButton:Disable()
     end
+
+    -- todo replace this with LFT_ROLE == ''
+    local tankCheck = _G['RoleTank']
+    local healerCheck = _G['RoleHealer']
+    local damageCheck = _G['RoleDamage']
+    local newRole = ''
+    if tankCheck:GetChecked() then
+        newRole = newRole .. 'tank'
+    end
+    if healerCheck:GetChecked() then
+        newRole = newRole .. 'healer'
+    end
+    if damageCheck:GetChecked() then
+        newRole = newRole .. 'damage'
+    end
+
+    if newRole == '' then
+        lfgButton:Disable()
+        lfmButton:Disable()
+    end
 end
 
 function LFT.sendCancelMeMessage()
-    SendChatMessage('leftQueue:' .. LFT_ROLE,
-            "CHANNEL",
-            DEFAULT_CHAT_FRAME.editBox.languageID,
-            GetChannelName(LFT.channel))
+    if string.find(LFT_ROLE, 'tank', 1, true) then
+        SendChatMessage('leftQueue:tank', "CHANNEL",
+                DEFAULT_CHAT_FRAME.editBox.languageID,
+                GetChannelName(LFT.channel))
 
+    end
+    if string.find(LFT_ROLE, 'healer', 1, true) then
+        SendChatMessage('leftQueue:healer', "CHANNEL",
+                DEFAULT_CHAT_FRAME.editBox.languageID,
+                GetChannelName(LFT.channel))
+
+    end
+    if string.find(LFT_ROLE, 'damage', 1, true) then
+        SendChatMessage('leftQueue:damage', "CHANNEL",
+                DEFAULT_CHAT_FRAME.editBox.languageID,
+                GetChannelName(LFT.channel))
+
+    end
 end
 
-function LFT.sendLFMessage()
+function LFT.sendLFGMessage(role)
 
     local lfg_text = ''
     for code, _ in pairs(LFT.group) do
-        lfg_text = 'LFG:' .. code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
+        lfg_text = 'LFG:' .. code .. ':' .. role .. ' ' .. lfg_text
     end
     lfg_text = string.sub(lfg_text, 1, string.len(lfg_text) - 1)
 
-    SendChatMessage(lfg_text,
-            "CHANNEL",
+    SendChatMessage(lfg_text, "CHANNEL",
+            DEFAULT_CHAT_FRAME.editBox.languageID,
+            GetChannelName(LFT.channel))
+end
+
+function LFT.sendLFMStats(code)
+
+    if code == '' then
+        lfdebug('cant send lfm stats, code = blank')
+        return false
+    end
+    if not LFT.group[code] then
+        return false
+    end
+    local tank, healer, damage = 0, 0, 0
+    if LFT.group[code].tank ~= '' then
+        tank = tank + 1
+    end
+    if LFT.group[code].healer ~= '' then
+        healer = healer + 1
+    end
+    if LFT.group[code].damage1 ~= '' then
+        damage = damage + 1
+    end
+    if LFT.group[code].damage2 ~= '' then
+        damage = damage + 1
+    end
+    if LFT.group[code].damage3 ~= '' then
+        damage = damage + 1
+    end
+
+    SendChatMessage("LFM:" .. code .. ":" .. tank .. ":" .. healer .. ":" .. damage, "CHANNEL",
             DEFAULT_CHAT_FRAME.editBox.languageID,
             GetChannelName(LFT.channel))
 end
@@ -2896,8 +3154,6 @@ function test_dung_ob(code)
     LFT.showDungeonObjectives(code)
 end
 
---local dungIndex = 1
-
 function LFT.showDungeonObjectives(code, numObjectivesComplete)
 
     local dungeonName = LFT.dungeonNameFromCode(LFT.groupFullCode)
@@ -3063,17 +3319,17 @@ function LFT.LFTBrowse_Update(offset)
 
                         if not LFT.inGroup and queues < 5 then
 
-                            if LFT.dungeonsSpamDisplay[data.code].tank == 0 and LFT_ROLE == 'tank' then
+                            if LFT.dungeonsSpamDisplay[data.code].tank == 0 and string.find(LFT_ROLE, 'tank', 1, true) then
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(1)
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Tank')
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
                             end
-                            if LFT.dungeonsSpamDisplay[data.code].healer == 0 and LFT_ROLE == 'healer' then
+                            if LFT.dungeonsSpamDisplay[data.code].healer == 0 and string.find(LFT_ROLE, 'healer', 1, true) then
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(2)
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Healer')
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
                             end
-                            if LFT_ROLE == 'damage' then
+                            if string.find(LFT_ROLE, 'damage', 1, true) then
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(3)
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Damage')
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
@@ -3115,15 +3371,41 @@ function lft_replace(s, c, cc)
 end
 
 function acceptRole()
-    SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. LFT_ROLE, "PARTY")
-    LFT.showMyRoleIcon()
-    LFTRoleCheck:Hide()
+
+    local myRole = ''
+    if _G['roleCheckTank']:GetChecked() then
+        myRole = 'tank'
+    end
+    if _G['roleCheckHealer']:GetChecked() then
+        myRole = 'healer'
+    end
+    if _G['roleCheckDamage']:GetChecked() then
+        myRole = 'damage'
+    end
+    LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole = myRole
+    SendAddonMessage(LFT_ADDON_CHANNEL, "acceptRole:" .. myRole, "PARTY")
+    LFT.showMyRoleIcon(myRole)
+    --LFTRoleCheck:Hide()
+    _G['LFTRoleCheck']:Hide()
 end
 
 function declineRole()
-    SendAddonMessage(LFT_ADDON_CHANNEL, "declineRole:" .. LFT_ROLE, "PARTY")
-    --    _G['LFTRoleCheck'):Hide() --move in hide
-    LFTRoleCheck:Hide()
+    local myRole = ''
+    if _G['roleCheckTank']:GetChecked() then
+        myRole = 'tank'
+    end
+    if _G['roleCheckHealer']:GetChecked() then
+        myRole = 'healer'
+    end
+    if _G['roleCheckDamage']:GetChecked() then
+        myRole = 'damage'
+    end
+    LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole = myRole
+    local myRole = LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].myRole
+    SendAddonMessage(LFT_ADDON_CHANNEL, "declineRole:" .. myRole, "PARTY")
+
+    --LFTRoleCheck:Hide()
+    _G['LFTRoleCheck']:Hide()
 end
 
 function LFT_Toggle()
@@ -3184,8 +3466,9 @@ end
 function sayReady()
     if LFT.inGroup and GetNumPartyMembers() + 1 == LFT.groupSizeMax then
         _G['LFTGroupReady']:Hide()
-        SendAddonMessage(LFT_ADDON_CHANNEL, "readyAs:" .. LFT_ROLE, "PARTY")
-        LFT.showMyRoleIcon()
+        local myRole = LFT.dungeons[LFT.dungeonNameFromCode(LFT.groupFullCode)].myRole
+        SendAddonMessage(LFT_ADDON_CHANNEL, "readyAs:" .. myRole, "PARTY")
+        LFT.showMyRoleIcon(myRole)
         LFTMinimapAnimation:Hide()
         _G['LFTReadyStatus']:Show()
         LFTGroupReadyFrameCloser.response = 'ready'
@@ -3200,7 +3483,8 @@ end
 function sayNotReady()
     if LFT.inGroup and GetNumPartyMembers() + 1 == LFT.groupSizeMax then
         _G['LFTGroupReady']:Hide()
-        SendAddonMessage(LFT_ADDON_CHANNEL, "notReadyAs:" .. LFT_ROLE, "PARTY")
+        local myRole = LFT.dungeons[LFT.dungeonNameFromCode(LFT.groupFullCode)].myRole
+        SendAddonMessage(LFT_ADDON_CHANNEL, "notReadyAs:" .. myRole, "PARTY")
         LFTMinimapAnimation:Hide()
         _G['LFTReadyStatus']:Show()
         LFTGroupReadyFrameCloser.response = 'notReady'
@@ -3217,48 +3501,111 @@ function LFTsetRole(role, status, readyCheck)
     local readyCheckHealer = _G['roleCheckHealer']
     local readyCheckDamage = _G['roleCheckDamage']
 
-    if role == 'tank' then
-        readyCheckHealer:SetChecked(false)
-        healerCheck:SetChecked(false)
-
-        readyCheckDamage:SetChecked(false)
-        damageCheck:SetChecked(false)
-        if not status and not readyCheck then
-            tankCheck:SetChecked(true)
-        end
-    end
-    if role == 'healer' then
-        readyCheckTank:SetChecked(false)
-        tankCheck:SetChecked(false)
-
-        readyCheckDamage:SetChecked(false)
-        damageCheck:SetChecked(false)
-        if not status and not readyCheck then
-            healerCheck:SetChecked(true)
-        end
-    end
-    if role == 'damage' then
-        readyCheckTank:SetChecked(false)
-        tankCheck:SetChecked(false)
-
-        readyCheckHealer:SetChecked(false)
-        healerCheck:SetChecked(false)
-        if not status and not readyCheck then
-            damageCheck:SetChecked(true)
-        end
-    end
-
     if readyCheck then
-        tankCheck:SetChecked(readyCheckTank:GetChecked())
-        healerCheck:SetChecked(readyCheckHealer:GetChecked())
-        damageCheck:SetChecked(readyCheckDamage:GetChecked())
-    else
-        readyCheckTank:SetChecked(tankCheck:GetChecked())
-        readyCheckHealer:SetChecked(healerCheck:GetChecked())
-        readyCheckDamage:SetChecked(damageCheck:GetChecked())
+        _G['LFTRoleCheckAcceptRole']:Enable()
+
+        if not readyCheckTank:GetChecked() and
+                not readyCheckHealer:GetChecked() and
+                not readyCheckDamage:GetChecked() then
+            _G['LFTRoleCheckAcceptRole']:Disable()
+        end
+
+        if role == 'tank' then
+            readyCheckHealer:SetChecked(false)
+            readyCheckDamage:SetChecked(false)
+        end
+        if role == 'healer' then
+            readyCheckTank:SetChecked(false)
+            readyCheckDamage:SetChecked(false)
+        end
+        if role == 'damage' then
+            readyCheckTank:SetChecked(false)
+            readyCheckHealer:SetChecked(false)
+        end
+        LFT_ROLE = role
+        return true
     end
-    LFT_ROLE = role
+
+    local newRole = ''
+
+    if LFT.inGroup then
+        if role == 'tank' then
+            healerCheck:SetChecked(false)
+            damageCheck:SetChecked(false)
+        end
+        if role == 'healer' then
+            tankCheck:SetChecked(false)
+            damageCheck:SetChecked(false)
+
+        end
+        if role == 'damage' then
+            tankCheck:SetChecked(false)
+            healerCheck:SetChecked(false)
+        end
+        newRole = role
+    else
+        if tankCheck:GetChecked() then
+            newRole = newRole .. 'tank'
+        end
+        if healerCheck:GetChecked() then
+            newRole = newRole .. 'healer'
+        end
+        if damageCheck:GetChecked() then
+            newRole = newRole .. 'damage'
+        end
+    end
+
+    LFT_ROLE = newRole
+
+    LFT.fixMainButton()
+    lfdebug('newRole = ' .. newRole)
+    --LFT_ROLE = newRole
     BrowseDungeonListFrame_Update()
+
+    ---
+
+    --if role == 'tank' then
+    --    readyCheckHealer:SetChecked(false)
+    --    healerCheck:SetChecked(false)
+    --
+    --    readyCheckDamage:SetChecked(false)
+    --    damageCheck:SetChecked(false)
+    --    if not status and not readyCheck then
+    --        tankCheck:SetChecked(true)
+    --    end
+    --end
+    --if role == 'healer' then
+    --    readyCheckTank:SetChecked(false)
+    --    tankCheck:SetChecked(false)
+    --
+    --    readyCheckDamage:SetChecked(false)
+    --    damageCheck:SetChecked(false)
+    --    if not status and not readyCheck then
+    --        healerCheck:SetChecked(true)
+    --    end
+    --end
+    --if role == 'damage' then
+    --    readyCheckTank:SetChecked(false)
+    --    tankCheck:SetChecked(false)
+    --
+    --    readyCheckHealer:SetChecked(false)
+    --    healerCheck:SetChecked(false)
+    --    if not status and not readyCheck then
+    --        damageCheck:SetChecked(true)
+    --    end
+    --end
+    --
+    --if readyCheck then
+    --    tankCheck:SetChecked(readyCheckTank:GetChecked())
+    --    healerCheck:SetChecked(readyCheckHealer:GetChecked())
+    --    damageCheck:SetChecked(readyCheckDamage:GetChecked())
+    --else
+    --    readyCheckTank:SetChecked(tankCheck:GetChecked())
+    --    readyCheckHealer:SetChecked(healerCheck:GetChecked())
+    --    readyCheckDamage:SetChecked(damageCheck:GetChecked())
+    --end
+    --LFT_ROLE = role
+    --BrowseDungeonListFrame_Update()
 end
 
 function DungeonListFrame_Update()
@@ -3321,13 +3668,13 @@ function LFT_ShowMinimap()
             local healer = 0
             local damage = 0
 
-            if LFT.group[dungeonCode].tank ~= '' or (not LFT.inGroup and LFT_ROLE == 'tank') then
+            if LFT.group[dungeonCode].tank ~= '' or (not LFT.inGroup and string.find(LFT_ROLE, 'tank', 1, true)) then
                 tank = tank + 1
             end
-            if LFT.group[dungeonCode].healer ~= '' or (not LFT.inGroup and LFT_ROLE == 'healer') then
+            if LFT.group[dungeonCode].healer ~= '' or (not LFT.inGroup and string.find(LFT_ROLE, 'healer', 1, true)) then
                 healer = healer + 1
             end
-            if LFT.group[dungeonCode].damage1 ~= '' or (not LFT.inGroup and LFT_ROLE == 'damage') then
+            if LFT.group[dungeonCode].damage1 ~= '' or (not LFT.inGroup and string.find(LFT_ROLE, 'damage', 1, true)) then
                 damage = damage + 1
             end
             if LFT.group[dungeonCode].damage2 ~= '' then
@@ -3355,7 +3702,8 @@ function LFT_ShowMinimap()
             _G['LFTMinimap_' .. dungeonCode .. 'Background']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. background)
             _G['LFTMinimap_' .. dungeonCode .. 'DungeonName']:SetText(dungeonName)
 
-            _G['LFTMinimap_' .. dungeonCode .. 'MyRole']:SetTexture('Interface\\addons\\LFT\\images\\ready_' .. LFT_ROLE)
+            --_G['LFTMinimap_' .. dungeonCode .. 'MyRole']:SetTexture('Interface\\addons\\LFT\\images\\ready_' .. LFT_ROLE)
+            _G['LFTMinimap_' .. dungeonCode .. 'MyRole']:Hide() -- hide for now  - dev
 
             if tank == 0 then
                 _G['LFTMinimap_' .. dungeonCode .. 'ReadyIconTank']:SetDesaturated(1)
@@ -3461,6 +3809,8 @@ end
 
 function findMore()
 
+    --LFTsetRole('tank', true, true)
+
     -- find queueing dungeon
     local qDungeon = ''
     for _, frame in next, LFT.availableDungeons do
@@ -3470,9 +3820,21 @@ function findMore()
     end
 
     LFT.LFMDungeonCode = qDungeon
-    --    LFT.findingMore = true
+
+    local tankCheck = _G['RoleTank']
+    local healerCheck = _G['RoleHealer']
+    local damageCheck = _G['RoleDamage']
+
+    if tankCheck:GetChecked() then
+        LFTsetRole('tank', true, true)
+    elseif healerCheck:GetChecked() then
+        LFTsetRole('healer', true, true)
+    elseif damageCheck:GetChecked() then
+        LFTsetRole('damage', true, true)
+    end
+
     SendAddonMessage(LFT_ADDON_CHANNEL, "roleCheck:" .. qDungeon, "PARTY")
-    LFT.showMyRoleIcon()
+
     LFT.fixMainButton()
 
     -- disable the button disable spam clicking it
@@ -3502,11 +3864,6 @@ end
 function findGroup()
 
     LFT.resetGroup()
-    LFT.findingGroup = true
-    LFTQueue:Show()
-    LFTMinimapAnimation:Show()
-
-    LFT.disableDungeonCheckButtons()
 
     _G['RoleTank']:Disable()
     _G['RoleHealer']:Disable()
@@ -3514,15 +3871,23 @@ function findGroup()
 
     PlaySound('PvpEnterQueue')
 
-    local roleColor = ''
-    if LFT_ROLE == 'tank' then
-        roleColor = COLOR_TANK
+    local roleText = ''
+    if string.find(LFT_ROLE, 'tank', 1, true) then
+        roleText = roleText .. COLOR_TANK .. 'Tank'
     end
-    if LFT_ROLE == 'healer' then
-        roleColor = COLOR_HEALER
+    if string.find(LFT_ROLE, 'healer', 1, true) then
+        local orText = ''
+        if roleText ~= '' then
+            orText = COLOR_WHITE .. ', '
+        end
+        roleText = roleText .. orText .. COLOR_HEALER .. 'Healer'
     end
-    if LFT_ROLE == 'damage' then
-        roleColor = COLOR_DAMAGE
+    if string.find(LFT_ROLE, 'damage', 1, true) then
+        local orText = ''
+        if roleText ~= '' then
+            orText = COLOR_WHITE .. ', '
+        end
+        roleText = roleText .. orText .. COLOR_DAMAGE .. 'Damage'
     end
 
     --disable on click advertise for now
@@ -3544,8 +3909,13 @@ function findGroup()
 
     dungeonsText = string.sub(dungeonsText, 1, string.len(dungeonsText) - 2)
     lfprint('You are in the queue for |cff69ccf0' .. dungeonsText ..
-            COLOR_WHITE .. ' as: ' .. roleColor .. LFT.ucFirst(LFT_ROLE))
+            COLOR_WHITE .. ' as: ' .. roleText)
 
+    LFT.findingGroup = true
+    LFTQueue:Show()
+    LFTMinimapAnimation:Show()
+
+    LFT.disableDungeonCheckButtons()
     LFT.oneGroupFull = false
     LFT.queueStartTime = time()
 
@@ -3622,7 +3992,7 @@ function leaveQueue(callData)
     LFT.enableDungeonCheckButtons()
 
     LFT.GetPossibleRoles()
-    LFTsetRole(LFT_ROLE)
+    --LFTsetRole(LFT_ROLE)
 
     if LFT.LFMDungeonCode ~= '' then
         if _G["Dungeon_" .. LFT.LFMDungeonCode] then
@@ -3630,6 +4000,10 @@ function leaveQueue(callData)
             LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].queued = true
         end
     end
+
+    local tankCheck = _G['RoleTank']
+    local healerCheck = _G['RoleHealer']
+    local damageCheck = _G['RoleDamage']
 
     DungeonListFrame_Update()
     BrowseDungeonListFrame_Update()
@@ -3813,7 +4187,11 @@ function LFT.removeChannelFromWindows()
     end
 end
 
-function LFT.incDungeonssSpamRole(dungeon, role)
+function LFT.incDungeonssSpamRole(dungeon, role, nrInc)
+
+    if not nrInc then
+        nrInc = 1
+    end
 
     if not role then
         role = LFT_ROLE
@@ -3825,13 +4203,13 @@ function LFT.incDungeonssSpamRole(dungeon, role)
     end
 
     if role == 'tank' then
-        LFT.dungeonsSpam[dungeon].tank = LFT.dungeonsSpam[dungeon].tank + 1
+        LFT.dungeonsSpam[dungeon].tank = LFT.dungeonsSpam[dungeon].tank + nrInc
     end
     if role == 'healer' then
-        LFT.dungeonsSpam[dungeon].healer = LFT.dungeonsSpam[dungeon].healer + 1
+        LFT.dungeonsSpam[dungeon].healer = LFT.dungeonsSpam[dungeon].healer + nrInc
     end
     if role == 'damage' then
-        LFT.dungeonsSpam[dungeon].damage = LFT.dungeonsSpam[dungeon].damage + 1
+        LFT.dungeonsSpam[dungeon].damage = LFT.dungeonsSpam[dungeon].damage + nrInc
     end
 end
 
@@ -3864,38 +4242,38 @@ end
 -- dungeons
 
 LFT.dungeons = {
-    ['Ragefire Chasm'] = { minLevel = 13, maxLevel = 18, code = 'rfc', queued = false, canQueue = true, background = 'ragefirechasm' },
-    ['Wailing Caverns'] = { minLevel = 17, maxLevel = 24, code = 'wc', queued = false, canQueue = true, background = 'wailingcaverns' },
-    ['The Deadmines'] = { minLevel = 17, maxLevel = 24, code = 'dm', queued = false, canQueue = true, background = 'deadmines' },
-    ['Shadowfang Keep'] = { minLevel = 22, maxLevel = 30, code = 'sfk', queued = false, canQueue = true, background = 'shadowfangkeep' },
-    ['The Stockade'] = { minLevel = 22, maxLevel = 30, code = 'stocks', queued = false, canQueue = true, background = 'stormwindstockades' },
-    ['Blackfathom Deeps'] = { minLevel = 23, maxLevel = 32, code = 'bfd', queued = false, canQueue = true, background = 'blackfathomdeeps' },
-    ['Scarlet Monastery Graveyard'] = { minLevel = 27, maxLevel = 36, code = 'smgy', queued = false, canQueue = true, background = 'scarletmonastery' },
-    ['Scarlet Monastery Library'] = { minLevel = 28, maxLevel = 39, code = 'smlib', queued = false, canQueue = true, background = 'scarletmonastery' },
-    ['Gnomeregan'] = { minLevel = 29, maxLevel = 38, code = 'gnomer', queued = false, canQueue = true, background = 'gnomeregan' },
-    ['Razorfen Kraul'] = { minLevel = 29, maxLevel = 38, code = 'rfk', queued = false, canQueue = true, background = 'razorfenkraul' },
-    ['Scarlet Monastery Armory'] = { minLevel = 32, maxLevel = 41, code = 'smarmory', queued = false, canQueue = true, background = 'scarletmonastery' },
-    ['Scarlet Monastery Cathedral'] = { minLevel = 35, maxLevel = 45, code = 'smcath', queued = false, canQueue = true, background = 'scarletmonastery' },
-    ['Razorfen Downs'] = { minLevel = 36, maxLevel = 46, code = 'rfd', queued = false, canQueue = true, background = 'razorfendowns' },
-    ['Uldaman'] = { minLevel = 40, maxLevel = 51, code = 'ulda', queued = false, canQueue = true, background = 'uldaman' },
-    ['Zul\'Farrak'] = { minLevel = 44, maxLevel = 54, code = 'zf', queued = false, canQueue = true, background = 'zulfarak' },
-    ['Maraudon Orange'] = { minLevel = 47, maxLevel = 55, code = 'maraorange', queued = false, canQueue = true, background = 'maraudon' },
-    ['Maraudon Purple'] = { minLevel = 45, maxLevel = 55, code = 'marapurple', queued = false, canQueue = true, background = 'maraudon' },
-    ['Maraudon Princess'] = { minLevel = 47, maxLevel = 55, code = 'maraprincess', queued = false, canQueue = true, background = 'maraudon' },
-    ['Temple of Atal\'Hakkar'] = { minLevel = 50, maxLevel = 60, code = 'st', queued = false, canQueue = true, background = 'sunkentemple' },
-    ['Blackrock Depths'] = { minLevel = 52, maxLevel = 60, code = 'brd', queued = false, canQueue = true, background = 'blackrockdepths' },
-    ['Blackrock Depths Arena'] = { minLevel = 52, maxLevel = 60, code = 'brdarena', queued = false, canQueue = true, background = 'blackrockdepths' },
-    ['Blackrock Depths Emperor'] = { minLevel = 54, maxLevel = 60, code = 'brdemp', queued = false, canQueue = true, background = 'blackrockdepths' },
-    ['Lower Blackrock Spire'] = { minLevel = 55, maxLevel = 60, code = 'lbrs', queued = false, canQueue = true, background = 'blackrockspire' },
-    ['Dire Maul East'] = { minLevel = 55, maxLevel = 60, code = 'dme', queued = false, canQueue = true, background = 'diremaul' },
-    ['Dire Maul North'] = { minLevel = 57, maxLevel = 60, code = 'dmn', queued = false, canQueue = true, background = 'diremaul' },
-    ['Dire Maul West'] = { minLevel = 57, maxLevel = 60, code = 'dmw', queued = false, canQueue = true, background = 'diremaul' },
-    ['Scholomance'] = { minLevel = 58, maxLevel = 60, code = 'scholo', queued = false, canQueue = true, background = 'scholomance' },
-    ['Stratholme: Undead District'] = { minLevel = 58, maxLevel = 60, code = 'stratud', queued = false, canQueue = true, background = 'stratholme' },
-    ['Stratholme: Scarlet Bastion'] = { minLevel = 58, maxLevel = 60, code = 'stratlive', queued = false, canQueue = true, background = 'stratholme' },
-    --['GM Test'] = { minLevel = 1, maxLevel = 60, code = 'gmtest', queued = false, canQueue = true, background = 'stratholme' },
+    ['Ragefire Chasm'] = { minLevel = 13, maxLevel = 18, code = 'rfc', queued = false, canQueue = true, background = 'ragefirechasm', myRole = '' },
+    ['Wailing Caverns'] = { minLevel = 17, maxLevel = 24, code = 'wc', queued = false, canQueue = true, background = 'wailingcaverns', myRole = '' },
+    ['The Deadmines'] = { minLevel = 17, maxLevel = 24, code = 'dm', queued = false, canQueue = true, background = 'deadmines', myRole = '' },
+    ['Shadowfang Keep'] = { minLevel = 22, maxLevel = 30, code = 'sfk', queued = false, canQueue = true, background = 'shadowfangkeep', myRole = '' },
+    ['The Stockade'] = { minLevel = 22, maxLevel = 30, code = 'stocks', queued = false, canQueue = true, background = 'stormwindstockades', myRole = '' },
+    ['Blackfathom Deeps'] = { minLevel = 23, maxLevel = 32, code = 'bfd', queued = false, canQueue = true, background = 'blackfathomdeeps', myRole = '' },
+    ['Scarlet Monastery Graveyard'] = { minLevel = 27, maxLevel = 36, code = 'smgy', queued = false, canQueue = true, background = 'scarletmonastery', myRole = '' },
+    ['Scarlet Monastery Library'] = { minLevel = 28, maxLevel = 39, code = 'smlib', queued = false, canQueue = true, background = 'scarletmonastery', myRole = '' },
+    ['Gnomeregan'] = { minLevel = 29, maxLevel = 38, code = 'gnomer', queued = false, canQueue = true, background = 'gnomeregan', myRole = '' },
+    ['Razorfen Kraul'] = { minLevel = 29, maxLevel = 38, code = 'rfk', queued = false, canQueue = true, background = 'razorfenkraul', myRole = '' },
+    ['Scarlet Monastery Armory'] = { minLevel = 32, maxLevel = 41, code = 'smarmory', queued = false, canQueue = true, background = 'scarletmonastery', myRole = '' },
+    ['Scarlet Monastery Cathedral'] = { minLevel = 35, maxLevel = 45, code = 'smcath', queued = false, canQueue = true, background = 'scarletmonastery', myRole = '' },
+    ['Razorfen Downs'] = { minLevel = 36, maxLevel = 46, code = 'rfd', queued = false, canQueue = true, background = 'razorfendowns', myRole = '' },
+    ['Uldaman'] = { minLevel = 40, maxLevel = 51, code = 'ulda', queued = false, canQueue = true, background = 'uldaman', myRole = '' },
+    ['Zul\'Farrak'] = { minLevel = 44, maxLevel = 54, code = 'zf', queued = false, canQueue = true, background = 'zulfarak', myRole = '' },
+    ['Maraudon Orange'] = { minLevel = 47, maxLevel = 55, code = 'maraorange', queued = false, canQueue = true, background = 'maraudon', myRole = '' },
+    ['Maraudon Purple'] = { minLevel = 45, maxLevel = 55, code = 'marapurple', queued = false, canQueue = true, background = 'maraudon', myRole = '' },
+    ['Maraudon Princess'] = { minLevel = 47, maxLevel = 55, code = 'maraprincess', queued = false, canQueue = true, background = 'maraudon', myRole = '' },
+    ['Temple of Atal\'Hakkar'] = { minLevel = 50, maxLevel = 60, code = 'st', queued = false, canQueue = true, background = 'sunkentemple', myRole = '' },
+    ['Blackrock Depths'] = { minLevel = 52, maxLevel = 60, code = 'brd', queued = false, canQueue = true, background = 'blackrockdepths', myRole = '' },
+    ['Blackrock Depths Arena'] = { minLevel = 52, maxLevel = 60, code = 'brdarena', queued = false, canQueue = true, background = 'blackrockdepths', myRole = '' },
+    ['Blackrock Depths Emperor'] = { minLevel = 54, maxLevel = 60, code = 'brdemp', queued = false, canQueue = true, background = 'blackrockdepths', myRole = '' },
+    ['Lower Blackrock Spire'] = { minLevel = 55, maxLevel = 60, code = 'lbrs', queued = false, canQueue = true, background = 'blackrockspire', myRole = '' },
+    ['Dire Maul East'] = { minLevel = 55, maxLevel = 60, code = 'dme', queued = false, canQueue = true, background = 'diremaul', myRole = '' },
+    ['Dire Maul North'] = { minLevel = 57, maxLevel = 60, code = 'dmn', queued = false, canQueue = true, background = 'diremaul', myRole = '' },
+    ['Dire Maul West'] = { minLevel = 57, maxLevel = 60, code = 'dmw', queued = false, canQueue = true, background = 'diremaul', myRole = '' },
+    ['Scholomance'] = { minLevel = 58, maxLevel = 60, code = 'scholo', queued = false, canQueue = true, background = 'scholomance', myRole = '' },
+    ['Stratholme: Undead District'] = { minLevel = 58, maxLevel = 60, code = 'stratud', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
+    ['Stratholme: Scarlet Bastion'] = { minLevel = 58, maxLevel = 60, code = 'stratlive', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
+    ['GM Test'] = { minLevel = 1, maxLevel = 60, code = 'gmtest', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
 }
-
+--todo : reset myRole
 LFT.bosses = {
     ['gmtest'] = { --dev only
         'Duros',
