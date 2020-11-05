@@ -128,6 +128,7 @@ LFTTime:SetScript("OnShow", function()
     lfdebug('diff = ' .. LFTTime.diff)
     this.startTime = GetTime()
     this.execAt = {}
+    this.resetAt = {}
 end)
 
 LFTTime:SetScript("OnUpdate", function()
@@ -148,23 +149,32 @@ LFTTime:SetScript("OnUpdate", function()
 
         if LFTTime.second == LFT.RESET_TIME or LFTTime.second == LFT.TIME_MARGIN then
 
-            if LFT.peopleLookingForGroupsDisplay < LFT.peopleLookingForGroups or LFT.peopleLookingForGroups == 0 then
-                LFT.peopleLookingForGroupsDisplay = LFT.peopleLookingForGroups
+            if not this.resetAt[LFTTime.second] then
+
+                this.resetAt[LFTTime.second] = true
+
+                if LFT.peopleLookingForGroupsDisplay < LFT.peopleLookingForGroups or LFT.peopleLookingForGroups == 0 then
+                    LFT.peopleLookingForGroupsDisplay = LFT.peopleLookingForGroups
+                end
+
+                LFT.peopleLookingForGroups = 0
+
+                lfdebug("RESET --- TIME IS 0 OR 30")
+
+                --reset dungeon spam at 0 and 30
+                for dungeon, data in next, LFT.dungeons do
+                    LFT.dungeonsSpam[data.code] = { tank = 0, healer = 0, damage = 0 }
+                end
+                this.execAt = {}
+
             end
-
-            LFT.peopleLookingForGroups = 0
-
-            lfdebug("RESET --- TIME IS 0 OR 30")
-
-            --reset dungeon spam at 0 and 30
-            for dungeon, data in next, LFT.dungeons do
-                LFT.dungeonsSpam[data.code] = { tank = 0, healer = 0, damage = 0 }
-            end
-            this.execAt = {}
         end
 
         if (LFTTime.second > 2 and LFTTime.second < 27) or
                 (LFTTime.second > 32 and LFTTime.second < 57) then
+
+            this.resetAt = {}
+
             if not this.execAt[LFTTime.second] then
                 BrowseDungeonListFrame_Update()
                 this.execAt[LFTTime.second] = true
