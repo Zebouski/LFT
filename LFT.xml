@@ -2026,6 +2026,20 @@
                     </Anchors>
                 </Texture>
 
+                <Texture name="$parentTarget" hidden="true"
+                         file="Interface\addons\LFT\images\tank_small">
+                    <Size>
+                        <AbsDimension x="32" y="32"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="TargetPortrait" relativePoint="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="-5" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+
                 <Texture name="$parentParty1" hidden="true"
                          file="Interface\addons\LFT\images\damage_small">
                     <Size>
