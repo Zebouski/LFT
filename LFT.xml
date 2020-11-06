@@ -1493,7 +1493,7 @@
                     <Anchors>
                         <Anchor point="BOTTOMLEFT">
                             <Offset>
-                                <AbsDimension x="72" y="55"/>
+                                <AbsDimension x="80" y="55"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -2073,7 +2073,7 @@
                     <Anchors>
                         <Anchor point="BOTTOMLEFT">
                             <Offset>
-                                <AbsDimension x="72" y="58"/>
+                                <AbsDimension x="80" y="58"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
