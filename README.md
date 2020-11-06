@@ -1,4 +1,4 @@
-# LFT - a LFG Addon for Turtle WoW, v0.0.2.5rc
+# LFT - a LFG Addon for Turtle WoW, v0.0.2.6rc
 
 [Download Link](https://github.com/CosminPOP/LFT/releases/latest/download/LFT.zip) <br>
 _Important note: Remove `-master` when extracting into your `interface/addons` folder and fully restart your client after each update !_<BR><BR><Br>
@@ -13,6 +13,10 @@ If you encounter any lua errors or other addon problems please take a screenshot
 ## Features ##
 Todo: option to choose: fresh groups only / any groups
 
+#### Multiple Role Queueing (v.0.0.2.6) ####
+Now you can queue for a dungeon with multiple roles!
+![multipleroles](https://imgur.com/cjoIt7y.png)
+
 #### Dungeon Groups Browser (v.0.0.2.5) ####
 Shows a list of available dungeons and how many people are queueing.<Br>
 ![browser](https://imgur.com/wpefzYP.png)
@@ -21,7 +25,7 @@ Shows a list of available dungeons and how many people are queueing.<Br>
 Brings up the main addon frame, allowing you to Look for a group or Look for more.<Br>
 ![minimap](https://imgur.com/Z1uRxqz.png)
 
-#### Queue-ing solo (maximum 5 dungeons at a time) ####
+#### Queueing solo (maximum 5 dungeons at a time) ####
 ![queuesolo](https://imgur.com/ZWd7awX.png)
 
 ### InQueue Minimap Tooltip ###
