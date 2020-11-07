@@ -876,7 +876,7 @@ LFTComms:SetScript("OnEvent", function()
                 LFTGroupReadyFrameCloser:Show()
 
                 LFT.fixMainButton()
-                _G['LFTMain']:Hide()
+                _G['LFTlft']:Hide()
 
                 PlaySoundFile("Interface\\Addons\\LFT\\sound\\levelup2.ogg")
                 LFTQueue:Hide()
@@ -1220,7 +1220,7 @@ LFTComms:SetScript("OnEvent", function()
 
             LFT.findingGroup = false
             LFT.findingMore = false
-            _G['LFTMain']:Hide()
+            _G['LFTlft']:Hide()
 
             LFT.fixMainButton()
         end
@@ -1649,7 +1649,7 @@ LFT:SetScript("OnEvent", function()
             if LFT.inGroup then
                 if LFT.isLeader then
                 else
-                    _G['LFTMain']:Hide()
+                    _G['LFTlft']:Hide()
                 end
             else
                 -- i left the group OR everybody left
@@ -2112,7 +2112,7 @@ LFTQueue:SetScript("OnUpdate", function()
                     LFTQueue:Hide()
 
                     LFT.fixMainButton()
-                    _G['LFTMain']:Hide()
+                    _G['LFTlft']:Hide()
                     LFTInvite:Show()
                 end
             end
@@ -2971,7 +2971,7 @@ function LFT.weInQueue(code)
     LFT.queueStartTime = time()
     LFTQueue:Show()
     LFTMinimapAnimation:Show()
-    _G['LFTMain']:Hide()
+    _G['LFTlft']:Hide()
     LFT.fixMainButton()
 end
 
@@ -3612,16 +3612,14 @@ function LFT_Toggle()
         end
     end
 
-    if LFT.tab == 1 then
+    if _G['LFTlft']:IsVisible() then
+        PlaySound("igCharacterInfoClose")
+        _G['LFTlft']:Hide()
+    else
+        PlaySound("igCharacterInfoOpen")
+        _G['LFTlft']:Show()
 
-        if _G['LFTMain']:IsVisible() then
-            _G['LFTMain']:Hide()
-            PlaySound("igCharacterInfoClose")
-        else
-            lft_moved()
-            _G['LFTBrowse']:Hide()
-            _G['LFTMain']:Show()
-            PlaySound("igCharacterInfoOpen")
+        if LFT.tab == 1 then
 
             LFT.checkLFTChannel()
             if not LFT.findingGroup then
@@ -3634,16 +3632,7 @@ function LFT_Toggle()
             end
 
             DungeonListFrame_Update()
-        end
 
-    elseif LFT.tab == 2 then
-        if _G['LFTBrowse']:IsVisible() then
-            _G['LFTBrowse']:Hide()
-            PlaySound("igCharacterInfoClose")
-        else
-            _G['LFTMain']:Hide()
-            _G['LFTBrowse']:Show()
-            PlaySound("igCharacterInfoOpen")
         end
     end
 
@@ -3906,7 +3895,6 @@ function LFT_ShowMinimap()
             dungeonIndex = dungeonIndex + 1
         end
 
-        _G['LFTGroupStatus']:SetPoint("TOPRIGHT", _G["LFT_Minimap"], "BOTTOMLEFT", 0, 40)
         _G['LFTGroupStatus']:SetHeight(dungeonIndex * 46 + 95)
         _G['LFTGroupStatusTimeInQueue']:SetText('Time in Queue: ' .. SecondsToTime(time() - LFT.queueStartTime))
         if LFT.averageWaitTime == 0 then
@@ -3914,9 +3902,21 @@ function LFT_ShowMinimap()
         else
             _G['LFTGroupStatusAverageWaitTime']:SetText('Average Wait Time: ' .. SecondsToTimeAbbrev(LFT.averageWaitTime))
         end
+
+        local x, y = GetCursorPosition()
+
+        if x < 800 and y > 300 then
+            _G['LFTGroupStatus']:SetPoint("TOPLEFT", _G["LFT_Minimap"], "BOTTOMRIGHT", 0, 0)
+        elseif x < 800 and y < 300 then
+            _G['LFTGroupStatus']:SetPoint("TOPLEFT", _G["LFT_Minimap"], "TOPRIGHT", 0, _G['LFTGroupStatus']:GetHeight())
+        elseif x > 800 and y > 300 then
+            _G['LFTGroupStatus']:SetPoint("TOPLEFT", _G["LFT_Minimap"], "TOPRIGHT", -_G['LFTGroupStatus']:GetWidth() - 40, -20)
+        else
+            _G['LFTGroupStatus']:SetPoint("TOPLEFT", _G["LFT_Minimap"], "TOPRIGHT", -_G['LFTGroupStatus']:GetWidth() - 40,  _G['LFTGroupStatus']:GetHeight())
+        end
+
         _G['LFTGroupStatus']:Show()
     else
-
         GameTooltip:SetOwner(this, "ANCHOR_LEFT", 0, -110)
         GameTooltip:AddLine('Looking For Turtles - LFT', 1, 1, 1)
         GameTooltip:AddLine('Left-click to open LFT.')
@@ -4269,14 +4269,6 @@ function toggleDungeonStatus_OnClick()
     end
 end
 
-function lft_moved()
-    if LFT.tab == 1 then
-        _G['LFTBrowse']:SetPoint("TOPLEFT", _G["LFTMain"], "TOPLEFT", 0, 0)
-    elseif LFT.tab == 2 then
-        _G['LFTMain']:SetPoint("TOPLEFT", _G["LFTBrowse"], "TOPLEFT", 0, 0)
-    end
-end
-
 function lft_switch_tab(t)
     LFT.tab = t
     PlaySound("igCharacterInfoTab");
@@ -4469,7 +4461,7 @@ LFT.dungeons = {
     ['Stratholme: Scarlet Bastion'] = { minLevel = 58, maxLevel = 60, code = 'stratlive', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
     --['GM Test'] = { minLevel = 1, maxLevel = 60, code = 'gmtest', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
 }
---todo : reset myRole
+
 LFT.bosses = {
     ['gmtest'] = { --dev only
         'Duros',
