@@ -1394,7 +1394,7 @@
         </Frames>
     </Frame>
 
-    <Frame name="LFTMain" hidden="true" toplevel="true"
+    <Frame name="LFTlft" hidden="true" toplevel="true"
            parent="UIParent" movable="true" enableMouse="true" resizable="false">
         <Size>
             <AbsDimension x="384" y="512"/>
@@ -1406,568 +1406,826 @@
                 </Offset>
             </Anchor>
         </Anchors>
-        <Layers>
-            <Layer level="BACKGROUND">
-                <Texture file="Interface\addons\LFT\images\ui-character-activetab">
-                    <Size>
-                        <AbsDimension x="128" y="64"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="37" y="13"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-                <Texture file="Interface\addons\LFT\images\ui-character-inactivetab">
-                    <Size>
-                        <AbsDimension x="128" y="32"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="150" y="45"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-                <Texture file="Interface\addons\LFT\images\ui-lfg-portrait">
-                    <!--                <Texture file="Interface\Addons\LFT\images\damage">-->
-                    <Size>
-                        <AbsDimension x="64" y="64"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOPLEFT">
-                            <Offset>
-                                <AbsDimension x="7" y="-6"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-                <Texture file="interface\addons\LFT\images\ui-lfg-background-dungeonwall">
-                    <Size>
-                        <AbsDimension x="512" y="256"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOP">
-                            <Offset>
-                                <AbsDimension x="85" y="-155"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-            </Layer>
-            <Layer level="ARTWORK">
-                <Texture name="LFTBrowseButtonHighlight" hidden="true"
-                         file="Interface\addons\LFT\images\ui-character-tab-realhighlight">
-                    <Size>
-                        <AbsDimension x="128" y="32"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="150" y="45"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-                <Texture name="LFTFrame" file="Interface\addons\LFT\images\ui-lfg-frame">
-                    <Size>
-                        <AbsDimension x="512" y="512"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOPLEFT">
-                            <Offset>
-                                <AbsDimension x="0" y="0"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-            </Layer>
-            <Layer level="OVERLAY">
-                <FontString name="$parentDungeonsText" inherits="GameFontWhite" text="Dungeons">
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="80" y="55"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-                <FontString name="$parentBrowseText" inherits="GameFontNormal" text="Browse">
-                    <Size>
-                        <AbsDimension x="128" y="22"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="150" y="53"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-                <FontString name="LFTTitleText" inherits="GameFontNormal" text="Turtle Finder">
-                    <Anchors>
-                        <Anchor point="TOP">
-                            <Offset>
-                                <AbsDimension x="0" y="-18"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-                <FontString name="LFTTitleTime" inherits="GameFontNormal" text="---TIME---" hidden="false">
-                    <Anchors>
-                        <Anchor point="TOP">
-                            <Offset>
-                                <AbsDimension x="-300" y="-130"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-
-                <Texture name="LFTTankBackground2" file="Interface\Addons\LFT\images\tank2">
-                    <Size>
-                        <AbsDimension x="64" y="64"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOP">
-                            <Offset>
-                                <AbsDimension x="-100" y="-50"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-                <Texture name="LFTHealerBackground2" file="Interface\Addons\LFT\images\healer2">
-                    <Size>
-                        <AbsDimension x="64" y="64"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOP">
-                            <Offset>
-                                <AbsDimension x="-5" y="-50"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-                <Texture name="LFTDamageBackground2" file="Interface\Addons\LFT\images\damage2">
-                    <Size>
-                        <AbsDimension x="64" y="64"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOP">
-                            <Offset>
-                                <AbsDimension x="90" y="-50"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-                <FontString name="LFTDungeonsText" inherits="GameFontNormal" text="Available Dungeons">
-                    <Anchors>
-                        <Anchor point="TOPLEFT">
-                            <Offset>
-                                <AbsDimension x="30" y="-165"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-            </Layer>
-        </Layers>
         <Frames>
 
-            <Button name="RoleTankTooltipButton" inherits="UIPanelButtonTemplate" text="">
-                <NormalTexture/>
-                <PushedTexture/>
-                <HighlightTexture/>
+            <Frame name="LFTMain" hidden="false" toplevel="true"
+                   enableMouse="true">
                 <Size>
-                    <AbsDimension x="64" y="64"/>
+                    <AbsDimension x="384" y="512"/>
                 </Size>
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="LFTTankBackground2" relativePoint="TOPLEFT">
+                    <Anchor point="TOPLEFT">
                         <Offset>
                             <AbsDimension x="0" y="0"/>
                         </Offset>
                     </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        if RoleTank:IsEnabled() == 1 then
-                        RoleTank:SetChecked(not RoleTank:GetChecked())
-                        LFTsetRole('tank', RoleTank:GetChecked())
-                        end
-                    </OnClick>
-                    <OnEnter>
-                        GameTooltip:SetOwner(this,"ANCHOR_RIGHT")
-                        GameTooltip:SetText(ROLE_TANK_TOOLTIP)
-                        checkRoleCompatibility('tank')
-                        GameTooltip:Show()
-                    </OnEnter>
-                    <OnLeave>
-                        GameTooltip:Hide()
-                    </OnLeave>
-                </Scripts>
-            </Button>
-
-            <Button name="RoleHealerTooltipButton" inherits="UIPanelButtonTemplate" text="">
-                <NormalTexture/>
-                <PushedTexture/>
-                <HighlightTexture/>
-                <Size>
-                    <AbsDimension x="64" y="64"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="LFTHealerBackground2" relativePoint="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        if RoleHealer:IsEnabled() == 1 then
-                        RoleHealer:SetChecked(not RoleHealer:GetChecked())
-                        LFTsetRole('healer', RoleHealer:GetChecked())
-                        end
-                    </OnClick>
-                    <OnEnter>
-                        GameTooltip:SetOwner(this,"ANCHOR_RIGHT")
-                        GameTooltip:SetText(ROLE_HEALER_TOOLTIP)
-                        checkRoleCompatibility('healer')
-                        GameTooltip:Show()
-                    </OnEnter>
-                    <OnLeave>
-                        GameTooltip:Hide()
-                    </OnLeave>
-                </Scripts>
-            </Button>
-
-            <Button name="RoleDamageTooltipButton" inherits="UIPanelButtonTemplate" text="">
-                <NormalTexture/>
-                <PushedTexture/>
-                <HighlightTexture/>
-                <Size>
-                    <AbsDimension x="64" y="64"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="LFTDamageBackground2" relativePoint="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        if RoleDamage:IsEnabled() == 1 then
-                        RoleDamage:SetChecked(not RoleDamage:GetChecked())
-                        LFTsetRole('damage', RoleDamage:GetChecked())
-                        end
-                    </OnClick>
-                    <OnEnter>
-                        GameTooltip:SetOwner(this,"ANCHOR_RIGHT")
-                        GameTooltip:SetText(ROLE_DAMAGE_TOOLTIP)
-                        GameTooltip:Show()
-                    </OnEnter>
-                    <OnLeave>
-                        GameTooltip:Hide()
-                    </OnLeave>
-                </Scripts>
-            </Button>
-
-            <!--            <Button name="LFTMicroButton" inherits="MainMenuBarMicroButton" parent="MainMenuBarArtFrame" hidden="false">-->
-            <!--                <Anchors>-->
-            <!--                    <Anchor point="BOTTOMLEFT" relativeTo="HelpMicroButton" relativePoint="BOTTOMRIGHT">-->
-            <!--                        <Offset>-->
-            <!--                            <AbsDimension x="-3" y="0"/>-->
-            <!--                        </Offset>-->
-            <!--                    </Anchor>-->
-            <!--                </Anchors>-->
-            <!--                <Scripts>-->
-            <!--                    <OnLoad>-->
-            <!--                            LoadMicroButtonTextures("Help");-->
-            <!--                            this.tooltipText = TEXT(HELP_BUTTON);-->
-            <!--                            this.newbieText = NEWBIE_TOOLTIP_HELP;-->
-            <!--                    </OnLoad>-->
-            <!--                    <OnClick>-->
-            <!--&#45;&#45;                            ToggleHelpFrame();-->
-            <!--                    </OnClick>-->
-            <!--                </Scripts>-->
-            <!--            </Button>-->
-
-            <Button name="LFTBrowseButton" inherits="UIPanelButtonTemplate" text="">
-                <NormalTexture/>
-                <HighlightTexture/>
-                <PushedTexture/>
-                <Size>
-                    <AbsDimension x="110" y="28"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="159" y="50"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        lft_switch_tab(2)
-                    </OnClick>
-                </Scripts>
-            </Button>
-
-
-            <ScrollFrame name="DungeonListScrollFrame" hidden="false" inherits="FauxScrollFrameTemplate">
-                <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2"
-                          tile="false">
-                </Backdrop>
-                <Size>
-                    <AbsDimension x="298" y="230"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="LFTMain" relativePoint="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="25" y="-180"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnVerticalScroll>
-                        FauxScrollFrame_OnVerticalScroll(20, DungeonListFrame_Update);
-                    </OnVerticalScroll>
-                </Scripts>
-            </ScrollFrame>
-
-            <Button name="LFT_Minimap" movable="true" parent="UIParent" enableMouse="true" toplevel="true"
-                    frameStrata="LOW">
-                <Size x="33" y="33"/>
-                <Anchors>
-                    <Anchor point="LEFT" relativeTo="Minimap" relativePoint="LEFT"/>
                 </Anchors>
                 <Layers>
                     <Layer level="BACKGROUND">
-                        <Texture name="$parentEye" file="Interface\Addons\LFT\images\eye\battlenetworking0">
-                            <Size x="38" y="38"/>
+                        <Texture file="Interface\addons\LFT\images\ui-character-activetab">
+                            <Size>
+                                <AbsDimension x="128" y="64"/>
+                            </Size>
                             <Anchors>
-                                <Anchor point="TOPLEFT">
-                                    <Offset x="-3" y="3"/>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="37" y="13"/>
+                                    </Offset>
                                 </Anchor>
                             </Anchors>
-                            <!--                            <TexCoords left="0.075" right="0.925" top="0.075" bottom="0.925"/>-->
+                        </Texture>
+
+                        <Texture file="Interface\addons\LFT\images\ui-character-inactivetab">
+                            <Size>
+                                <AbsDimension x="128" y="32"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="150" y="45"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+
+                        <Texture file="Interface\addons\LFT\images\ui-lfg-portrait">
+                            <!--                <Texture file="Interface\Addons\LFT\images\damage">-->
+                            <Size>
+                                <AbsDimension x="64" y="64"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="7" y="-6"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <Texture file="interface\addons\LFT\images\ui-lfg-background-dungeonwall">
+                            <Size>
+                                <AbsDimension x="512" y="256"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOP">
+                                    <Offset>
+                                        <AbsDimension x="85" y="-155"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <Texture name="LFTBrowseButtonHighlight" hidden="true"
+                                 file="Interface\addons\LFT\images\ui-character-tab-realhighlight">
+                            <Size>
+                                <AbsDimension x="128" y="32"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="150" y="45"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+
+                        <Texture name="LFTFrame" file="Interface\addons\LFT\images\ui-lfg-frame">
+                            <Size>
+                                <AbsDimension x="512" y="512"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
                         </Texture>
                     </Layer>
                     <Layer level="OVERLAY">
-                        <Texture file="Interface\Minimap\MiniMap-TrackingBorder">
-                            <Size x="56" y="56"/>
+                        <FontString name="$parentDungeonsText" inherits="GameFontNormal" text="Dungeons">
+                            <Size>
+                                <AbsDimension x="128" y="22"/>
+                            </Size>
                             <Anchors>
-                                <Anchor point="TOPLEFT"/>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="40" y="50"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentBrowseText" inherits="GameFontWhite" text="Browse">
+                            <Size>
+                                <AbsDimension x="128" y="22"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="150" y="53"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="LFTTitleText" inherits="GameFontNormal" text="Turtle Finder">
+                            <Anchors>
+                                <Anchor point="TOP">
+                                    <Offset>
+                                        <AbsDimension x="0" y="-18"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="LFTTitleTime" inherits="GameFontNormal" text="---TIME---" hidden="false">
+                            <Anchors>
+                                <Anchor point="TOP">
+                                    <Offset>
+                                        <AbsDimension x="-300" y="-130"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+
+                        <Texture name="LFTTankBackground2" file="Interface\Addons\LFT\images\tank2">
+                            <Size>
+                                <AbsDimension x="64" y="64"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOP">
+                                    <Offset>
+                                        <AbsDimension x="-100" y="-50"/>
+                                    </Offset>
+                                </Anchor>
                             </Anchors>
                         </Texture>
-                    </Layer>
-                </Layers>
-                <HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight"/>
-                <Scripts>
-                    <OnLoad>
-                        this:RegisterForClicks("RightButtonUp")
-                        this:RegisterForDrag("LeftButton")
-                        this:SetClampedToScreen(true)
-                    </OnLoad>
-                    <OnDragStart>
-                        this:LockHighlight()
-                        this:StartMoving()
-                    </OnDragStart>
-                    <OnDragStop>
-                        this:UnlockHighlight()
-                        this:StopMovingOrSizing()
-                    </OnDragStop>
-                    <OnEnter>
-                        LFT_ShowMinimap()
-                    </OnEnter>
-                    <OnLeave>
-                        LFT_HideMinimap()
-                        GameTooltip:Hide()
-                    </OnLeave>
-                    <OnMouseUp>
-                        if arg1 == "LeftButton" then
-                        LFT_Toggle()
-                        else
-                        -- ShowTWLCMinimapDropdown()
-                        end
-                    </OnMouseUp>
-                </Scripts>
-            </Button>
 
-            <Button name="LFTCloseButton" inherits="UIPanelCloseButton">
-                <Anchors>
-                    <Anchor point="TOPRIGHT">
-                        <Offset>
-                            <AbsDimension x="-27" y="-8"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-            </Button>
-
-            <Button name="LFTTypeSelect" inherits="UIDropDownMenuTemplate" text="aasdasdasda">
-                <Layers>
-                    <Layer level="BACKGROUND">
-                        <FontString name="$parentLabel" inherits="GameFontNormal" text="Type: ">
+                        <Texture name="LFTHealerBackground2" file="Interface\Addons\LFT\images\healer2">
+                            <Size>
+                                <AbsDimension x="64" y="64"/>
+                            </Size>
                             <Anchors>
-                                <Anchor point="LEFT" relativePoint="LEFT">
+                                <Anchor point="TOP">
                                     <Offset>
-                                        <AbsDimension x="-25" y="2"/>
+                                        <AbsDimension x="-5" y="-50"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+
+                        <Texture name="LFTDamageBackground2" file="Interface\Addons\LFT\images\damage2">
+                            <Size>
+                                <AbsDimension x="64" y="64"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOP">
+                                    <Offset>
+                                        <AbsDimension x="90" y="-50"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+
+                        <FontString name="LFTDungeonsText" inherits="GameFontNormal" text="Available Dungeons">
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="30" y="-165"/>
                                     </Offset>
                                 </Anchor>
                             </Anchors>
                         </FontString>
                     </Layer>
                 </Layers>
-                <Anchors>
-                    <Anchor point="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="150" y="-125"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
+                <Frames>
+
+                    <Button name="RoleTankTooltipButton" inherits="UIPanelButtonTemplate" text="">
+                        <NormalTexture/>
+                        <PushedTexture/>
+                        <HighlightTexture/>
+                        <Size>
+                            <AbsDimension x="64" y="64"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="LFTTankBackground2" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                if RoleTank:IsEnabled() == 1 then
+                                RoleTank:SetChecked(not RoleTank:GetChecked())
+                                LFTsetRole('tank', RoleTank:GetChecked())
+                                end
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetOwner(this,"ANCHOR_RIGHT")
+                                GameTooltip:SetText(ROLE_TANK_TOOLTIP)
+                                checkRoleCompatibility('tank')
+                                GameTooltip:Show()
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+
+                    <Button name="RoleHealerTooltipButton" inherits="UIPanelButtonTemplate" text="">
+                        <NormalTexture/>
+                        <PushedTexture/>
+                        <HighlightTexture/>
+                        <Size>
+                            <AbsDimension x="64" y="64"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="LFTHealerBackground2" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                if RoleHealer:IsEnabled() == 1 then
+                                RoleHealer:SetChecked(not RoleHealer:GetChecked())
+                                LFTsetRole('healer', RoleHealer:GetChecked())
+                                end
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetOwner(this,"ANCHOR_RIGHT")
+                                GameTooltip:SetText(ROLE_HEALER_TOOLTIP)
+                                checkRoleCompatibility('healer')
+                                GameTooltip:Show()
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+
+                    <Button name="RoleDamageTooltipButton" inherits="UIPanelButtonTemplate" text="">
+                        <NormalTexture/>
+                        <PushedTexture/>
+                        <HighlightTexture/>
+                        <Size>
+                            <AbsDimension x="64" y="64"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="LFTDamageBackground2" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                if RoleDamage:IsEnabled() == 1 then
+                                RoleDamage:SetChecked(not RoleDamage:GetChecked())
+                                LFTsetRole('damage', RoleDamage:GetChecked())
+                                end
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetOwner(this,"ANCHOR_RIGHT")
+                                GameTooltip:SetText(ROLE_DAMAGE_TOOLTIP)
+                                GameTooltip:Show()
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+
+                    <!--            <Button name="LFTMicroButton" inherits="MainMenuBarMicroButton" parent="MainMenuBarArtFrame" hidden="false">-->
+                    <!--                <Anchors>-->
+                    <!--                    <Anchor point="BOTTOMLEFT" relativeTo="HelpMicroButton" relativePoint="BOTTOMRIGHT">-->
+                    <!--                        <Offset>-->
+                    <!--                            <AbsDimension x="-3" y="0"/>-->
+                    <!--                        </Offset>-->
+                    <!--                    </Anchor>-->
+                    <!--                </Anchors>-->
+                    <!--                <Scripts>-->
+                    <!--                    <OnLoad>-->
+                    <!--                            LoadMicroButtonTextures("Help");-->
+                    <!--                            this.tooltipText = TEXT(HELP_BUTTON);-->
+                    <!--                            this.newbieText = NEWBIE_TOOLTIP_HELP;-->
+                    <!--                    </OnLoad>-->
+                    <!--                    <OnClick>-->
+                    <!--&#45;&#45;                            ToggleHelpFrame();-->
+                    <!--                    </OnClick>-->
+                    <!--                </Scripts>-->
+                    <!--            </Button>-->
+
+                    <Button name="LFTBrowseButton" inherits="UIPanelButtonTemplate" text="">
+                        <NormalTexture/>
+                        <HighlightTexture/>
+                        <PushedTexture/>
+                        <Size>
+                            <AbsDimension x="110" y="28"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="159" y="50"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                lft_switch_tab(2)
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+
+                    <ScrollFrame name="DungeonListScrollFrame" hidden="false" inherits="FauxScrollFrameTemplate">
+                        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2"
+                                  tile="false">
+                        </Backdrop>
+                        <Size>
+                            <AbsDimension x="298" y="230"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="LFTMain" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="25" y="-180"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnVerticalScroll>
+                                FauxScrollFrame_OnVerticalScroll(20, DungeonListFrame_Update);
+                            </OnVerticalScroll>
+                        </Scripts>
+                    </ScrollFrame>
+
+                    <Button name="LFT_Minimap" movable="true" parent="UIParent" enableMouse="true" toplevel="true"
+                            frameStrata="LOW">
+                        <Size x="33" y="33"/>
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="Minimap" relativePoint="LEFT"/>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture name="$parentEye" file="Interface\Addons\LFT\images\eye\battlenetworking0">
+                                    <Size x="38" y="38"/>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT">
+                                            <Offset x="-3" y="3"/>
+                                        </Anchor>
+                                    </Anchors>
+                                </Texture>
+                            </Layer>
+                            <Layer level="OVERLAY">
+                                <Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+                                    <Size x="56" y="56"/>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT"/>
+                                    </Anchors>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight"/>
+                        <Scripts>
+                            <OnLoad>
+                                this:RegisterForClicks("RightButtonUp")
+                                this:RegisterForDrag("LeftButton")
+                                this:SetClampedToScreen(true)
+                            </OnLoad>
+                            <OnDragStart>
+                                this:LockHighlight()
+                                this:StartMoving()
+                            </OnDragStart>
+                            <OnDragStop>
+                                this:UnlockHighlight()
+                                this:StopMovingOrSizing()
+                            </OnDragStop>
+                            <OnEnter>
+                                LFT_ShowMinimap()
+                            </OnEnter>
+                            <OnLeave>
+                                LFT_HideMinimap()
+                                GameTooltip:Hide()
+                            </OnLeave>
+                            <OnMouseUp>
+                                if arg1 == "LeftButton" then
+                                LFT_Toggle()
+                                end
+                            </OnMouseUp>
+                        </Scripts>
+                    </Button>
+
+                    <Button name="LFTMainCloseButton" inherits="UIPanelCloseButton">
+                        <Anchors>
+                            <Anchor point="TOPRIGHT">
+                                <Offset>
+                                    <AbsDimension x="-27" y="-8"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                LFT_Toggle()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+
+                    <Button name="LFTTypeSelect" inherits="UIDropDownMenuTemplate" text="aasdasdasda">
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <FontString name="$parentLabel" inherits="GameFontNormal" text="Type: ">
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="LEFT">
+                                            <Offset>
+                                                <AbsDimension x="-25" y="2"/>
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="150" y="-125"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnLoad>
+                                DungeonType_OnLoad();
+                            </OnLoad>
+                            <OnShow>
+                                DungeonType_OnLoad();
+                            </OnShow>
+                        </Scripts>
+                    </Button>
+
+                    <CheckButton name="RoleTank" toplevel="true">
+                        <Size>
+                            <AbsDimension x="20" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="60" y="-95"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                LFTsetRole('tank', this:GetChecked())
+                            </OnClick>
+                        </Scripts>
+                        <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
+                        <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
+                        <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
+                        <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
+                        <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
+                    </CheckButton>
+
+                    <CheckButton name="RoleHealer" toplevel="true">
+                        <Size>
+                            <AbsDimension x="20" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="155" y="-95"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                LFTsetRole('healer', this:GetChecked())
+                            </OnClick>
+                        </Scripts>
+                        <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
+                        <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
+                        <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
+                        <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
+                        <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
+                    </CheckButton>
+
+                    <CheckButton name="RoleDamage" toplevel="true">
+                        <Size>
+                            <AbsDimension x="20" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="250" y="-95"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                LFTsetRole('damage', this:GetChecked())
+                            </OnClick>
+                        </Scripts>
+                        <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
+                        <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
+                        <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
+                        <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
+                        <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
+                    </CheckButton>
+
+                    <Button name="findGroupButton" hidden="true" inherits="UIPanelButtonTemplate2" text="Find Group">
+                        <Size>
+                            <AbsDimension x="104" y="21"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="BOTTOM">
+                                <Offset>
+                                    <AbsDimension x="-8" y="79"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                findGroup()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="findMoreButton" hidden="true" inherits="UIPanelButtonTemplate2" text="Find More">
+                        <Size>
+                            <AbsDimension x="104" y="21"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="BOTTOM">
+                                <Offset>
+                                    <AbsDimension x="-8" y="79"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                findMore()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+
+                    <Button name="leaveQueueButton" hidden="true" inherits="UIPanelButtonTemplate2" text="Leave Queue">
+                        <Size>
+                            <AbsDimension x="104" y="21"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="BOTTOM">
+                                <Offset>
+                                    <AbsDimension x="-8" y="79"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                leaveQueue()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+
+                </Frames>
                 <Scripts>
                     <OnLoad>
-                        DungeonType_OnLoad();
+                        this:RegisterForDrag("LeftButton");
                     </OnLoad>
-                    <OnShow>
-                        DungeonType_OnLoad();
-                    </OnShow>
+                    <OnDragStart>
+                        LFTlft:StartMoving();
+                        LFTlft.isMoving = true;
+                    </OnDragStart>
+                    <OnDragStop>
+                        LFTlft:StopMovingOrSizing();
+                        LFTlft.isMoving = false;
+                    </OnDragStop>
                 </Scripts>
-            </Button>
+            </Frame>
 
-            <CheckButton name="RoleTank" toplevel="true">
+            <Frame name="LFTBrowse" hidden="true" toplevel="true"
+                   enableMouse="true">
                 <Size>
-                    <AbsDimension x="20" y="20"/>
+                    <AbsDimension x="384" y="512"/>
                 </Size>
                 <Anchors>
                     <Anchor point="TOPLEFT">
                         <Offset>
-                            <AbsDimension x="60" y="-95"/>
+                            <AbsDimension x="0" y="-0"/>
                         </Offset>
                     </Anchor>
                 </Anchors>
-                <Scripts>
-                    <OnClick>
-                        LFTsetRole('tank', this:GetChecked())
-                    </OnClick>
-                </Scripts>
-                <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
-                <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
-                <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
-                <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
-                <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
-            </CheckButton>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\addons\LFT\images\ui-character-activetab">
+                            <Size>
+                                <AbsDimension x="128" y="64"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="150" y="13"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
 
-            <CheckButton name="RoleHealer" toplevel="true">
-                <Size>
-                    <AbsDimension x="20" y="20"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="155" y="-95"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        LFTsetRole('healer', this:GetChecked())
-                    </OnClick>
-                </Scripts>
-                <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
-                <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
-                <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
-                <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
-                <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
-            </CheckButton>
+                        <Texture file="Interface\addons\LFT\images\ui-character-inactivetab">
+                            <Size>
+                                <AbsDimension x="128" y="32"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="37" y="45"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
 
-            <CheckButton name="RoleDamage" toplevel="true">
-                <Size>
-                    <AbsDimension x="20" y="20"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="250" y="-95"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        LFTsetRole('damage', this:GetChecked())
-                    </OnClick>
-                </Scripts>
-                <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
-                <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
-                <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
-                <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
-                <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
-            </CheckButton>
+                        <Texture file="Interface\addons\LFT\images\battlenet-portrait">
+                            <Size>
+                                <AbsDimension x="64" y="64"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="7" y="-6"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
 
-            <Button name="findGroupButton" hidden="true" inherits="UIPanelButtonTemplate2" text="Find Group">
-                <Size>
-                    <AbsDimension x="104" y="21"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="BOTTOM">
-                        <Offset>
-                            <AbsDimension x="-8" y="79"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        findGroup()
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="findMoreButton" hidden="true" inherits="UIPanelButtonTemplate2" text="Find More">
-                <Size>
-                    <AbsDimension x="104" y="21"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="BOTTOM">
-                        <Offset>
-                            <AbsDimension x="-8" y="79"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        findMore()
-                    </OnClick>
-                </Scripts>
-            </Button>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <Texture name="LFTFrame" file="Interface\addons\LFT\images\ui-frame-threebutton-blank">
+                            <Size>
+                                <AbsDimension x="512" y="512"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="-2" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <Texture name="LFTDungeonsButtonHighlight" hidden="true"
+                                 file="Interface\addons\LFT\images\ui-character-tab-realhighlight">
+                            <Size>
+                                <AbsDimension x="128" y="32"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="37" y="45"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="OVERLAY">
 
-            <Button name="leaveQueueButton" hidden="true" inherits="UIPanelButtonTemplate2" text="Leave Queue">
-                <Size>
-                    <AbsDimension x="104" y="21"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="BOTTOM">
-                        <Offset>
-                            <AbsDimension x="-8" y="79"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
+                        <FontString name="$parentDungeonsText" inherits="GameFontWhite" text="Dungeons">
+                            <Size>
+                                <AbsDimension x="128" y="22"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="40" y="53"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentBrowseText" inherits="GameFontNormal" text="Browse">
+                            <Size>
+                                <AbsDimension x="128" y="22"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="150" y="50"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="LFTTitleText" inherits="GameFontNormal" text="Turtle Finder">
+                            <Anchors>
+                                <Anchor point="TOP">
+                                    <Offset>
+                                        <AbsDimension x="0" y="-18"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+
+                        <FontString name="$parentNoPeople" inherits="GameFontWhite"
+                                    text="No players are looking for groups at the moment.">
+                            <Size>
+                                <AbsDimension x="300" y="326"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER">
+                                    <Offset>
+                                        <AbsDimension x="-10" y="30"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+
+                    </Layer>
+                </Layers>
+                <Frames>
+
+                    <!--            <Button name="joinQueueButton" inherits="UIPanelButtonTemplate" text="Join Queue DISABLED">-->
+                    <!--                <Size>-->
+                    <!--                    <AbsDimension x="104" y="23"/>-->
+                    <!--                </Size>-->
+                    <!--                <Anchors>-->
+                    <!--                    <Anchor point="BOTTOMRIGHT">-->
+                    <!--                        <Offset>-->
+                    <!--                            <AbsDimension x="-37" y="83"/>-->
+                    <!--                        </Offset>-->
+                    <!--                    </Anchor>-->
+                    <!--                </Anchors>-->
+                    <!--                <Scripts>-->
+                    <!--                    <OnClick>-->
+                    <!--                    </OnClick>-->
+                    <!--                </Scripts>-->
+                    <!--            </Button>-->
+
+                    <Button name="LFTDungeonsButton" inherits="UIPanelButtonTemplate" text="">
+                        <NormalTexture/>
+                        <HighlightTexture/>
+                        <PushedTexture/>
+                        <Size>
+                            <AbsDimension x="110" y="28"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="46" y="50"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                lft_switch_tab(1)
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+
+                    <Button name="LFTBrowseCloseButton" inherits="UIPanelCloseButton">
+                        <Anchors>
+                            <Anchor point="TOPRIGHT">
+                                <Offset>
+                                    <AbsDimension x="-27" y="-8"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                LFT_Toggle()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+
+                    <ScrollFrame name="BrowseDungeonListScrollFrame" hidden="true" inherits="FauxScrollFrameTemplate">
+                        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2"
+                                  tile="false">
+                        </Backdrop>
+                        <Size>
+                            <AbsDimension x="295" y="326"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="LFTBrowse" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="25" y="-78"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnVerticalScroll>
+                                FauxScrollFrame_OnVerticalScroll(40, BrowseDungeonListFrame_Update);
+                            </OnVerticalScroll>
+                        </Scripts>
+                    </ScrollFrame>
+
+                </Frames>
                 <Scripts>
-                    <OnClick>
-                        leaveQueue()
-                    </OnClick>
+                    <OnLoad>
+                        this:RegisterForDrag("LeftButton");
+                    </OnLoad>
+                    <OnDragStart>
+                        LFTlft:StartMoving();
+                        LFTlft.isMoving = true;
+                    </OnDragStart>
+                    <OnDragStop>
+                        LFTlft:StopMovingOrSizing();
+                        LFTlft.isMoving = false;
+                    </OnDragStop>
                 </Scripts>
-            </Button>
+            </Frame>
 
         </Frames>
         <Scripts>
             <OnLoad>
-                this:RegisterForDrag("LeftButton");
                 this:SetMovable(1);
                 this:SetUserPlaced(true);
                 tinsert(UISpecialFrames, this:GetName());
@@ -1979,233 +2237,7 @@
             <OnDragStop>
                 this:StopMovingOrSizing();
                 this.isMoving = false;
-                lft_moved()
             </OnDragStop>
-            <OnShow>
-            </OnShow>
-        </Scripts>
-    </Frame>
-
-    <Frame name="LFTBrowse" hidden="true" toplevel="true"
-           parent="UIParent" movable="true" enableMouse="true" resizable="false">
-        <Size>
-            <AbsDimension x="384" y="512"/>
-        </Size>
-        <Anchors>
-            <Anchor point="TOPLEFT">
-                <Offset>
-                    <AbsDimension x="0" y="-104"/>
-                </Offset>
-            </Anchor>
-        </Anchors>
-        <Layers>
-            <Layer level="BACKGROUND">
-                <Texture file="Interface\addons\LFT\images\ui-character-activetab">
-                    <Size>
-                        <AbsDimension x="128" y="64"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="150" y="13"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-                <Texture file="Interface\addons\LFT\images\ui-character-inactivetab">
-                    <Size>
-                        <AbsDimension x="128" y="32"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="37" y="45"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-                <Texture file="Interface\addons\LFT\images\battlenet-portrait">
-                    <Size>
-                        <AbsDimension x="64" y="64"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOPLEFT">
-                            <Offset>
-                                <AbsDimension x="7" y="-6"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-
-            </Layer>
-            <Layer level="ARTWORK">
-                <Texture name="LFTFrame" file="Interface\addons\LFT\images\ui-frame-threebutton-blank">
-                    <Size>
-                        <AbsDimension x="512" y="512"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="TOPLEFT">
-                            <Offset>
-                                <AbsDimension x="-2" y="0"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-                <Texture name="LFTDungeonsButtonHighlight" hidden="true"
-                         file="Interface\addons\LFT\images\ui-character-tab-realhighlight">
-                    <Size>
-                        <AbsDimension x="128" y="32"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="37" y="45"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-            </Layer>
-            <Layer level="OVERLAY">
-
-                <FontString name="$parentDungeonsText" inherits="GameFontWhite" text="Dungeons">
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="80" y="58"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-                <FontString name="$parentBrowseText" inherits="GameFontNormal" text="Browse">
-                    <Size>
-                        <AbsDimension x="128" y="22"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT">
-                            <Offset>
-                                <AbsDimension x="150" y="50"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-                <FontString name="LFTTitleText" inherits="GameFontNormal" text="Turtle Finder">
-                    <Anchors>
-                        <Anchor point="TOP">
-                            <Offset>
-                                <AbsDimension x="0" y="-18"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-
-                <FontString name="$parentNoPeople" inherits="GameFontWhite"
-                            text="No players are looking for groups at the moment.">
-                    <Size>
-                        <AbsDimension x="300" y="326"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="CENTER">
-                            <Offset>
-                                <AbsDimension x="-10" y="30"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </FontString>
-
-            </Layer>
-        </Layers>
-        <Frames>
-
-            <!--            <Button name="joinQueueButton" inherits="UIPanelButtonTemplate" text="Join Queue DISABLED">-->
-            <!--                <Size>-->
-            <!--                    <AbsDimension x="104" y="23"/>-->
-            <!--                </Size>-->
-            <!--                <Anchors>-->
-            <!--                    <Anchor point="BOTTOMRIGHT">-->
-            <!--                        <Offset>-->
-            <!--                            <AbsDimension x="-37" y="83"/>-->
-            <!--                        </Offset>-->
-            <!--                    </Anchor>-->
-            <!--                </Anchors>-->
-            <!--                <Scripts>-->
-            <!--                    <OnClick>-->
-            <!--                    </OnClick>-->
-            <!--                </Scripts>-->
-            <!--            </Button>-->
-
-            <Button name="LFTDungeonsButton" inherits="UIPanelButtonTemplate" text="">
-                <NormalTexture/>
-                <HighlightTexture/>
-                <PushedTexture/>
-                <Size>
-                    <AbsDimension x="110" y="28"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="46" y="50"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        lft_switch_tab(1)
-                    </OnClick>
-                </Scripts>
-            </Button>
-
-            <Button name="LFTCloseButton" inherits="UIPanelCloseButton">
-                <Anchors>
-                    <Anchor point="TOPRIGHT">
-                        <Offset>
-                            <AbsDimension x="-27" y="-8"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-            </Button>
-
-            <ScrollFrame name="BrowseDungeonListScrollFrame" hidden="true" inherits="FauxScrollFrameTemplate">
-                <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2"
-                          tile="false">
-                </Backdrop>
-                <Size>
-                    <AbsDimension x="295" y="326"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="LFTBrowse" relativePoint="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="25" y="-78"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnVerticalScroll>
-                        FauxScrollFrame_OnVerticalScroll(40, BrowseDungeonListFrame_Update);
-                    </OnVerticalScroll>
-                </Scripts>
-            </ScrollFrame>
-
-        </Frames>
-        <Scripts>
-            <OnLoad>
-                this:RegisterForDrag("LeftButton");
-                this:SetMovable(1);
-                this:SetUserPlaced(true);
-                tinsert(UISpecialFrames, this:GetName());
-            </OnLoad>
-            <OnDragStart>
-                this:StartMoving();
-                this.isMoving = true;
-            </OnDragStart>
-            <OnDragStop>
-                this:StopMovingOrSizing();
-                this.isMoving = false;
-                lft_moved()
-            </OnDragStop>
-            <OnShow>
-            </OnShow>
         </Scripts>
     </Frame>
 
