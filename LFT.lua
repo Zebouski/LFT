@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.2.6'
+local addonVer = '0.0.2.7'
 local LFT_ADDON_CHANNEL = 'LFT'
 local groupsFormedThisSession = 0
 
@@ -26,6 +26,7 @@ LFT.diplomat = false
 LFT.tab = 1
 LFT.dungeonsSpam = {}
 LFT.dungeonsSpamDisplay = {}
+LFT.dungeonsSpamDisplayLFM = {}
 LFT.browseFrames = {}
 LFT.showedUpdateNotification = false
 LFT.maxDungeonsInQueue = 5
@@ -236,6 +237,7 @@ LFTTime:SetScript("OnUpdate", function()
                 if LFT.dungeonsSpam[data.code].damage == 0 then
                     LFT.dungeonsSpamDisplay[data.code].damage = LFT.dungeonsSpam[data.code].damage
                 end
+                LFT.dungeonsSpamDisplayLFM[data.code] = 0
             end
         end
 
@@ -1286,7 +1288,7 @@ LFTComms:SetScript("OnEvent", function()
                     LFT.incDungeonssSpamRole(mDungeonCode, 'tank', lfmTank)
                     LFT.incDungeonssSpamRole(mDungeonCode, 'healer', lfmHealer)
                     LFT.incDungeonssSpamRole(mDungeonCode, 'damage', lfmDamage)
-                    LFT.updateDungeonsSpamDisplay(mDungeonCode)
+                    LFT.updateDungeonsSpamDisplay(mDungeonCode, true, lfmTank + lfmHealer + lfmDamage)
                 end
             end
         end
@@ -1963,6 +1965,7 @@ function LFT.init()
                 healer = 0,
                 damage = 0
             }
+            LFT.dungeonsSpamDisplayLFM[data.code] = 0
         end
 
     end
@@ -2326,7 +2329,8 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
     --unqueue queued
     for dungeon, data in next, LFT.dungeons do
         LFT.dungeons[dungeon].canQueue = true
-        if data.queued and (LFT.level < data.minLevel or LFT.level > data.maxLevel) then
+        if data.queued and LFT.level < data.minLevel then
+            lfdebug(' !!!! de-queued fillavail ' .. data.code)
             LFT.dungeons[dungeon].queued = false
         end
     end
@@ -3403,7 +3407,7 @@ function LFT.LFTBrowse_Update(offset)
                     end
 
                     _G['BrowseFrame_' .. data.code .. 'Background']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. data.background)
-                    _G['BrowseFrame_' .. data.code .. 'Background']:SetAlpha(0.5)
+                    _G['BrowseFrame_' .. data.code .. 'Background']:SetAlpha(0.7)
 
                     LFT.browseFrames[data.code]:Show()
 
@@ -3423,6 +3427,13 @@ function LFT.LFTBrowse_Update(offset)
                     end
 
                     _G["BrowseFrame_" .. data.code .. "DungeonName"]:SetText(color .. dungeon)
+                    _G["BrowseFrame_" .. data.code .. "IconLeader"]:Hide()
+
+                    if LFT.dungeonsSpamDisplayLFM[data.code] > 0 then
+                        _G["BrowseFrame_" .. data.code .. "DungeonName"]:SetText(color .. dungeon .. " (" .. LFT.dungeonsSpamDisplayLFM[data.code] .. "/5)")
+                        _G["BrowseFrame_" .. data.code .. "IconLeader"]:Show()
+                    end
+
                     local tank_color = ''
                     local healer_color = ''
                     local damage_color = ''
@@ -3468,13 +3479,11 @@ function LFT.LFTBrowse_Update(offset)
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(1)
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Tank')
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
-                            end
-                            if LFT.dungeonsSpamDisplay[data.code].healer == 0 and string.find(LFT_ROLE, 'healer', 1, true) then
+                            elseif LFT.dungeonsSpamDisplay[data.code].healer == 0 and string.find(LFT_ROLE, 'healer', 1, true) then
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(2)
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Healer')
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
-                            end
-                            if string.find(LFT_ROLE, 'damage', 1, true) then
+                            elseif LFT.dungeonsSpamDisplay[data.code].damage < 3 and string.find(LFT_ROLE, 'damage', 1, true) then
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(3)
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Damage')
                                 _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
@@ -3578,6 +3587,19 @@ function LFT_Toggle()
             end
         end
         if not LFT.diplomat then
+            lfdebug('not a keyring diplomat')
+            for bag = 0, 5 do
+                for slot = 0, GetContainerNumSlots(bag) do
+                    local itemLink = GetContainerItemLink(bag, slot)
+                    if itemLink then
+                        if string.find(itemLink, 'Pendant of Diplomacy', 1, true) then
+                            LFT.diplomat = true
+                        end
+                    end
+                end
+            end
+        end
+        if not LFT.diplomat then
             local _, race = UnitRace('player')
             race = string.lower(race)
 
@@ -3607,6 +3629,9 @@ function LFT_Toggle()
         if not LFT.dungeonsSpamDisplay[data.code] then
             LFT.dungeonsSpamDisplay[data.code] = { tank = 0, healer = 0, damage = 0 }
         end
+        if not LFT.dungeonsSpamDisplayLFM[data.code] then
+            LFT.dungeonsSpamDisplayLFM[data.code] = 0
+        end
         if not LFT.supress[data.code] then
             LFT.supress[data.code] = ''
         end
@@ -3633,6 +3658,8 @@ function LFT_Toggle()
 
             DungeonListFrame_Update()
 
+        elseif LFT.tab == 2 then
+            BrowseDungeonListFrame_Update()
         end
     end
 
@@ -3912,7 +3939,7 @@ function LFT_ShowMinimap()
         elseif x > 800 and y > 300 then
             _G['LFTGroupStatus']:SetPoint("TOPLEFT", _G["LFT_Minimap"], "TOPRIGHT", -_G['LFTGroupStatus']:GetWidth() - 40, -20)
         else
-            _G['LFTGroupStatus']:SetPoint("TOPLEFT", _G["LFT_Minimap"], "TOPRIGHT", -_G['LFTGroupStatus']:GetWidth() - 40,  _G['LFTGroupStatus']:GetHeight())
+            _G['LFTGroupStatus']:SetPoint("TOPLEFT", _G["LFT_Minimap"], "TOPRIGHT", -_G['LFTGroupStatus']:GetWidth() - 40, _G['LFTGroupStatus']:GetHeight())
         end
 
         _G['LFTGroupStatus']:Show()
@@ -3951,6 +3978,9 @@ function queueForFromButton(bCode)
 end
 
 function queueFor(name, status)
+
+    lfdebug('queue for call ' .. name)
+
     local dungeonCode = ''
     local dung = string.split(name, '_')
     dungeonCode = dung[2]
@@ -3976,13 +4006,15 @@ function queueFor(name, status)
     lfdebug(queues)
     lfdebug(LFT.inGroup)
 
-    if queues == 1 and LFT.inGroup then
-        LFT.LFMDungeonCode = dungeonCode
-        LFT.disableDungeonCheckButtons(dungeonCode)
+    if LFT.inGroup then
+        if queues == 1 then
+            LFT.LFMDungeonCode = dungeonCode
+            LFT.disableDungeonCheckButtons(dungeonCode)
+        end
     else
-        LFT.enableDungeonCheckButtons()
-        if queues >= LFT.maxDungeonsInQueue then
-
+        if queues < LFT.maxDungeonsInQueue then
+            --LFT.enableDungeonCheckButtons()
+        else
             for _, frame in next, LFT.availableDungeons do
                 local dungeonName = LFT.dungeonNameFromCode(frame.code)
                 if not LFT.dungeons[dungeonName].queued then
@@ -4037,11 +4069,12 @@ end
 function joinQueue(roleID, name)
 
     lfdebug('join queue call ' .. name)
+    lfdebug('join queue call role ' .. roleID)
 
     local nameEx = string.split(name, '_')
     local mCode = nameEx[2]
 
-    leaveQueue('from join queue')
+    --leaveQueue('from join queue')
 
     if _G['Dungeon_' .. mCode] ~= nil then
         _G['Dungeon_' .. mCode]:SetChecked(true)
@@ -4086,6 +4119,7 @@ function findGroup()
     local dungeonsText = ''
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
+            lfdebug('in find group queued for : ' .. dungeon)
             dungeonsText = dungeonsText .. dungeon .. ', '
             --lfg_text = 'LFG:' .. data.code .. ':' .. LFT_ROLE .. ' ' .. lfg_text
         end
@@ -4401,7 +4435,7 @@ function LFT.incDungeonssSpamRole(dungeon, role, nrInc)
     end
 end
 
-function LFT.updateDungeonsSpamDisplay(code)
+function LFT.updateDungeonsSpamDisplay(code, lfm, numLFM)
 
     if not LFT.dungeonsSpam[code] then
         lfdebug('error in updateDungeons, ' .. code .. ' not init')
@@ -4423,6 +4457,16 @@ function LFT.updateDungeonsSpamDisplay(code)
 
     if LFT.dungeonsSpam[code].damage ~= 0 then
         LFT.dungeonsSpamDisplay[code].damage = LFT.dungeonsSpam[code].damage
+    end
+
+    if lfm then
+        if LFT.dungeonsSpamDisplayLFM[code] == 0 then
+            LFT.dungeonsSpamDisplayLFM[code] = numLFM
+        else
+            if numLFM > LFT.dungeonsSpamDisplayLFM[code] then
+                LFT.dungeonsSpamDisplayLFM[code] = numLFM
+            end
+        end
     end
 
 end
@@ -4572,6 +4616,7 @@ LFT.bosses = {
         'Witch Doctor Zum\'rah',
         'Sandfury Executioner',
         'Nekrum Gutchewer',
+        'Shadowpriest Sezz\'ziz',
         'Sergeant Bly',
         'Hydromancer Velratha',
         'Ruuzlu',
