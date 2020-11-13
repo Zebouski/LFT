@@ -11,10 +11,14 @@ This version is for testing purposes. <br>
 If you encounter any lua errors or other addon problems please take a screenshot and send it to me (Xerron/Er) on Discord with a short explanation of what you were doing when you encountered the problem breaks your gameplay disable the addon until a new version comes out.
 
 ## Features ##
-Todo: option to choose: fresh groups only / any groups
+Todo: option to choose: fresh groups only / any groups.
+
+#### LFM Groups (v.0.0.2.7) ####
+LFM groups will be visible in the Browse window with a crown icon and the number of members in the LFM group.<br>
+![LFMGroups](https://imgur.com/TjJ7yOY.png)
 
 #### Multiple Role Queueing (v.0.0.2.6) ####
-Now you can queue for a dungeon with multiple roles!
+Now you can queue for a dungeon with multiple roles!<br>
 ![multipleroles](https://imgur.com/cjoIt7y.png)
 
 #### Dungeon Groups Browser (v.0.0.2.5) ####
