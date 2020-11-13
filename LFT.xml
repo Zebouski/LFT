@@ -284,14 +284,27 @@
             <Layer level="BACKGROUND">
             </Layer>
             <Layer level="ARTWORK">
+
+                <Texture name="$parentIconLeader" file="interface\groupframe\ui-group-leadericon">
+                    <Size>
+                        <AbsDimension x="16" y="16"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="2" y="-3"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
                 <Texture name="$parentIconTank" file="Interface\addons\LFT\images\ready_tank">
                     <Size>
                         <AbsDimension x="16" y="14"/>
                     </Size>
                     <Anchors>
-                        <Anchor point="TOPLEFT">
+                        <Anchor point="BOTTOM">
                             <Offset>
-                                <AbsDimension x="190" y="-15"/>
+                                <AbsDimension x="38" y="2"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -301,9 +314,9 @@
                         <AbsDimension x="16" y="14"/>
                     </Size>
                     <Anchors>
-                        <Anchor point="TOPLEFT">
+                        <Anchor point="BOTTOM">
                             <Offset>
-                                <AbsDimension x="230" y="-15"/>
+                                <AbsDimension x="78" y="2"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -313,9 +326,9 @@
                         <AbsDimension x="16" y="14"/>
                     </Size>
                     <Anchors>
-                        <Anchor point="TOPLEFT">
+                        <Anchor point="BOTTOM">
                             <Offset>
-                                <AbsDimension x="270" y="-15"/>
+                                <AbsDimension x="118" y="2"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -327,18 +340,18 @@
                     <Anchors>
                         <Anchor point="LEFT">
                             <Offset>
-                                <AbsDimension x="8" y="10"/>
+                                <AbsDimension x="18" y="10"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
                 </FontString>
 
-                <FontString name="$parentInQueue" hidden="true" justifyH="LEFT" inherits="GameFontHighlightSmall"
+                <FontString name="$parentInQueue" hidden="false" justifyH="LEFT" inherits="GameFontHighlightSmall"
                             text="In Queue">
                     <Anchors>
                         <Anchor point="LEFT">
                             <Offset>
-                                <AbsDimension x="8" y="-8"/>
+                                <AbsDimension x="18" y="-8"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -351,7 +364,7 @@
                     <Anchors>
                         <Anchor point="BOTTOM">
                             <Offset>
-                                <AbsDimension x="83" y="7"/>
+                                <AbsDimension x="80" y="-2"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -363,7 +376,7 @@
                     <Anchors>
                         <Anchor point="BOTTOM">
                             <Offset>
-                                <AbsDimension x="123" y="7"/>
+                                <AbsDimension x="120" y="-2"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -375,7 +388,7 @@
                     <Anchors>
                         <Anchor point="BOTTOM">
                             <Offset>
-                                <AbsDimension x="163" y="7"/>
+                                <AbsDimension x="160" y="-2"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -393,7 +406,7 @@
                 <Anchors>
                     <Anchor point="BOTTOMLEFT">
                         <Offset>
-                            <AbsDimension x="7" y="5"/>
+                            <AbsDimension x="15" y="5"/>
                         </Offset>
                     </Anchor>
                 </Anchors>
@@ -1449,7 +1462,6 @@
                         </Texture>
 
                         <Texture file="Interface\addons\LFT\images\ui-lfg-portrait">
-                            <!--                <Texture file="Interface\Addons\LFT\images\damage">-->
                             <Size>
                                 <AbsDimension x="64" y="64"/>
                             </Size>
@@ -1483,7 +1495,7 @@
                             <Anchors>
                                 <Anchor point="BOTTOMLEFT">
                                     <Offset>
-                                        <AbsDimension x="150" y="45"/>
+                                        <AbsDimension x="150" y="47"/>
                                     </Offset>
                                 </Anchor>
                             </Anchors>
@@ -2073,7 +2085,7 @@
                             <Anchors>
                                 <Anchor point="BOTTOMLEFT">
                                     <Offset>
-                                        <AbsDimension x="37" y="45"/>
+                                        <AbsDimension x="37" y="47"/>
                                     </Offset>
                                 </Anchor>
                             </Anchors>
