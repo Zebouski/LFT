@@ -8,7 +8,10 @@
         </Size>
         <Layers>
             <Layer level="OVERLAY">
-                <FontString name="$parentText" inherits="GameFontNormal" text="dungeontext">
+                <FontString name="$parentText" inherits="GameFontNormal" text="dungeontext" justifyH="LEFT">
+                    <Size>
+                        <AbsDimension x="200" y="20"/>
+                    </Size>
                     <Anchors>
                         <Anchor point="LEFT">
                             <Offset>
@@ -17,11 +20,14 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
-                <FontString name="$parentLevels" inherits="GameFontNormal" text="dungeontext">
+                <FontString name="$parentLevels" inherits="GameFontNormal" text="dungeontext" justifyH="LEFT">
+                    <Size>
+                        <AbsDimension x="70" y="20"/>
+                    </Size>
                     <Anchors>
                         <Anchor point="LEFT">
                             <Offset>
-                                <AbsDimension x="230" y="0"/>
+                                <AbsDimension x="225" y="0"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -2266,7 +2272,7 @@
             </Anchor>
         </Anchors>
         <Layers>
-            <Layer level="OVERLAY">
+            <Layer level="ARTWORK">
 
                 <Texture name="$parentPlayer" hidden="true"
                          file="Interface\addons\LFT\images\tank_small">
