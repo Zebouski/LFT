@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.2.7'
+local addonVer = '0.0.2.8'
 local LFT_ADDON_CHANNEL = 'LFT'
 local groupsFormedThisSession = 0
 
@@ -54,8 +54,11 @@ LFT.averageWaitTime = 0
 LFT.types = {
     [1] = 'Suggested Dungeons',
     --    [2] = 'Random Dungeon',
-    [3] = 'All Available Dungeons'
+    [3] = 'All Available Dungeons',
+    --[4] = 'Elite Quests'
 }
+local TYPE_ELITE_QUESTS = 4
+LFT.quests = {}
 LFT.maxDungeonsList = 11
 LFT.minimapFrames = {}
 LFT.myRandomTime = 0
@@ -68,6 +71,8 @@ LFT.HEALER_TIME = 10
 LFT.DAMAGE_TIME = 18
 LFT.FULLCHECK_TIME = 26 --time when checkGroupFull is called, has to wait for goingWith messages
 LFT.TIME_MARGIN = 30
+
+LFT.ROLE_CHECK_TIME = 50
 
 LFT.foundGroup = false
 LFT.inGroup = false
@@ -102,6 +107,27 @@ LFT.classColors = {
     ["warlock"] = { r = 0.58, g = 0.51, b = 0.79, c = "|cff9482c9" },
     ["paladin"] = { r = 0.96, g = 0.55, b = 0.73, c = "|cfff58cba" }
 }
+
+--quest watcher
+local LFTQuestWatcher = CreateFrame("Frame")
+--LFTQuestWatcher:RegisterEvent("QUEST_ACCEPTED")
+--LFTQuestWatcher:RegisterEvent("QUEST_REMOVED")
+--LFTQuestWatcher:RegisterEvent("QUEST_TURNED_IN")
+LFTQuestWatcher:RegisterEvent("QUEST_LOG_UPDATE")
+LFTQuestWatcher:Show()
+
+LFTQuestWatcher:SetScript("OnEvent", function()
+    if event then
+        if event == "QUEST_LOG_UPDATE" then
+            if LFT_TYPE == TYPE_ELITE_QUESTS then
+                lfdebug(event)
+                LFT.getEliteQuests()
+                DungeonListFrame_Update()
+            end
+        end
+
+    end
+end)
 
 -- delay leave queue, to check if im really ungrouped
 local LFTDelayLeaveQueue = CreateFrame("Frame")
@@ -400,15 +426,17 @@ LFTObjectives:SetScript("OnUpdate", function()
 end)
 
 LFTObjectives:SetScript("OnEvent", function()
-    if event == "CHAT_MSG_COMBAT_HOSTILE_DEATH" then
-        local creatureDied = arg1
-        --lfdebug(creatureDied)
-        if LFT.bosses[LFT.groupFullCode] then
-            for _, boss in next, LFT.bosses[LFT.groupFullCode] do
-                --creatureDied == 'You have slain ' .. boss .. '!'
-                if creatureDied == boss .. ' dies.' then
-                    LFTObjectives.objectiveComplete(boss)
-                    return true
+    if event then
+        if event == "CHAT_MSG_COMBAT_HOSTILE_DEATH" then
+            local creatureDied = arg1
+            --lfdebug(creatureDied)
+            if LFT.bosses[LFT.groupFullCode] then
+                for _, boss in next, LFT.bosses[LFT.groupFullCode] do
+                    --creatureDied == 'You have slain ' .. boss .. '!'
+                    if creatureDied == boss .. ' dies.' then
+                        LFTObjectives.objectiveComplete(boss)
+                        return true
+                    end
                 end
             end
         end
@@ -536,7 +564,7 @@ LFTRoleCheck:SetScript("OnHide", function()
 end)
 
 LFTRoleCheck:SetScript("OnUpdate", function()
-    local plus = 25 --seconds
+    local plus = LFT.ROLE_CHECK_TIME --seconds
     if LFT.isLeader then
         plus = plus + 2 --leader waits 2 more second to hide
     end
@@ -596,8 +624,8 @@ end)
 LFTGroupReadyFrameCloser:SetScript("OnHide", function()
 end)
 LFTGroupReadyFrameCloser:SetScript("OnUpdate", function()
-    local plus = 30 --time after i click leave queue, afk
-    local plus2 = 35 --time after i close the window
+    local plus = LFT.ROLE_CHECK_TIME --time after i click leave queue, afk
+    local plus2 = LFT.ROLE_CHECK_TIME + 5 --time after i close the window
     local gt = GetTime() * 1000
     local st = (this.startTime + plus) * 1000
     local st2 = (this.startTime + plus2) * 1000
@@ -617,7 +645,7 @@ LFTGroupReadyFrameCloser:SetScript("OnUpdate", function()
         if LFTGroupReadyFrameCloser.response == 'notReady' then
             --doesnt trigger for leader, cause it leaves queue
             --which resets response to ''
-            LeaveParty()
+            --LeaveParty()
             LFTGroupReadyFrameCloser.response = ''
         end
         LFTGroupReadyFrameCloser:Hide()
@@ -1886,6 +1914,15 @@ function LFT.init()
     end
 
     UIDropDownMenu_SetText(LFT.types[LFT_TYPE], _G['LFTTypeSelect']);
+
+    if LFT_TYPE == TYPE_ELITE_QUESTS then
+        _G['LFTMainDungeonsText']:SetText('Elite Quests')
+        _G['LFTBrowseDungeonsText']:SetText('Elite Quests')
+    else
+        _G['LFTMainDungeonsText']:SetText('Dungeons')
+        _G['LFTBrowseDungeonsText']:SetText('Dungeons')
+    end
+
     _G['LFTDungeonsText']:SetText(LFT.types[LFT_TYPE])
     if not LFT_ROLE then
         LFT.SetSingleRole('tank')
@@ -1970,6 +2007,77 @@ function LFT.init()
 
     end
 
+    -- get quests
+    LFT.getEliteQuests()
+
+end
+
+function LFT.getEliteQuests()
+    local numEntries, numQuests = GetNumQuestLogEntries();
+
+    local quests = {}
+    local header = ''
+    for i = 1, 20 do
+        --replace with numEntries
+        local title, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(i)
+        if isHeader then
+            header = title
+        else
+            if isComplete and isComplete > 0 then
+                -- quest is complete, hide it ?
+            else
+                -- quest not complete show ?
+                if questTag then
+                    -- elite, at least, i think
+                    if questTag == 'Elite' then
+                        --lfdebug(header .. ': ' .. title .. ' ' .. questTag)
+                        local color = GetDifficultyColor(level) --rgb
+                        local code = 0
+                        for j = 1, string.len(title) do
+                            code = code + string.byte(string.sub(title, j, j))
+                        end
+                        local queued = false
+                        if LFT.quests[title] then
+                            queued = LFT.quests[title].queued
+                        end
+                        quests[title] = {
+                            minLevel = level, maxLevel = 60,
+                            code = code, queued = queued, canQueue = true,
+                            background = header, myRole = ''
+                        }
+
+                    end
+
+                end
+            end
+        end
+    end
+    if table.getn(LFT.quests) ~= table.getn(quests) or table.getn(LFT.quests) == 0 then
+        LFT.quests = quests
+    end
+
+    for quest, data in next, LFT.quests do
+
+        if not LFT.dungeonsSpam[data.code] then
+            LFT.dungeonsSpam[data.code] = {
+                tank = 0,
+                healer = 0,
+                damage = 0
+            }
+        end
+        if not LFT.dungeonsSpamDisplay[data.code] then
+            LFT.dungeonsSpamDisplay[data.code] = {
+                tank = 0,
+                healer = 0,
+                damage = 0
+            }
+            LFT.dungeonsSpamDisplayLFM[data.code] = 0
+        end
+
+    end
+
+    --DungeonListFrame_Update()
+    return LFT.quests
 end
 
 LFTQueue:SetScript("OnShow", function()
@@ -2076,10 +2184,12 @@ LFTQueue:SetScript("OnUpdate", function()
 
                     LFT.SetSingleRole('tank')
 
-                    SendChatMessage("[LFT]:" .. code .. ":party:ready:" .. healer .. ":" .. damage1 .. ":" .. damage2 .. ":" .. damage3,
+                    SendChatMessage("[LFT]:" .. code .. ":party:ready:" .. healer .. ":" ..
+                            damage1 .. ":" .. damage2 .. ":" .. damage3,
                             "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
 
-                    SendChatMessage("[LFT]:lft_group_formed:" .. code .. ":" .. time() - LFT.queueStartTime, "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
+                    SendChatMessage("[LFT]:lft_group_formed:" .. code .. ":" .. time() - LFT.queueStartTime,
+                            "CHANNEL", DEFAULT_CHAT_FRAME.editBox.languageID, GetChannelName(LFT.channel))
 
                     --untick everything
                     for dungeon, data in next, LFT.dungeons do
@@ -2304,18 +2414,32 @@ function LFT.GetPossibleRoles()
     return 'damage'
 end
 
-function LFT.getAvailableDungeons(level, type, mine)
+function LFT.getAvailableDungeons(level, type, mine, partyIndex)
     if level == 0 then
         return {}
     end
     local dungeons = {}
+
     for _, data in next, LFT.dungeons do
-        if level >= data.minLevel and (level <= data.maxLevel or (not mine)) and type ~= 3 then
-            dungeons[data.code] = true
-        end
-        if level >= data.minLevel and type == 3 then
-            --all available
-            dungeons[data.code] = true
+
+        if type == TYPE_ELITE_QUESTS then
+            -- elite quests
+            if mine then
+                dungeons[data.code] = true
+            else
+                -- todo fix questIndex
+                --dungeons[data.code] = IsUnitOnQuest(questIndex, "party" .. partyIndex)
+            end
+        else
+
+            if level >= data.minLevel and (level <= data.maxLevel or (not mine)) and type ~= 3 then
+                dungeons[data.code] = true
+            end
+            if level >= data.minLevel and type == 3 then
+                --all available
+                dungeons[data.code] = true
+            end
+
         end
     end
     return dungeons
@@ -2326,11 +2450,16 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
         offset = 0
     end
 
+    if LFT_TYPE == TYPE_ELITE_QUESTS then
+        LFT.dungeons = LFT.getEliteQuests()
+    else
+        LFT.dungeons = LFT.allDungeons
+    end
+
     --unqueue queued
     for dungeon, data in next, LFT.dungeons do
         LFT.dungeons[dungeon].canQueue = true
         if data.queued and LFT.level < data.minLevel then
-            lfdebug(' !!!! de-queued fillavail ' .. data.code)
             LFT.dungeons[dungeon].queued = false
         end
     end
@@ -2354,7 +2483,7 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
             party[i] = {
                 level = UnitLevel('party' .. i),
                 name = UnitName('party' .. i),
-                dungeons = LFT.getAvailableDungeons(UnitLevel('party' .. i), LFT_TYPE, false)
+                dungeons = LFT.getAvailableDungeons(UnitLevel('party' .. i), LFT_TYPE, false, i)
             }
 
             if party[i].level == 0 and UnitIsConnected('party' .. i) then
@@ -2429,11 +2558,18 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
                 end
 
                 _G['Dungeon_' .. data.code .. 'Text']:SetText(color .. dungeon)
-                _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
+                if LFT_TYPE == TYPE_ELITE_QUESTS then
+                    _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. data.background)
+                else
+                    _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
+                end
+
                 _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
 
                 LFT.availableDungeons[data.code]:SetPoint("TOP", _G["LFTMain"], "TOP", -145, -165 - 20 * (dungeonIndex - offset))
                 LFT.availableDungeons[data.code].code = data.code
+                LFT.availableDungeons[data.code].background = data.background
+                LFT.availableDungeons[data.code].questIndex = data.questIndex
                 LFT.availableDungeons[data.code].minLevel = data.minLevel
                 LFT.availableDungeons[data.code].maxLevel = data.maxLevel
 
@@ -2491,6 +2627,8 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
 
                 LFT.availableDungeons[data.code]:SetPoint("TOP", _G["LFTMain"], "TOP", -145, -165 - 20 * (dungeonIndex - offset))
                 LFT.availableDungeons[data.code].code = data.code
+                LFT.availableDungeons[data.code].background = data.backgroud
+                LFT.availableDungeons[data.code].questIndex = data.questIndex
                 LFT.availableDungeons[data.code].minLevel = data.minLevel
                 LFT.availableDungeons[data.code].maxLevel = data.maxLevel
             end
@@ -2536,8 +2674,14 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
                 _G["Dungeon_" .. frame.code]:Disable()
                 _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
                 _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
+
+                local q = 'dungeons'
+                if LFT_TYPE == TYPE_ELITE_QUESTS then
+                    q = 'elite quests'
+                    _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. frame.background)
+                end
                 LFT.addOnEnterTooltip(_G['Dungeon_' .. frame.code .. '_Button'], 'Queueing for ' .. dungeonName .. ' is unavailable',
-                        'Maximum allowed queued dungeons at a time is ' .. LFT.maxDungeonsInQueue .. '.')
+                        'Maximum allowed queued ' .. q .. ' at a time is ' .. LFT.maxDungeonsInQueue .. '.')
             end
         end
     end
@@ -3581,7 +3725,7 @@ function LFT_Toggle()
         for slot = 0, 10 do
             local itemLink = GetContainerItemLink(KEYRING_CONTAINER, slot)
             if itemLink then
-                if string.find(itemLink, 'Pendant of Diplomacy', 1, true) then
+                if string.find(itemLink, 'of Diplomacy', 1, true) then
                     LFT.diplomat = true
                 end
             end
@@ -3592,7 +3736,7 @@ function LFT_Toggle()
                 for slot = 0, GetContainerNumSlots(bag) do
                     local itemLink = GetContainerItemLink(bag, slot)
                     if itemLink then
-                        if string.find(itemLink, 'Pendant of Diplomacy', 1, true) then
+                        if string.find(itemLink, 'of Diplomacy', 1, true) then
                             LFT.diplomat = true
                         end
                     end
@@ -3605,9 +3749,9 @@ function LFT_Toggle()
 
             local NEED_DIPLOMACY_START = 'You need to be a Diplomat to use ' .. COLOR_HUNTER .. 'LFT' .. COLOR_ORANGE .. '. Speak with '
             local FACTION_DIPLOMAT = COLOR_WHITE .. 'Tarun Swifteagle ' .. COLOR_ORANGE .. 'in ' .. COLOR_WHITE .. 'Stormwind (Trade District)' .. COLOR_ORANGE
-            local NEED_DIPLOMACY_END = ' to get a ' .. COLOR_WHITE .. '[Pendant of Diplomacy]' .. COLOR_ORANGE .. ' and become a diplomat! You will be able to group and trade with the players of an opposite faction.'
+            local NEED_DIPLOMACY_END = ' to get a ' .. COLOR_WHITE .. '[Glyph/Pendant of Diplomacy]' .. COLOR_ORANGE .. ' and become a diplomat! You will be able to group and trade with the players of an opposite faction.'
 
-            if race ~= 'human' and race ~= 'gnome' and race ~= 'dwarf' and race ~= 'nightelf' then
+            if race ~= 'human' and race ~= 'gnome' and race ~= 'dwarf' and race ~= 'nightelf' and race ~= 'bloodelf' then
                 FACTION_DIPLOMAT = COLOR_WHITE .. 'Karn Deepeye ' .. COLOR_ORANGE .. 'in ' .. COLOR_WHITE .. 'Orgimmar (Vallery of Strength Inn)' .. COLOR_ORANGE
             end
             lfnotice(NEED_DIPLOMACY_START .. FACTION_DIPLOMAT .. NEED_DIPLOMACY_END)
@@ -3827,7 +3971,32 @@ end
 function DungeonType_OnClick(a)
     LFT_TYPE = a
     UIDropDownMenu_SetText(LFT.types[LFT_TYPE], _G['LFTTypeSelect'])
+
+    if LFT_TYPE == TYPE_ELITE_QUESTS then
+        _G['LFTMainDungeonsText']:SetText('Elite Quests')
+        _G['LFTBrowseDungeonsText']:SetText('Elite Quests')
+    else
+        _G['LFTMainDungeonsText']:SetText('Dungeons')
+        _G['LFTBrowseDungeonsText']:SetText('Dungeons')
+    end
+
     _G['LFTDungeonsText']:SetText(LFT.types[LFT_TYPE])
+
+    -- dequeue everything from before
+    for dungeon, data in next, LFT.dungeons do
+        if _G["Dungeon_" .. data.code] then
+            _G["Dungeon_" .. data.code]:SetChecked(false)
+        end
+        LFT.dungeons[dungeon].queued = false
+    end
+
+    if LFT_TYPE == TYPE_ELITE_QUESTS then
+        LFT.dungeons = LFT.getEliteQuests()
+    else
+        LFT.dungeons = LFT.allDungeons
+    end
+
+    -- dequeue everything after too
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
             if _G["Dungeon_" .. data.code] then
@@ -3836,6 +4005,26 @@ function DungeonType_OnClick(a)
             LFT.dungeons[dungeon].queued = false
         end
     end
+
+    for dungeon, data in next, LFT.dungeons do
+        if not LFT.dungeonsSpam[data.code] then
+            LFT.dungeonsSpam[data.code] = {
+                tank = 0,
+                healer = 0,
+                damage = 0
+            }
+        end
+        if not LFT.dungeonsSpamDisplay[data.code] then
+            LFT.dungeonsSpamDisplay[data.code] = {
+                tank = 0,
+                healer = 0,
+                damage = 0
+            }
+            LFT.dungeonsSpamDisplayLFM[data.code] = 0
+        end
+
+    end
+
     LFT.fillAvailableDungeons()
 end
 
@@ -3985,6 +4174,10 @@ function queueFor(name, status)
     local dung = string.split(name, '_')
     dungeonCode = dung[2]
     for dungeon, data in next, LFT.dungeons do
+        if tonumber(dungeonCode) then
+            --quests
+            dungeonCode = tonumber(dungeonCode)
+        end
         if dungeonCode == data.code then
             if status then
                 LFT.dungeons[dungeon].queued = true
@@ -4000,6 +4193,8 @@ function queueFor(name, status)
             queues = queues + 1
         end
     end
+
+    lfdebug(queues .. ' queues in queuefor')
 
     LFT.inGroup = GetNumRaidMembers() == 0 and GetNumPartyMembers() > 0
 
@@ -4017,16 +4212,27 @@ function queueFor(name, status)
         else
             for _, frame in next, LFT.availableDungeons do
                 local dungeonName = LFT.dungeonNameFromCode(frame.code)
+                lfdebug('dungeonName in queuefor = ' .. dungeonName)
+                lfdebug('frame.code in queuefor = ' .. frame.code)
+                lfdebug('frame.background in queuefor = ' .. frame.background)
                 if not LFT.dungeons[dungeonName].queued then
                     _G["Dungeon_" .. frame.code]:Disable()
                     _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
                     _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
+
+                    local q = 'dungeons'
+                    if LFT_TYPE == TYPE_ELITE_QUESTS then
+                        q = 'elite quests'
+                        _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. frame.background)
+                    end
+
                     LFT.addOnEnterTooltip(_G['Dungeon_' .. frame.code .. '_Button'], 'Queueing for ' .. dungeonName .. ' is unavailable',
-                            'Maximum allowed queued dungeons at a time is ' .. LFT.maxDungeonsInQueue .. '.')
+                            'Maximum allowed queued ' .. q .. ' at a time is ' .. LFT.maxDungeonsInQueue .. '.')
                 end
             end
         end
     end
+    DungeonListFrame_Update()
     LFT.fixMainButton()
 end
 
@@ -4167,6 +4373,9 @@ function leaveQueue(callData)
     LFTQueue:Hide()
     LFTRoleCheck:Hide()
     lfdebug('LFTRoleCheck:Hide() in leaveQueue')
+
+    LFT.hidePartyRoleIcons()
+    LFT.hideMyRoleIcon()
 
     local dungeonsText = ''
 
@@ -4420,7 +4629,7 @@ function LFT.incDungeonssSpamRole(dungeon, role, nrInc)
     end
 
     if not LFT.dungeonsSpam[dungeon] then
-        lfdebug('error in incDugeon, ' .. dungeon .. ' not init')
+        --lfdebug('error in incDugeon, ' .. dungeon .. ' not init')
         return false
     end
 
@@ -4438,7 +4647,7 @@ end
 function LFT.updateDungeonsSpamDisplay(code, lfm, numLFM)
 
     if not LFT.dungeonsSpam[code] then
-        lfdebug('error in updateDungeons, ' .. code .. ' not init')
+        --lfdebug('error in updateDungeons, ' .. code .. ' not init')
         return false
     end
 
@@ -4473,7 +4682,9 @@ end
 
 -- dungeons
 
-LFT.dungeons = {
+LFT.dungeons = {}
+
+LFT.allDungeons = {
     ['Ragefire Chasm'] = { minLevel = 13, maxLevel = 18, code = 'rfc', queued = false, canQueue = true, background = 'ragefirechasm', myRole = '' },
     ['Wailing Caverns'] = { minLevel = 17, maxLevel = 24, code = 'wc', queued = false, canQueue = true, background = 'wailingcaverns', myRole = '' },
     ['The Deadmines'] = { minLevel = 17, maxLevel = 24, code = 'dm', queued = false, canQueue = true, background = 'deadmines', myRole = '' },
