@@ -2,10 +2,17 @@
     xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
     <Script file="LFT.lua"/>
 
-    <CheckButton name="LFT_DungeonCheck" virtual="true">
+    <Frame name="LFT_DungeonItemTemplate" virtual="true">
         <Size>
-            <AbsDimension x="20" y="20"/>
+            <AbsDimension x="300" y="20"/>
         </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
         <Layers>
             <Layer level="OVERLAY">
                 <FontString name="$parentText" inherits="GameFontNormal" text="dungeontext" justifyH="LEFT">
@@ -27,7 +34,7 @@
                     <Anchors>
                         <Anchor point="LEFT">
                             <Offset>
-                                <AbsDimension x="225" y="0"/>
+                                <AbsDimension x="238" y="0"/>
                             </Offset>
                         </Anchor>
                     </Anchors>
@@ -35,12 +42,38 @@
             </Layer>
         </Layers>
         <Frames>
+            <CheckButton name="$parent_CheckButton" hidden="false">
+                <Size>
+                    <AbsDimension x="20" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+
+                </Frames>
+                <Scripts>
+                    <OnClick>
+                        queueFor(this:GetName(), this:GetChecked())
+                    </OnClick>
+                </Scripts>
+                <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
+                <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
+                <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
+                <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
+                <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
+            </CheckButton>
+
             <Button name="$parent_Button" inherits="UIPanelButtonTemplate">
-                <NormalTexture/>
+                                        <NormalTexture/>
                 <PushedTexture/>
                 <HighlightTexture/>
                 <Size>
-                    <AbsDimension x="200" y="18"/>
+                    <AbsDimension x="280" y="18"/>
                 </Size>
                 <Anchors>
                     <Anchor point="LEFT">
@@ -55,18 +88,9 @@
                     </OnClick>
                 </Scripts>
             </Button>
+
         </Frames>
-        <Scripts>
-            <OnClick>
-                queueFor(this:GetName(), this:GetChecked())
-            </OnClick>
-        </Scripts>
-        <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
-        <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
-        <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
-        <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
-        <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
-    </CheckButton>
+    </Frame>
 
     <Frame name="LFTTypeDropDown" inherits="UIDropDownMenuTemplate"/>
 
@@ -1413,7 +1437,7 @@
         </Frames>
     </Frame>
 
-    <Frame name="LFTlft" hidden="true" toplevel="true"
+    <Frame name="LFTlft" hidden="false" toplevel="true"
            parent="UIParent" movable="true" enableMouse="true" resizable="false">
         <Size>
             <AbsDimension x="384" y="512"/>
@@ -1755,25 +1779,39 @@
                         </Scripts>
                     </Button>
 
-                    <ScrollFrame name="DungeonListScrollFrame" hidden="false" inherits="FauxScrollFrameTemplate">
-                        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2"
-                                  tile="false">
-                        </Backdrop>
+                    <ScrollFrame name="DungeonListScrollFrame" hidden="false" inherits="UIPanelScrollFrameTemplate">
                         <Size>
-                            <AbsDimension x="298" y="230"/>
+                            <AbsDimension x="298" y="228"/>
                         </Size>
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="LFTMain" relativePoint="TOPLEFT">
                                 <Offset>
-                                    <AbsDimension x="25" y="-180"/>
+                                    <AbsDimension x="25" y="-182"/>
                                 </Offset>
                             </Anchor>
                         </Anchors>
                         <Scripts>
-                            <OnVerticalScroll>
-                                FauxScrollFrame_OnVerticalScroll(20, DungeonListFrame_Update);
-                            </OnVerticalScroll>
                         </Scripts>
+                        <ScrollChild>
+                            <Frame name="DungeonListScrollFrameChildren">
+                                <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2"
+                                          tile="false">
+                                </Backdrop>
+                                <Size>
+                                    <AbsDimension x="298" y="230"/>
+                                </Size>
+                                <Anchors>
+                                    <Anchor point="TOPLEFT">
+                                        <Offset>
+                                            <AbsDimension x="-3" y="0"/>
+                                        </Offset>
+                                    </Anchor>
+                                </Anchors>
+                                <Frames>
+                                </Frames>
+                            </Frame>
+
+                        </ScrollChild>
                     </ScrollFrame>
 
                     <Button name="LFT_Minimap" movable="true" parent="UIParent" enableMouse="true" toplevel="true"
