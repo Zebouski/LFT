@@ -13,11 +13,11 @@ If you encounter any lua errors or other addon problems please take a screenshot
 ## Features ##
 Todo: option to choose: fresh groups only / any groups.
 
-#### LFM Groups (v.0.0.2.9) ####
+#### Scrollframes and backgrounds (v.0.0.2.9) ####
 Scrollframe upgrade<br>
 Misc fixes<br>
 
-#### LFM Groups (v.0.0.2.8) ####
+#### HE/Gobo/Diplo (v.0.0.2.8) ####
 Update for HighElves and Goblins<br>
 Update for new Glyph of Diplomacy<br>
 
