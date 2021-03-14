@@ -1,6 +1,6 @@
-# LFT - a LFG Addon for Turtle WoW, v0.0.2.8rc
+# LFT - a LFG Addon for Turtle WoW, v0.0.2.9rc
 
-[Download Link](https://github.com/CosminPOP/LFT/releases/latest/download/LFT.zip) <br>
+[comment]: <> ([Download Link]&#40;https://github.com/CosminPOP/LFT/releases/latest/download/LFT.zip&#41; <br>)
 _Important note: Remove `-master` when extracting into your `interface/addons` folder and fully restart your client after each update !_<BR><BR><Br>
 
 #### What it does NOT do ####
@@ -12,6 +12,10 @@ If you encounter any lua errors or other addon problems please take a screenshot
 
 ## Features ##
 Todo: option to choose: fresh groups only / any groups.
+
+#### LFM Groups (v.0.0.2.9) ####
+Scrollframe upgrade<br>
+Misc fixes<br>
 
 #### LFM Groups (v.0.0.2.8) ####
 Update for HighElves and Goblins<br>
