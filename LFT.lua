@@ -3747,12 +3747,12 @@ function LFT_Toggle()
             local _, race = UnitRace('player')
             race = string.lower(race)
 
-            local NEED_DIPLOMACY_START = 'You need to be a Diplomat to use ' .. COLOR_HUNTER .. 'LFT' .. COLOR_ORANGE .. '. Speak with '
-            local FACTION_DIPLOMAT = COLOR_WHITE .. 'Tarun Swifteagle ' .. COLOR_ORANGE .. 'in ' .. COLOR_WHITE .. 'Stormwind (Trade District)' .. COLOR_ORANGE
-            local NEED_DIPLOMACY_END = ' to get a ' .. COLOR_WHITE .. '[Glyph/Pendant of Diplomacy]' .. COLOR_ORANGE .. ' and become a diplomat! You will be able to group and trade with the players of an opposite faction.'
+            local NEED_DIPLOMACY_START =  FONT_COLOR_CODE_CLOSE .. 'You need to be a Diplomat to use ' .. COLOR_HUNTER .. 'LFT' .. FONT_COLOR_CODE_CLOSE .. '. Speak with '
+            local FACTION_DIPLOMAT = FONT_COLOR_CODE_CLOSE .. 'Joseph Dalton ' .. FONT_COLOR_CODE_CLOSE .. 'in ' .. COLOR_WHITE .. 'Stormwind (Trade District)' .. FONT_COLOR_CODE_CLOSE
+            local NEED_DIPLOMACY_END = ' to get a ' .. COLOR_YELLOW .. '\124cffffffff\124Hitem:50012:0:0:0:0:0:0:0:0\124h[Glyph of Diplomacy]\124h\124r' .. FONT_COLOR_CODE_CLOSE .. ' and become a diplomat! You will be able to group and trade with the players of an opposite faction.'
 
             if race ~= 'human' and race ~= 'gnome' and race ~= 'dwarf' and race ~= 'nightelf' and race ~= 'bloodelf' then
-                FACTION_DIPLOMAT = COLOR_WHITE .. 'Karn Deepeye ' .. COLOR_ORANGE .. 'in ' .. COLOR_WHITE .. 'Orgimmar (Vallery of Strength Inn)' .. COLOR_ORANGE
+                FACTION_DIPLOMAT = FONT_COLOR_CODE_CLOSE .. 'Karn Deepeye ' .. FONT_COLOR_CODE_CLOSE .. 'in ' .. FONT_COLOR_CODE_CLOSE .. 'Orgimmar (Vallery of Strength Inn)' .. FONT_COLOR_CODE_CLOSE
             end
             lfnotice(NEED_DIPLOMACY_START .. FACTION_DIPLOMAT .. NEED_DIPLOMACY_END)
             return false
@@ -4211,23 +4211,25 @@ function queueFor(name, status)
             --LFT.enableDungeonCheckButtons()
         else
             for _, frame in next, LFT.availableDungeons do
-                local dungeonName = LFT.dungeonNameFromCode(frame.code)
-                lfdebug('dungeonName in queuefor = ' .. dungeonName)
-                lfdebug('frame.code in queuefor = ' .. frame.code)
-                lfdebug('frame.background in queuefor = ' .. frame.background)
-                if not LFT.dungeons[dungeonName].queued then
-                    _G["Dungeon_" .. frame.code]:Disable()
-                    _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
-                    _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
+                if frame then
+                    local dungeonName = LFT.dungeonNameFromCode(frame.code)
+                    lfdebug('dungeonName in queuefor = ' .. dungeonName)
+                    lfdebug('frame.code in queuefor = ' .. frame.code)
+                    lfdebug('frame.background in queuefor = ' .. frame.background)
+                    if not LFT.dungeons[dungeonName].queued then
+                        _G["Dungeon_" .. frame.code]:Disable()
+                        _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
+                        _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
 
-                    local q = 'dungeons'
-                    if LFT_TYPE == TYPE_ELITE_QUESTS then
-                        q = 'elite quests'
-                        _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. frame.background)
+                        local q = 'dungeons'
+                        if LFT_TYPE == TYPE_ELITE_QUESTS then
+                            q = 'elite quests'
+                            _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. frame.background)
+                        end
+
+                        LFT.addOnEnterTooltip(_G['Dungeon_' .. frame.code .. '_Button'], 'Queueing for ' .. dungeonName .. ' is unavailable',
+                                'Maximum allowed queued ' .. q .. ' at a time is ' .. LFT.maxDungeonsInQueue .. '.')
                     end
-
-                    LFT.addOnEnterTooltip(_G['Dungeon_' .. frame.code .. '_Button'], 'Queueing for ' .. dungeonName .. ' is unavailable',
-                            'Maximum allowed queued ' .. q .. ' at a time is ' .. LFT.maxDungeonsInQueue .. '.')
                 end
             end
         end
