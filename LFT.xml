@@ -1437,7 +1437,7 @@
         </Frames>
     </Frame>
 
-    <Frame name="LFTlft" hidden="false" toplevel="true"
+    <Frame name="LFTlft" hidden="true" toplevel="true"
            parent="UIParent" movable="true" enableMouse="true" resizable="false">
         <Size>
             <AbsDimension x="384" y="512"/>
