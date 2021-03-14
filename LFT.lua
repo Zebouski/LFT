@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.2.8'
+local addonVer = '0.0.2.9'
 local LFT_ADDON_CHANNEL = 'LFT'
 local groupsFormedThisSession = 0
 
@@ -445,7 +445,6 @@ end)
 
 -- fill available dungeons delayer because UnitLevel(member who just joined) returns 0
 local LFTFillAvailableDungeonsDelay = CreateFrame("Frame")
-LFTFillAvailableDungeonsDelay.offset = 0
 LFTFillAvailableDungeonsDelay.triggers = 0
 LFTFillAvailableDungeonsDelay.queueAfterIfPossible = false
 LFTFillAvailableDungeonsDelay:Hide()
@@ -455,7 +454,7 @@ end)
 
 LFTFillAvailableDungeonsDelay:SetScript("OnHide", function()
     if LFTFillAvailableDungeonsDelay.triggers < 10 then
-        LFT.fillAvailableDungeons(LFTFillAvailableDungeonsDelay.offset, LFTFillAvailableDungeonsDelay.queueAfterIfPossible)
+        LFT.fillAvailableDungeons(LFTFillAvailableDungeonsDelay.queueAfterIfPossible)
         LFTFillAvailableDungeonsDelay.triggers = LFTFillAvailableDungeonsDelay.triggers + 1
     else
         lferror('Error occurred at LFTFillAvailableDungeonsDelay triggers = 10. Please report this to Xerron/Er.')
@@ -639,8 +638,7 @@ LFTGroupReadyFrameCloser:SetScript("OnUpdate", function()
         lfprint('A member of your group has not accepted the invitation. You are rejoining the queue.')
         if LFT.isLeader then
             leaveQueue('LFTGroupReadyFrameCloser isleader = true')
-            local offset = FauxScrollFrame_GetOffset(_G['DungeonListScrollFrame']);
-            LFT.fillAvailableDungeons(offset, 'queueAgain' == 'queueAgain')
+            LFT.fillAvailableDungeons('queueAgain' == 'queueAgain')
         end
         if LFTGroupReadyFrameCloser.response == 'notReady' then
             --doesnt trigger for leader, cause it leaves queue
@@ -879,7 +877,7 @@ LFTComms:SetScript("OnEvent", function()
                 LFT.LFMDungeonCode = mCode
 
                 --uncheck everything
-                _G['Dungeon_' .. LFT.groupFullCode]:SetChecked(false)
+                _G['Dungeon_' .. LFT.groupFullCode .. '_CheckButton']:SetChecked(false)
                 LFT.findingGroup = false
                 LFT.findingMore = false
                 local background = ''
@@ -1764,8 +1762,8 @@ LFT:SetScript("OnEvent", function()
                     -- disable dungeon checks if i have more than one and i join a party
                     for _, data in next, LFT.dungeons do
                         data.queue = false
-                        if _G["Dungeon_" .. data.code] then
-                            _G["Dungeon_" .. data.code]:SetChecked(false)
+                        if _G["Dungeon_" .. data.code .. '_CheckButton'] then
+                            _G["Dungeon_" .. data.code .. '_CheckButton']:SetChecked(false)
                         end
                     end
                     DungeonListFrame_Update()
@@ -2193,8 +2191,8 @@ LFTQueue:SetScript("OnUpdate", function()
 
                     --untick everything
                     for dungeon, data in next, LFT.dungeons do
-                        if _G["Dungeon_" .. data.code] then
-                            _G["Dungeon_" .. data.code]:SetChecked(false)
+                        if _G["Dungeon_" .. data.code .. '_CheckButton'] then
+                            _G["Dungeon_" .. data.code .. '_CheckButton']:SetChecked(false)
                         end
                         LFT.dungeons[dungeon].queued = false
                     end
@@ -2445,10 +2443,7 @@ function LFT.getAvailableDungeons(level, type, mine, partyIndex)
     return dungeons
 end
 
-function LFT.fillAvailableDungeons(offset, queueAfter)
-    if not offset then
-        offset = 0
-    end
+function LFT.fillAvailableDungeons(queueAfter)
 
     if LFT_TYPE == TYPE_ELITE_QUESTS then
         LFT.dungeons = LFT.getEliteQuests()
@@ -2487,7 +2482,6 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
             }
 
             if party[i].level == 0 and UnitIsConnected('party' .. i) then
-                LFTFillAvailableDungeonsDelay.offset = offset
                 LFTFillAvailableDungeonsDelay:Show()
                 return false
             end
@@ -2523,137 +2517,137 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
         if LFT.level >= data.minLevel and LFT.level <= data.maxLevel and LFT_TYPE ~= 3 then
 
             dungeonIndex = dungeonIndex + 1
-            if dungeonIndex > offset and dungeonIndex <= offset + LFT.maxDungeonsList then
-                if not LFT.availableDungeons[data.code] then
-                    LFT.availableDungeons[data.code] = CreateFrame("CheckButton", "Dungeon_" .. data.code, _G["LFTMain"], "LFT_DungeonCheck")
-                end
 
-                LFT.availableDungeons[data.code]:Show()
-
-                local color = COLOR_GREEN
-                if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
-                    color = COLOR_RED
-                end
-                if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
-                    color = COLOR_ORANGE
-                end
-                if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
-                    color = COLOR_GREEN
-                end
-
-                if LFT.level > data.maxLevel then
-                    color = COLOR_GREEN
-                end
-
-                _G['Dungeon_' .. data.code]:Enable()
-
-                if data.canQueue then
-                    LFT.removeOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'])
-                else
-                    color = COLOR_DISABLED
-                    data.queued = false
-                    LFT.addOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'], dungeon .. ' is unavailable',
-                            'A member of your group does not meet', 'the suggested minimum level requirement (' .. data.minLevel .. ').')
-                    _G['Dungeon_' .. data.code]:Disable()
-                end
-
-                _G['Dungeon_' .. data.code .. 'Text']:SetText(color .. dungeon)
-                if LFT_TYPE == TYPE_ELITE_QUESTS then
-                    _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. data.background)
-                else
-                    _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
-                end
-
-                _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
-
-                LFT.availableDungeons[data.code]:SetPoint("TOP", _G["LFTMain"], "TOP", -145, -165 - 20 * (dungeonIndex - offset))
-                LFT.availableDungeons[data.code].code = data.code
-                LFT.availableDungeons[data.code].background = data.background
-                LFT.availableDungeons[data.code].questIndex = data.questIndex
-                LFT.availableDungeons[data.code].minLevel = data.minLevel
-                LFT.availableDungeons[data.code].maxLevel = data.maxLevel
-
-                LFT.dungeons[dungeon].queued = data.queued
-                _G['Dungeon_' .. data.code]:SetChecked(data.queued)
-
-                if LFT_TYPE == 2 and not LFT.inGroup then
-                    LFT.dungeons[dungeon].queued = true
-                    _G['Dungeon_' .. data.code]:SetChecked(true)
-                end
+            if not LFT.availableDungeons[data.code] then
+                LFT.availableDungeons[data.code] = CreateFrame("Frame", "Dungeon_" .. data.code, _G["DungeonListScrollFrameChildren"], "LFT_DungeonItemTemplate")
             end
+
+            LFT.availableDungeons[data.code]:Show()
+
+            local color = COLOR_GREEN
+            if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
+                color = COLOR_RED
+            end
+            if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
+                color = COLOR_ORANGE
+            end
+            if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
+                color = COLOR_GREEN
+            end
+
+            if LFT.level > data.maxLevel then
+                color = COLOR_GREEN
+            end
+
+            _G['Dungeon_' .. data.code .. '_CheckButton']:Enable()
+
+            if data.canQueue then
+                LFT.removeOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'])
+            else
+                color = COLOR_DISABLED
+                data.queued = false
+                LFT.addOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'], dungeon .. ' is unavailable',
+                        'A member of your group does not meet', 'the suggested minimum level requirement (' .. data.minLevel .. ').')
+                _G['Dungeon_' .. data.code .. '_CheckButton']:Disable()
+            end
+
+            _G['Dungeon_' .. data.code .. 'Text']:SetText(color .. dungeon)
+            if LFT_TYPE == TYPE_ELITE_QUESTS then
+                _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. data.background)
+            else
+                _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
+            end
+
+            _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
+
+            LFT.availableDungeons[data.code]:SetPoint("TOPLEFT", _G["DungeonListScrollFrameChildren"], "TOPLEFT", 5, 20 -20 * (dungeonIndex))
+            LFT.availableDungeons[data.code].code = data.code
+            LFT.availableDungeons[data.code].background = data.background
+            LFT.availableDungeons[data.code].questIndex = data.questIndex
+            LFT.availableDungeons[data.code].minLevel = data.minLevel
+            LFT.availableDungeons[data.code].maxLevel = data.maxLevel
+
+            LFT.dungeons[dungeon].queued = data.queued
+            _G['Dungeon_' .. data.code .. '_CheckButton']:SetChecked(data.queued)
+
+            if LFT_TYPE == 2 and not LFT.inGroup then
+                LFT.dungeons[dungeon].queued = true
+                _G['Dungeon_' .. data.code .. '_CheckButton']:SetChecked(true)
+            end
+
         end
 
         if LFT.level >= data.minLevel and LFT_TYPE == 3 then
             --all available
 
             dungeonIndex = dungeonIndex + 1
-            if dungeonIndex > offset and dungeonIndex <= offset + LFT.maxDungeonsList then
-                if not LFT.availableDungeons[data.code] then
-                    LFT.availableDungeons[data.code] = CreateFrame("CheckButton", "Dungeon_" .. data.code, _G["LFTMain"], "LFT_DungeonCheck")
-                end
 
-                LFT.availableDungeons[data.code]:Show()
-
-                local color = COLOR_GREEN
-                if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
-                    color = COLOR_RED
-                end
-                if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
-                    color = COLOR_ORANGE
-                end
-                if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
-                    color = COLOR_GREEN
-                end
-
-                if LFT.level > data.maxLevel then
-                    color = COLOR_GREEN
-                end
-
-                _G['Dungeon_' .. data.code]:Enable()
-
-                if data.canQueue then
-                    LFT.removeOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'])
-                else
-                    color = COLOR_DISABLED
-                    data.queued = false
-                    LFT.addOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'], dungeon .. ' is unavailable',
-                            'A member of your group does not meet', 'the suggested minimum level requirement (' .. data.minLevel .. ').')
-                    _G['Dungeon_' .. data.code]:Disable()
-                end
-
-                _G['Dungeon_' .. data.code .. 'Text']:SetText(color .. dungeon)
-                _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
-                _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
-
-                LFT.availableDungeons[data.code]:SetPoint("TOP", _G["LFTMain"], "TOP", -145, -165 - 20 * (dungeonIndex - offset))
-                LFT.availableDungeons[data.code].code = data.code
-                LFT.availableDungeons[data.code].background = data.backgroud
-                LFT.availableDungeons[data.code].questIndex = data.questIndex
-                LFT.availableDungeons[data.code].minLevel = data.minLevel
-                LFT.availableDungeons[data.code].maxLevel = data.maxLevel
+            if not LFT.availableDungeons[data.code] then
+                LFT.availableDungeons[data.code] = CreateFrame("Frame", "Dungeon_" .. data.code, _G["DungeonListScrollFrameChildren"], "LFT_DungeonItemTemplate")
             end
+
+            LFT.availableDungeons[data.code]:Show()
+
+            local color = COLOR_GREEN
+            if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
+                color = COLOR_RED
+            end
+            if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
+                color = COLOR_ORANGE
+            end
+            if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
+                color = COLOR_GREEN
+            end
+
+            if LFT.level > data.maxLevel then
+                color = COLOR_GREEN
+            end
+
+            _G['Dungeon_' .. data.code .. '_CheckButton']:Enable()
+
+            if data.canQueue then
+                LFT.removeOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'])
+            else
+                color = COLOR_DISABLED
+                data.queued = false
+                LFT.addOnEnterTooltip(_G['Dungeon_' .. data.code .. '_Button'], dungeon .. ' is unavailable',
+                        'A member of your group does not meet', 'the suggested minimum level requirement (' .. data.minLevel .. ').')
+                _G['Dungeon_' .. data.code .. '_CheckButton']:Disable()
+            end
+
+            _G['Dungeon_' .. data.code .. 'Text']:SetText(color .. dungeon)
+            _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
+            _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
+
+            LFT.availableDungeons[data.code]:SetPoint("TOPLEFT", _G["DungeonListScrollFrameChildren"], "TOPLEFT", 5, 20-20 * (dungeonIndex))
+            LFT.availableDungeons[data.code].code = data.code
+            LFT.availableDungeons[data.code].background = data.background
+            LFT.availableDungeons[data.code].questIndex = data.questIndex
+            LFT.availableDungeons[data.code].minLevel = data.minLevel
+            LFT.availableDungeons[data.code].maxLevel = data.maxLevel
+
         end
 
         if LFT.findingGroup then
-            if _G['Dungeon_' .. data.code] then
-                _G['Dungeon_' .. data.code]:Disable()
+            if _G['Dungeon_' .. data.code .. '_CheckButton'] then
+                _G['Dungeon_' .. data.code .. '_CheckButton']:Disable()
             end
         end
 
         if LFT.findingMore then
-            if _G['Dungeon_' .. data.code] then
-                _G['Dungeon_' .. data.code]:Disable()
-                _G['Dungeon_' .. data.code]:SetChecked(false)
+            if _G['Dungeon_' .. data.code .. '_CheckButton'] then
+                _G['Dungeon_' .. data.code .. '_CheckButton']:Disable()
+                _G['Dungeon_' .. data.code .. '_CheckButton']:SetChecked(false)
             end
             if data.code == LFT.LFMDungeonCode then
-                if _G['Dungeon_' .. data.code] then
-                    _G['Dungeon_' .. data.code]:SetChecked(true)
+                if _G['Dungeon_' .. data.code .. '_CheckButton'] then
+                    _G['Dungeon_' .. data.code .. '_CheckButton']:SetChecked(true)
                 end
                 LFT.dungeons[dungeon].queued = true
             end
         end
-        if _G['Dungeon_' .. data.code] then
-            if _G['Dungeon_' .. data.code]:GetChecked() then
+        if _G['Dungeon_' .. data.code .. '_CheckButton'] then
+            if _G['Dungeon_' .. data.code .. '_CheckButton']:GetChecked() then
                 LFT.dungeons[dungeon].queued = true
             end
         end
@@ -2671,7 +2665,7 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
         for _, frame in next, LFT.availableDungeons do
             local dungeonName = LFT.dungeonNameFromCode(frame.code)
             if not LFT.dungeons[dungeonName].queued then
-                _G["Dungeon_" .. frame.code]:Disable()
+                _G["Dungeon_" .. frame.code .. '_CheckButton']:Disable()
                 _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
                 _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
 
@@ -2687,7 +2681,7 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
     end
     -- end gray
 
-    FauxScrollFrame_Update(_G['DungeonListScrollFrame'], dungeonIndex, LFT.maxDungeonsList, 20)
+    --FauxScrollFrame_Update(_G['DungeonListScrollFrame'], dungeonIndex, LFT.maxDungeonsList, 20)
 
     LFT.fixMainButton()
 
@@ -2698,7 +2692,7 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
         local qDungeon = ''
         local dungeonName = ''
         for _, frame in next, LFT.availableDungeons do
-            if _G["Dungeon_" .. frame.code]:GetChecked() then
+            if _G["Dungeon_" .. frame.code .. '_CheckButton']:GetChecked() then
                 qDungeon = frame.code
             end
         end
@@ -2714,11 +2708,14 @@ function LFT.fillAvailableDungeons(offset, queueAfter)
             lfprint('A member of your group does not meet the suggested minimum level requirement for |cff69ccf0' .. dungeonName)
         end
     end
+
+    _G['DungeonListScrollFrame']:SetVerticalScroll(0)
+    _G['DungeonListScrollFrame']:UpdateScrollChildRect()
 end
 
 function LFT.enableDungeonCheckButtons()
     for _, frame in next, LFT.availableDungeons do
-        _G["Dungeon_" .. frame.code]:Enable()
+        _G["Dungeon_" .. frame.code .. '_CheckButton']:Enable()
     end
     DungeonListFrame_Update()
 end
@@ -2728,7 +2725,7 @@ function LFT.disableDungeonCheckButtons(except)
         if except and except == frame.code then
             --dont disable
         else
-            _G["Dungeon_" .. frame.code]:Disable()
+            _G["Dungeon_" .. frame.code .. '_CheckButton']:Disable()
         end
     end
 end
@@ -3525,11 +3522,8 @@ function LFT.getDungeonCompletion()
     return math.floor((completed * 100) / total), completed
 end
 
-function LFT.LFTBrowse_Update(offset)
+function LFT.LFTBrowse_Update()
     --lfdebug('LFTBrowse_Update time is ' .. LFTTime.second)
-    if not offset then
-        offset = 0
-    end
 
     --hide all
     for _, frame in next, LFT.browseFrames do
@@ -3545,100 +3539,99 @@ function LFT.LFTBrowse_Update(offset)
 
                 dungeonIndex = dungeonIndex + 1
 
-                if dungeonIndex > offset and dungeonIndex <= offset + 8 then
-                    if not LFT.browseFrames[data.code] then
-                        LFT.browseFrames[data.code] = CreateFrame("Frame", "BrowseFrame_" .. data.code, _G["LFTBrowse"], "LFTBrowseDungeonTemplate")
-                    end
-
-                    _G['BrowseFrame_' .. data.code .. 'Background']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. data.background)
-                    _G['BrowseFrame_' .. data.code .. 'Background']:SetAlpha(0.7)
-
-                    LFT.browseFrames[data.code]:Show()
-
-                    local color = COLOR_GREEN
-                    if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
-                        color = COLOR_RED
-                    end
-                    if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
-                        color = COLOR_ORANGE
-                    end
-                    if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
-                        color = COLOR_GREEN
-                    end
-
-                    if LFT.level > data.maxLevel then
-                        color = COLOR_GREEN
-                    end
-
-                    _G["BrowseFrame_" .. data.code .. "DungeonName"]:SetText(color .. dungeon)
-                    _G["BrowseFrame_" .. data.code .. "IconLeader"]:Hide()
-
-                    if LFT.dungeonsSpamDisplayLFM[data.code] > 0 then
-                        _G["BrowseFrame_" .. data.code .. "DungeonName"]:SetText(color .. dungeon .. " (" .. LFT.dungeonsSpamDisplayLFM[data.code] .. "/5)")
-                        _G["BrowseFrame_" .. data.code .. "IconLeader"]:Show()
-                    end
-
-                    local tank_color = ''
-                    local healer_color = ''
-                    local damage_color = ''
-
-                    _G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(0)
-
-                    if LFT.dungeonsSpamDisplay[data.code].tank == 0 then
-                        tank_color = COLOR_DISABLED2
-                        _G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(1)
-                    end
-                    _G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(0)
-                    if LFT.dungeonsSpamDisplay[data.code].healer == 0 then
-                        healer_color = COLOR_DISABLED2
-                        _G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(1)
-                    end
-                    _G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(0)
-                    if LFT.dungeonsSpamDisplay[data.code].damage == 0 then
-                        damage_color = COLOR_DISABLED2
-                        _G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(1)
-                    end
-
-                    _G["BrowseFrame_" .. data.code .. "NrTank"]:SetText(tank_color .. LFT.dungeonsSpamDisplay[data.code].tank)
-                    _G["BrowseFrame_" .. data.code .. "NrHealer"]:SetText(healer_color .. LFT.dungeonsSpamDisplay[data.code].healer)
-                    _G["BrowseFrame_" .. data.code .. "NrDamage"]:SetText(damage_color .. LFT.dungeonsSpamDisplay[data.code].damage)
-
-                    _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Hide()
-
-                    if data.queued and (LFT.findingMore or LFT.findingGroup) then
-                        _G["BrowseFrame_" .. data.code .. "InQueue"]:Show()
-                    else
-                        _G["BrowseFrame_" .. data.code .. "InQueue"]:Hide()
-
-                        local queues = 0
-                        for dungeon, data in LFT.dungeons do
-                            if data.queued then
-                                queues = queues + 1
-                            end
-                        end
-
-                        if not LFT.inGroup and queues < 5 then
-
-                            if LFT.dungeonsSpamDisplay[data.code].tank == 0 and string.find(LFT_ROLE, 'tank', 1, true) then
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(1)
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Tank')
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
-                            elseif LFT.dungeonsSpamDisplay[data.code].healer == 0 and string.find(LFT_ROLE, 'healer', 1, true) then
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(2)
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Healer')
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
-                            elseif LFT.dungeonsSpamDisplay[data.code].damage < 3 and string.find(LFT_ROLE, 'damage', 1, true) then
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(3)
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Damage')
-                                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
-                            end
-                        end
-                    end
-
-                    LFT.browseFrames[data.code]:SetPoint("TOPLEFT", _G["LFTBrowse"], "TOPLEFT", 26, -35 - 41 * (dungeonIndex - offset))
-                    LFT.browseFrames[data.code].code = data.code
-
+                if not LFT.browseFrames[data.code] then
+                    LFT.browseFrames[data.code] = CreateFrame("Frame", "BrowseFrame_" .. data.code, _G["LFTBrowse"], "LFTBrowseDungeonTemplate")
                 end
+
+                _G['BrowseFrame_' .. data.code .. 'Background']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. data.background)
+                _G['BrowseFrame_' .. data.code .. 'Background']:SetAlpha(0.7)
+
+                LFT.browseFrames[data.code]:Show()
+
+                local color = COLOR_GREEN
+                if LFT.level == data.minLevel or LFT.level == data.minLevel + 1 then
+                    color = COLOR_RED
+                end
+                if LFT.level == data.minLevel + 2 or LFT.level == data.minLevel + 3 then
+                    color = COLOR_ORANGE
+                end
+                if LFT.level == data.minLevel + 4 or LFT.level == data.maxLevel + 5 then
+                    color = COLOR_GREEN
+                end
+
+                if LFT.level > data.maxLevel then
+                    color = COLOR_GREEN
+                end
+
+                _G["BrowseFrame_" .. data.code .. "DungeonName"]:SetText(color .. dungeon)
+                _G["BrowseFrame_" .. data.code .. "IconLeader"]:Hide()
+
+                if LFT.dungeonsSpamDisplayLFM[data.code] > 0 then
+                    _G["BrowseFrame_" .. data.code .. "DungeonName"]:SetText(color .. dungeon .. " (" .. LFT.dungeonsSpamDisplayLFM[data.code] .. "/5)")
+                    _G["BrowseFrame_" .. data.code .. "IconLeader"]:Show()
+                end
+
+                local tank_color = ''
+                local healer_color = ''
+                local damage_color = ''
+
+                _G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(0)
+
+                if LFT.dungeonsSpamDisplay[data.code].tank == 0 then
+                    tank_color = COLOR_DISABLED2
+                    _G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(1)
+                end
+                _G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(0)
+                if LFT.dungeonsSpamDisplay[data.code].healer == 0 then
+                    healer_color = COLOR_DISABLED2
+                    _G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(1)
+                end
+                _G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(0)
+                if LFT.dungeonsSpamDisplay[data.code].damage == 0 then
+                    damage_color = COLOR_DISABLED2
+                    _G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(1)
+                end
+
+                _G["BrowseFrame_" .. data.code .. "NrTank"]:SetText(tank_color .. LFT.dungeonsSpamDisplay[data.code].tank)
+                _G["BrowseFrame_" .. data.code .. "NrHealer"]:SetText(healer_color .. LFT.dungeonsSpamDisplay[data.code].healer)
+                _G["BrowseFrame_" .. data.code .. "NrDamage"]:SetText(damage_color .. LFT.dungeonsSpamDisplay[data.code].damage)
+
+                _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Hide()
+
+                if data.queued and (LFT.findingMore or LFT.findingGroup) then
+                    _G["BrowseFrame_" .. data.code .. "InQueue"]:Show()
+                else
+                    _G["BrowseFrame_" .. data.code .. "InQueue"]:Hide()
+
+                    local queues = 0
+                    for dungeon, data in LFT.dungeons do
+                        if data.queued then
+                            queues = queues + 1
+                        end
+                    end
+
+                    if not LFT.inGroup and queues < 5 then
+
+                        if LFT.dungeonsSpamDisplay[data.code].tank == 0 and string.find(LFT_ROLE, 'tank', 1, true) then
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(1)
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Tank')
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
+                        elseif LFT.dungeonsSpamDisplay[data.code].healer == 0 and string.find(LFT_ROLE, 'healer', 1, true) then
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(2)
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Healer')
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
+                        elseif LFT.dungeonsSpamDisplay[data.code].damage < 3 and string.find(LFT_ROLE, 'damage', 1, true) then
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetID(3)
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:SetText('Join as Damage')
+                            _G["BrowseFrame_" .. data.code .. "_JoinAs"]:Show()
+                        end
+                    end
+                end
+
+                LFT.browseFrames[data.code]:SetPoint("TOPLEFT", _G["LFTBrowse"], "TOPLEFT", 26, -35 - 41 * (dungeonIndex))
+                LFT.browseFrames[data.code].code = data.code
+
+
             end
         end
     end
@@ -3659,7 +3652,7 @@ function LFT.LFTBrowse_Update(offset)
         _G['BrowseDungeonListScrollFrame']:Hide()
     end
 
-    FauxScrollFrame_Update(_G['BrowseDungeonListScrollFrame'], dungeonIndex, 8, 40)
+    --FauxScrollFrame_Update(_G['BrowseDungeonListScrollFrame'], dungeonIndex, 8, 40)
 end
 
 -- XML called methods and public functions
@@ -3747,12 +3740,12 @@ function LFT_Toggle()
             local _, race = UnitRace('player')
             race = string.lower(race)
 
-            local NEED_DIPLOMACY_START =  FONT_COLOR_CODE_CLOSE .. 'You need to be a Diplomat to use ' .. COLOR_HUNTER .. 'LFT' .. FONT_COLOR_CODE_CLOSE .. '. Speak with '
-            local FACTION_DIPLOMAT = FONT_COLOR_CODE_CLOSE .. 'Joseph Dalton ' .. FONT_COLOR_CODE_CLOSE .. 'in ' .. COLOR_WHITE .. 'Stormwind (Trade District)' .. FONT_COLOR_CODE_CLOSE
+            local NEED_DIPLOMACY_START = FONT_COLOR_CODE_CLOSE .. 'You need to be a Diplomat to use ' .. COLOR_HUNTER .. 'LFT' .. FONT_COLOR_CODE_CLOSE .. '. Speak with '
+            local FACTION_DIPLOMAT = FONT_COLOR_CODE_CLOSE .. 'Joseph Dalton ' .. FONT_COLOR_CODE_CLOSE .. 'in ' .. COLOR_WHITE .. 'Stormwind ' .. FONT_COLOR_CODE_CLOSE
             local NEED_DIPLOMACY_END = ' to get a ' .. COLOR_YELLOW .. '\124cffffffff\124Hitem:50012:0:0:0:0:0:0:0:0\124h[Glyph of Diplomacy]\124h\124r' .. FONT_COLOR_CODE_CLOSE .. ' and become a diplomat! You will be able to group and trade with the players of an opposite faction.'
 
             if race ~= 'human' and race ~= 'gnome' and race ~= 'dwarf' and race ~= 'nightelf' and race ~= 'bloodelf' then
-                FACTION_DIPLOMAT = FONT_COLOR_CODE_CLOSE .. 'Karn Deepeye ' .. FONT_COLOR_CODE_CLOSE .. 'in ' .. FONT_COLOR_CODE_CLOSE .. 'Orgimmar (Vallery of Strength Inn)' .. FONT_COLOR_CODE_CLOSE
+                FACTION_DIPLOMAT = FONT_COLOR_CODE_CLOSE .. 'Karn Deepeye ' .. FONT_COLOR_CODE_CLOSE .. 'in ' .. FONT_COLOR_CODE_CLOSE .. 'Orgimmar ' .. FONT_COLOR_CODE_CLOSE
             end
             lfnotice(NEED_DIPLOMACY_START .. FACTION_DIPLOMAT .. NEED_DIPLOMACY_END)
             return false
@@ -3954,13 +3947,11 @@ function LFTsetRole(role, status, readyCheck)
 end
 
 function DungeonListFrame_Update()
-    local offset = FauxScrollFrame_GetOffset(_G['DungeonListScrollFrame']);
-    LFT.fillAvailableDungeons(offset)
+    LFT.fillAvailableDungeons()
 end
 
 function BrowseDungeonListFrame_Update()
-    local offset = FauxScrollFrame_GetOffset(_G['BrowseDungeonListScrollFrame']);
-    LFT.LFTBrowse_Update(offset)
+    LFT.LFTBrowse_Update()
 end
 
 function DungeonType_OnLoad()
@@ -3984,8 +3975,8 @@ function DungeonType_OnClick(a)
 
     -- dequeue everything from before
     for dungeon, data in next, LFT.dungeons do
-        if _G["Dungeon_" .. data.code] then
-            _G["Dungeon_" .. data.code]:SetChecked(false)
+        if _G["Dungeon_" .. data.code .. '_CheckButton'] then
+            _G["Dungeon_" .. data.code .. '_CheckButton']:SetChecked(false)
         end
         LFT.dungeons[dungeon].queued = false
     end
@@ -3999,8 +3990,8 @@ function DungeonType_OnClick(a)
     -- dequeue everything after too
     for dungeon, data in next, LFT.dungeons do
         if data.queued then
-            if _G["Dungeon_" .. data.code] then
-                _G["Dungeon_" .. data.code]:SetChecked(false)
+            if _G["Dungeon_" .. data.code .. '_CheckButton'] then
+                _G["Dungeon_" .. data.code .. '_CheckButton']:SetChecked(false)
             end
             LFT.dungeons[dungeon].queued = false
         end
@@ -4154,14 +4145,14 @@ function queueForFromButton(bCode)
     local codeEx = string.split(bCode, '_')
     local qCode = codeEx[2]
 
-    if _G['Dungeon_' .. qCode]:IsEnabled() == 0 then
+    if _G['Dungeon_' .. qCode .. '_CheckButton']:IsEnabled() == 0 then
         return false
     end
 
     for code, data in next, LFT.availableDungeons do
         if code == qCode and not LFT.findingGroup then
-            _G['Dungeon_' .. data.code]:SetChecked(not _G['Dungeon_' .. data.code]:GetChecked())
-            queueFor(bCode, _G['Dungeon_' .. data.code]:GetChecked())
+            _G['Dungeon_' .. data.code .. '_CheckButton']:SetChecked(not _G['Dungeon_' .. data.code .. '_CheckButton']:GetChecked())
+            queueFor(bCode, _G['Dungeon_' .. data.code .. '_CheckButton']:GetChecked())
         end
     end
 end
@@ -4198,7 +4189,7 @@ function queueFor(name, status)
 
     LFT.inGroup = GetNumRaidMembers() == 0 and GetNumPartyMembers() > 0
 
-    lfdebug(queues)
+    lfdebug('queues: ' .. queues)
     lfdebug(LFT.inGroup)
 
     if LFT.inGroup then
@@ -4211,25 +4202,23 @@ function queueFor(name, status)
             --LFT.enableDungeonCheckButtons()
         else
             for _, frame in next, LFT.availableDungeons do
-                if frame then
-                    local dungeonName = LFT.dungeonNameFromCode(frame.code)
-                    lfdebug('dungeonName in queuefor = ' .. dungeonName)
-                    lfdebug('frame.code in queuefor = ' .. frame.code)
-                    lfdebug('frame.background in queuefor = ' .. frame.background)
-                    if not LFT.dungeons[dungeonName].queued then
-                        _G["Dungeon_" .. frame.code]:Disable()
-                        _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
-                        _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
+                local dungeonName = LFT.dungeonNameFromCode(frame.code)
+                lfdebug('dungeonName in queuefor = ' .. dungeonName)
+                lfdebug('frame.code in queuefor = ' .. frame.code)
+                lfdebug('frame.background in queuefor = ' .. frame.background)
+                if not LFT.dungeons[dungeonName].queued then
+                    _G["Dungeon_" .. frame.code .. '_CheckButton']:Disable()
+                    _G['Dungeon_' .. frame.code .. 'Text']:SetText(COLOR_DISABLED .. dungeonName)
+                    _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. '(' .. frame.minLevel .. ' - ' .. frame.maxLevel .. ')')
 
-                        local q = 'dungeons'
-                        if LFT_TYPE == TYPE_ELITE_QUESTS then
-                            q = 'elite quests'
-                            _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. frame.background)
-                        end
-
-                        LFT.addOnEnterTooltip(_G['Dungeon_' .. frame.code .. '_Button'], 'Queueing for ' .. dungeonName .. ' is unavailable',
-                                'Maximum allowed queued ' .. q .. ' at a time is ' .. LFT.maxDungeonsInQueue .. '.')
+                    local q = 'dungeons'
+                    if LFT_TYPE == TYPE_ELITE_QUESTS then
+                        q = 'elite quests'
+                        _G['Dungeon_' .. frame.code .. 'Levels']:SetText(COLOR_DISABLED .. frame.background)
                     end
+
+                    LFT.addOnEnterTooltip(_G['Dungeon_' .. frame.code .. '_Button'], 'Queueing for ' .. dungeonName .. ' is unavailable',
+                            'Maximum allowed queued ' .. q .. ' at a time is ' .. LFT.maxDungeonsInQueue .. '.')
                 end
             end
         end
@@ -4245,7 +4234,7 @@ function findMore()
     -- find queueing dungeon
     local qDungeon = ''
     for _, frame in next, LFT.availableDungeons do
-        if _G["Dungeon_" .. frame.code]:GetChecked() then
+        if _G["Dungeon_" .. frame.code .. '_CheckButton']:GetChecked() then
             qDungeon = frame.code
         end
     end
@@ -4284,8 +4273,8 @@ function joinQueue(roleID, name)
 
     --leaveQueue('from join queue')
 
-    if _G['Dungeon_' .. mCode] ~= nil then
-        _G['Dungeon_' .. mCode]:SetChecked(true)
+    if _G['Dungeon_' .. mCode .. '_CheckButton'] ~= nil then
+        _G['Dungeon_' .. mCode .. '_CheckButton']:SetChecked(true)
     end
 
     queueFor(name, true)
@@ -4397,8 +4386,8 @@ function leaveQueue(callData)
             --end
 
             if callData ~= 'from join queue' then
-                if _G["Dungeon_" .. data.code] then
-                    _G["Dungeon_" .. data.code]:SetChecked(false)
+                if _G["Dungeon_" .. data.code .. '_CheckButton'] then
+                    _G["Dungeon_" .. data.code .. '_CheckButton']:SetChecked(false)
                 end
                 LFT.dungeons[dungeon].queued = false
             end
@@ -4433,8 +4422,8 @@ function leaveQueue(callData)
     --LFTsetRole(LFT_ROLE)
 
     if LFT.LFMDungeonCode ~= '' then
-        if _G["Dungeon_" .. LFT.LFMDungeonCode] then
-            _G["Dungeon_" .. LFT.LFMDungeonCode]:SetChecked(true)
+        if _G["Dungeon_" .. LFT.LFMDungeonCode .. '_CheckButton'] then
+            _G["Dungeon_" .. LFT.LFMDungeonCode .. '_CheckButton']:SetChecked(true)
             LFT.dungeons[LFT.dungeonNameFromCode(LFT.LFMDungeonCode)].queued = true
         end
     end
