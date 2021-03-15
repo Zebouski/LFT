@@ -2242,7 +2242,7 @@
                         </Scripts>
                     </Button>
 
-                    <ScrollFrame name="BrowseDungeonListScrollFrame" hidden="true" inherits="FauxScrollFrameTemplate">
+                    <ScrollFrame name="BrowseDungeonListScrollFrame" inherits="UIPanelScrollFrameTemplate">
                         <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2"
                                   tile="false">
                         </Backdrop>
@@ -2256,11 +2256,25 @@
                                 </Offset>
                             </Anchor>
                         </Anchors>
-                        <Scripts>
-                            <OnVerticalScroll>
-                                FauxScrollFrame_OnVerticalScroll(40, BrowseDungeonListFrame_Update);
-                            </OnVerticalScroll>
-                        </Scripts>
+                        <ScrollChild>
+                            <Frame name="BrowseScrollFrameChildren">
+                                <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2"
+                                          tile="false">
+                                </Backdrop>
+                                <Size>
+                                    <AbsDimension x="295" y="326"/>
+                                </Size>
+                                <Anchors>
+                                    <Anchor point="TOPLEFT">
+                                        <Offset>
+                                            <AbsDimension x="0" y="0"/>
+                                        </Offset>
+                                    </Anchor>
+                                </Anchors>
+                                <Frames>
+                                </Frames>
+                            </Frame>
+                        </ScrollChild>
                     </ScrollFrame>
 
                 </Frames>
