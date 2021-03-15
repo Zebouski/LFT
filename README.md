@@ -1,6 +1,6 @@
 # LFT - a LFG Addon for Turtle WoW, v0.0.3.0
 
-[comment]: <> ([Download Link]&#40;https://github.com/CosminPOP/LFT/releases/latest/download/LFT.zip&#41; <br>)
+[Download Link](https://github.com/CosminPOP/LFT/releases/latest/download/LFT.zip) <br>
 _Important note: Remove `-master` when extracting into your `interface/addons` folder and fully restart your client after each update !_<BR><BR><Br>
 
 #### What it does NOT do ####
