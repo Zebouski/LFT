@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.2.9'
+local addonVer = '0.0.3.0'
 local LFT_ADDON_CHANNEL = 'LFT'
 local groupsFormedThisSession = 0
 
@@ -3540,7 +3540,7 @@ function LFT.LFTBrowse_Update()
                 dungeonIndex = dungeonIndex + 1
 
                 if not LFT.browseFrames[data.code] then
-                    LFT.browseFrames[data.code] = CreateFrame("Frame", "BrowseFrame_" .. data.code, _G["LFTBrowse"], "LFTBrowseDungeonTemplate")
+                    LFT.browseFrames[data.code] = CreateFrame("Frame", "BrowseFrame_" .. data.code, _G["BrowseScrollFrameChildren"], "LFTBrowseDungeonTemplate")
                 end
 
                 _G['BrowseFrame_' .. data.code .. 'Background']:SetTexture('Interface\\addons\\LFT\\images\\background\\ui-lfg-background-' .. data.background)
@@ -3628,7 +3628,7 @@ function LFT.LFTBrowse_Update()
                     end
                 end
 
-                LFT.browseFrames[data.code]:SetPoint("TOPLEFT", _G["LFTBrowse"], "TOPLEFT", 26, -35 - 41 * (dungeonIndex))
+                LFT.browseFrames[data.code]:SetPoint("TOPLEFT", _G["BrowseScrollFrameChildren"], "TOPLEFT", 0, 41 - 41 * (dungeonIndex))
                 LFT.browseFrames[data.code].code = data.code
 
 
@@ -3646,13 +3646,8 @@ function LFT.LFTBrowse_Update()
         _G['LFTMainBrowseText']:SetText('Browse')
     end
 
-    if dungeonIndex > 8 then
-        _G['BrowseDungeonListScrollFrame']:Show()
-    else
-        _G['BrowseDungeonListScrollFrame']:Hide()
-    end
+    _G['BrowseDungeonListScrollFrame']:UpdateScrollChildRect()
 
-    --FauxScrollFrame_Update(_G['BrowseDungeonListScrollFrame'], dungeonIndex, 8, 40)
 end
 
 -- XML called methods and public functions
