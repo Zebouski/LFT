@@ -1239,6 +1239,7 @@ LFTComms:SetScript("OnEvent", function()
             _G['LFTGroupReadyDungeonName']:SetText(dungeonName)
 
             LFT.readyStatusReset()
+            _G['LFTGroupReadyObjectivesCompleted']:SetText('0/' ..  LFT.tableSize(LFT.bosses[LFT.groupFullCode]) .. ' Bosses Defeated')
             _G['LFTGroupReady']:Show()
             LFTGroupReadyFrameCloser:Show()
             _G['LFTRoleCheck']:Hide()
