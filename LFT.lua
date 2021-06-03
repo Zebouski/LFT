@@ -1180,6 +1180,7 @@ LFTComms:SetScript("OnEvent", function()
             local time = tonumber(gfEx[4])
             groupsFormedThisSession = groupsFormedThisSession + 1
             if me == 'Er' then
+                lfprint(LFT.dungeonNameFromCode(code) .. ' group just formed.')
                 lfprint(groupsFormedThisSession .. ' groups formed this session.')
             end
             if not time then
@@ -1300,10 +1301,10 @@ LFTComms:SetScript("OnEvent", function()
             if string.sub(arg1, 1, 4) == 'LFM:' then
 
                 local lfmEx = string.split(arg1, ':')
-                local mDungeonCode = lfmEx[2]
-                local lfmTank = tonumber(lfmEx[3])
-                local lfmHealer = tonumber(lfmEx[4])
-                local lfmDamage = tonumber(lfmEx[5])
+                local mDungeonCode = lfmEx[2] or false
+                local lfmTank = tonumber(lfmEx[3]) or 0
+                local lfmHealer = tonumber(lfmEx[4]) or 0
+                local lfmDamage = tonumber(lfmEx[5]) or 0
 
                 if mDungeonCode then
 
