@@ -54,7 +54,7 @@ When a group is found you will be prompted with this readycheck.<br>
 The button will become available once all 5 members of the group are in.<br>
 ![queuesolo](https://imgur.com/9rHbnfQ.png)
 
-#### Ready Check ####
+### Ready Check ###
 Clicking *Let's do this!* on the ready check will show you the readycheck status of your group.<br>
 ![queuesolo](https://imgur.com/1h3FDYG.png)
 
@@ -77,7 +77,7 @@ Once the leader clicks find more, a role check will be initiated and when the ad
 
 _Note: addon communications are made in LFT chat channel, don't manually leave or check it in your main chat frame, its very spammy!_<Br>
 
-### Known bugs ###
+## Known bugs ##
 Addon textures don't load or just load a white texture: type `/run ReloadUI()`<br>
 Chat channels order messed up: type `/leave LFT` (or any channel that's not in his place) and relog<br>
 
