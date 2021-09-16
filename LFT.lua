@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.3.0'
+local addonVer = '0.0.3.1'
 local LFT_ADDON_CHANNEL = 'LFT'
 local groupsFormedThisSession = 0
 
@@ -1179,8 +1179,10 @@ LFTComms:SetScript("OnEvent", function()
             local code = gfEx[3]
             local time = tonumber(gfEx[4])
             groupsFormedThisSession = groupsFormedThisSession + 1
+            if LFT_CONFIG['spamChat'] then
+                lfnotice(LFT.dungeonNameFromCode(code) .. ' group just formed. (type "/lft spam off" to disabled this message)')
+            end
             if me == 'Er' then
-                lfprint(LFT.dungeonNameFromCode(code) .. ' group just formed.')
                 lfprint(groupsFormedThisSession .. ' groups formed this session.')
             end
             if not time then
@@ -1538,7 +1540,7 @@ function lferror(a)
 end
 
 function lfdebug(a)
-    if not LFT_DEBUG then
+    if not LFT_CONFIG['debug'] then
         return false
     end
     if type(a) == 'boolean' then
@@ -1894,10 +1896,13 @@ end)
 
 function LFT.init()
 
-    if LFT_DEBUG == nil then
-        LFT_DEBUG = false
+    if not LFT_CONFIG then
+        LFT_CONFIG = {}
+        LFT_CONFIG['debug'] = false
+        LFT_CONFIG['spamChat'] = true
     end
-    if LFT_DEBUG then
+
+    if LFT_CONFIG['debug'] then
         _G['LFTTitleTime']:Show()
     else
         _G['LFTTitleTime']:Hide()
@@ -2313,7 +2318,7 @@ function LFT.GetPossibleRoles()
         readyCheckDamage:SetChecked(false)
 
         tankCheck:SetChecked(string.find(LFT_ROLE, 'tank', 1, true))
-        healerCheck:SetChecked(string.find(LFT_ROLE, 'healer', 1, true))
+        healerCheck:SetChecked(false)
         damageCheck:SetChecked(string.find(LFT_ROLE, 'damage', 1, true))
 
         _G['LFTTankBackground2']:SetDesaturated(0)
@@ -2375,7 +2380,7 @@ function LFT.GetPossibleRoles()
         readyCheckDamage:Show()
         readyCheckDamage:SetChecked(false)
 
-        tankCheck:SetChecked(string.find(LFT_ROLE, 'tank', 1, true))
+        tankCheck:SetChecked(false)
         healerCheck:SetChecked(string.find(LFT_ROLE, 'healer', 1, true))
         damageCheck:SetChecked(string.find(LFT_ROLE, 'damage', 1, true))
 
@@ -2396,12 +2401,11 @@ function LFT.GetPossibleRoles()
         readyCheckDamage:Show()
         readyCheckDamage:SetChecked(true)
 
-        tankCheck:SetChecked(string.find(LFT_ROLE, 'tank', 1, true))
-        healerCheck:SetChecked(string.find(LFT_ROLE, 'healer', 1, true))
+        tankCheck:SetChecked(false)
+        healerCheck:SetChecked(false)
         damageCheck:SetChecked(string.find(LFT_ROLE, 'damage', 1, true))
 
         _G['LFTDamageBackground2']:SetDesaturated(0)
-
         _G['LFTRoleCheckRoleDamage']:SetDesaturated(0)
 
         return 'damage'
@@ -4517,8 +4521,8 @@ end
 SLASH_LFTDEBUG1 = "/lftdebug"
 SlashCmdList["LFTDEBUG"] = function(cmd)
     if cmd then
-        LFT_DEBUG = not LFT_DEBUG
-        if LFT_DEBUG then
+        LFT_CONFIG['debug'] = not LFT_CONFIG['debug']
+        if LFT_CONFIG['debug'] then
             lfprint('debug enabled')
             _G['LFTTitleTime']:Show()
         else
@@ -4530,6 +4534,14 @@ end
 SLASH_LFT1 = "/lft"
 SlashCmdList["LFT"] = function(cmd)
     if cmd then
+        if string.sub(cmd, 1, 4) == 'spam' then
+            LFT_CONFIG['spamChat'] = not LFT_CONFIG['spamChat']
+            if LFT_CONFIG['spamChat'] then
+                lfnotice('Groups formed spam is on')
+            else
+                lfnotice('Groups formed spam is off')
+            end
+        end
         if string.sub(cmd, 1, 3) == 'who' then
             if me ~= 'Er' then
                 return false
@@ -4561,8 +4573,8 @@ SlashCmdList["LFT"] = function(cmd)
             end
         end
         if string.sub(cmd, 1, 5) == 'debug' then
-            LFT_DEBUG = not LFT_DEBUG
-            if LFT_DEBUG then
+            LFT_CONFIG['debug'] = not LFT_CONFIG['debug']
+            if LFT_CONFIG['debug'] then
                 lfprint('debug enabled')
                 _G['LFTTitleTime']:Show()
             else
@@ -4585,7 +4597,7 @@ function LFT.sendAdvertisement(chan)
 end
 
 function LFT.removeChannelFromWindows()
-    if LFT_DEBUG then
+    if LFT_CONFIG['debug'] then
         return false
     end
     if me == 'Er' then
