@@ -1,4 +1,4 @@
-# LFT - a LFG Addon for Turtle WoW, v0.0.3.0
+# LFT - a LFG Addon for Turtle WoW, v0.0.3.1
 
 [Download Link](https://github.com/CosminPOP/LFT/releases/latest/download/LFT.zip) <br>
 _Important note: Remove `-master` when extracting into your `interface/addons` folder and fully restart your client after each update !_<BR><BR><Br>
@@ -10,6 +10,10 @@ This addon will not teleport you and your group inside the dungeon.
 If you encounter any lua errors or other addon problems please take a screenshot and send it to me (Xerron/Er) on Discord with a short explanation of what you were doing when you encountered the problem breaks your gameplay disable the addon until a new version comes out.
 
 ## Changes ##
+
+### Browseframeupdate (v.0.0.3.1) ###
+Chat spam option<br>
+Role fixes<Br>
   
 ### Browseframeupdate (v.0.0.3.0) ###
 Browseframe update<br>
