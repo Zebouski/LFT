@@ -1180,7 +1180,7 @@ LFTComms:SetScript("OnEvent", function()
             local time = tonumber(gfEx[4])
             groupsFormedThisSession = groupsFormedThisSession + 1
             if LFT_CONFIG['spamChat'] then
-                lfnotice(LFT.dungeonNameFromCode(code) .. ' group just formed. (type "/lft spam" to disabled this message)')
+                lfnotice(LFT.dungeonNameFromCode(code) .. ' group just formed. (type "/lft spam" to disable this message)')
             end
             if me == 'Er' then
                 lfprint(groupsFormedThisSession .. ' groups formed this session.')
