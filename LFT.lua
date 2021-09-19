@@ -1183,7 +1183,13 @@ LFTComms:SetScript("OnEvent", function()
                 lfnotice(LFT.dungeonNameFromCode(code) .. ' group just formed. (type "/lft spam" to disable this message)')
             end
             if me == 'Er' then
-                lfprint(groupsFormedThisSession .. ' groups formed this session.')
+                local totalGroups = 0
+                for _, number in next, LFT_FORMED_GROUPS do
+                    if number ~= 0 then
+                        totalGroups = totalGroups + number
+                    end
+                end
+                lfprint(groupsFormedThisSession .. ' this session, ' .. totalGroups .. ' total recorded.')
             end
             if not time then
                 return false
@@ -1242,7 +1248,7 @@ LFTComms:SetScript("OnEvent", function()
             _G['LFTGroupReadyDungeonName']:SetText(dungeonName)
 
             LFT.readyStatusReset()
-            _G['LFTGroupReadyObjectivesCompleted']:SetText('0/' ..  LFT.tableSize(LFT.bosses[LFT.groupFullCode]) .. ' Bosses Defeated')
+            _G['LFTGroupReadyObjectivesCompleted']:SetText('0/' .. LFT.tableSize(LFT.bosses[LFT.groupFullCode]) .. ' Bosses Defeated')
             _G['LFTGroupReady']:Show()
             LFTGroupReadyFrameCloser:Show()
             _G['LFTRoleCheck']:Hide()
@@ -2566,7 +2572,7 @@ function LFT.fillAvailableDungeons(queueAfter)
 
             _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
 
-            LFT.availableDungeons[data.code]:SetPoint("TOPLEFT", _G["DungeonListScrollFrameChildren"], "TOPLEFT", 5, 20 -20 * (dungeonIndex))
+            LFT.availableDungeons[data.code]:SetPoint("TOPLEFT", _G["DungeonListScrollFrameChildren"], "TOPLEFT", 5, 20 - 20 * (dungeonIndex))
             LFT.availableDungeons[data.code].code = data.code
             LFT.availableDungeons[data.code].background = data.background
             LFT.availableDungeons[data.code].questIndex = data.questIndex
@@ -2625,7 +2631,7 @@ function LFT.fillAvailableDungeons(queueAfter)
             _G['Dungeon_' .. data.code .. 'Levels']:SetText(color .. '(' .. data.minLevel .. ' - ' .. data.maxLevel .. ')')
             _G['Dungeon_' .. data.code .. '_Button']:SetID(dungeonIndex)
 
-            LFT.availableDungeons[data.code]:SetPoint("TOPLEFT", _G["DungeonListScrollFrameChildren"], "TOPLEFT", 5, 20-20 * (dungeonIndex))
+            LFT.availableDungeons[data.code]:SetPoint("TOPLEFT", _G["DungeonListScrollFrameChildren"], "TOPLEFT", 5, 20 - 20 * (dungeonIndex))
             LFT.availableDungeons[data.code].code = data.code
             LFT.availableDungeons[data.code].background = data.background
             LFT.availableDungeons[data.code].questIndex = data.questIndex
