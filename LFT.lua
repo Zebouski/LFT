@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.3.1'
+local addonVer = '0.0.3.2'
 local LFT_ADDON_CHANNEL = 'LFT'
 local groupsFormedThisSession = 0
 
@@ -22,7 +22,6 @@ ROLE_HEALER_TOOLTIP = 'Indicates that you are willing to\nheal your allies when 
 ROLE_DAMAGE_TOOLTIP = 'Indicates that you are willing to\ntake on the role of dealing\ndamage to enemies.'
 ROLE_BAD_TOOLTIP = 'Your class may not perform this role.'
 
-LFT.diplomat = false
 LFT.tab = 1
 LFT.dungeonsSpam = {}
 LFT.dungeonsSpamDisplay = {}
@@ -223,6 +222,8 @@ LFTTime:SetScript("OnUpdate", function()
                 end
 
                 LFT.peopleLookingForGroups = 0
+
+                LFT.browseNames = {}
 
                 lfdebug("RESET --- TIME IS 0 OR 30")
 
@@ -1299,6 +1300,20 @@ LFTComms:SetScript("OnEvent", function()
                     local mRole = spamSplit[3] --other's role
 
                     if mDungeonCode and mRole then
+
+                        if not LFT.browseNames[mDungeonCode] then
+                            LFT.browseNames[mDungeonCode] = {}
+                        end
+                        if not LFT.browseNames[mDungeonCode][mRole] then
+                            LFT.browseNames[mDungeonCode][mRole] = ''
+                        end
+
+                        if LFT.browseNames[mDungeonCode][mRole] == '' then
+                            LFT.browseNames[mDungeonCode][mRole] = arg2
+                        else
+                            LFT.browseNames[mDungeonCode][mRole] = LFT.browseNames[mDungeonCode][mRole] .. "\n" .. arg2
+                        end
+
                         LFT.incDungeonssSpamRole(mDungeonCode, mRole)
                         LFT.updateDungeonsSpamDisplay(mDungeonCode)
                     end
@@ -1538,7 +1553,7 @@ function lfprint(a)
 end
 
 function lfnotice(a)
-    DEFAULT_CHAT_FRAME:AddMessage(COLOR_HUNTER .. "[LFT Notice] " .. COLOR_ORANGE .. a)
+    DEFAULT_CHAT_FRAME:AddMessage(COLOR_HUNTER .. "[LFT] " .. COLOR_ORANGE .. a)
 end
 
 function lferror(a)
@@ -1979,7 +1994,7 @@ function LFT.init()
 
     _G['LFTGroupReadyAwesome']:Disable()
 
-    lfprint(COLOR_HUNTER .. 'Looking For Turtles v' .. addonVer .. COLOR_WHITE .. ' - LFG Addon for Turtle WoW loaded.')
+    --lfprint(COLOR_HUNTER .. 'Looking For Turtles v' .. addonVer .. COLOR_WHITE .. ' - LFG Addon for Turtle WoW loaded.')
 
     local dungeonsButton = _G['LFTBrowseButton']
 
@@ -3374,9 +3389,13 @@ function LFT.sendMinimapDataToParty(code)
     SendAddonMessage(LFT_ADDON_CHANNEL, "minimap:" .. code .. ":" .. tank .. ":" .. healer .. ":" .. damage, "PARTY")
 end
 
-function LFT.addOnEnterTooltip(frame, title, text1, text2)
+function LFT.addOnEnterTooltip(frame, title, text1, text2, x, y)
     frame:SetScript("OnEnter", function()
-        GameTooltip:SetOwner(this, "ANCHOR_RIGHT", -200, -5)
+        if x and y then
+            GameTooltip:SetOwner(this, "ANCHOR_RIGHT", x, y)
+        else
+            GameTooltip:SetOwner(this, "ANCHOR_RIGHT", -200, -5)
+        end
         GameTooltip:AddLine(title)
         if text1 then
             GameTooltip:AddLine(text1, 1, 1, 1)
@@ -3534,6 +3553,8 @@ function LFT.getDungeonCompletion()
     return math.floor((completed * 100) / total), completed
 end
 
+LFT.browseNames = {}
+
 function LFT.LFTBrowse_Update()
     --lfdebug('LFTBrowse_Update time is ' .. LFTTime.second)
 
@@ -3587,21 +3608,51 @@ function LFT.LFTBrowse_Update()
                 local healer_color = ''
                 local damage_color = ''
 
-                _G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(0)
 
+
+
+
+
+
+
+
+                --_G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(0)
+                _G["BrowseFrame_" .. data.code .. "TankButtonTexture"]:SetDesaturated(0)
                 if LFT.dungeonsSpamDisplay[data.code].tank == 0 then
                     tank_color = COLOR_DISABLED2
-                    _G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(1)
+                    --_G["BrowseFrame_" .. data.code .. "IconTank"]:SetDesaturated(1)
+                    _G["BrowseFrame_" .. data.code .. "TankButtonTexture"]:SetDesaturated(1)
+                    LFT.removeOnEnterTooltip(_G["BrowseFrame_" .. data.code .. "TankButton"])
+                else
+                    if LFT.browseNames[data.code] and LFT.browseNames[data.code]['tank'] then
+                        LFT.addOnEnterTooltip(_G["BrowseFrame_" .. data.code .. "TankButton"], COLOR_TANK .. "Tank\n" .. COLOR_WHITE .. LFT.browseNames[data.code]['tank'], nil, nil, 15, 0)
+                    end
                 end
-                _G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(0)
+
+                --_G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(0)
+                _G["BrowseFrame_" .. data.code .. "HealerButtonTexture"]:SetDesaturated(0)
                 if LFT.dungeonsSpamDisplay[data.code].healer == 0 then
                     healer_color = COLOR_DISABLED2
-                    _G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(1)
+                    --_G["BrowseFrame_" .. data.code .. "IconHealer"]:SetDesaturated(1)
+                    _G["BrowseFrame_" .. data.code .. "HealerButtonTexture"]:SetDesaturated(1)
+                    LFT.removeOnEnterTooltip(_G["BrowseFrame_" .. data.code .. "HealerButton"])
+                else
+                    if LFT.browseNames[data.code] and LFT.browseNames[data.code]['healer'] then
+                        LFT.addOnEnterTooltip(_G["BrowseFrame_" .. data.code .. "HealerButton"], COLOR_HEALER .. "Healer\n" .. COLOR_WHITE .. LFT.browseNames[data.code]['healer'], nil, nil, 15, 0)
+                    end
                 end
-                _G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(0)
+
+                --_G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(0)
+                _G["BrowseFrame_" .. data.code .. "DamageButtonTexture"]:SetDesaturated(0)
                 if LFT.dungeonsSpamDisplay[data.code].damage == 0 then
                     damage_color = COLOR_DISABLED2
-                    _G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(1)
+                    --_G["BrowseFrame_" .. data.code .. "IconDamage"]:SetDesaturated(1)
+                    _G["BrowseFrame_" .. data.code .. "DamageButtonTexture"]:SetDesaturated(1)
+                    LFT.removeOnEnterTooltip(_G["BrowseFrame_" .. data.code .. "DamageButton"])
+                else
+                    if LFT.browseNames[data.code] and LFT.browseNames[data.code]['damage'] then
+                        LFT.addOnEnterTooltip(_G["BrowseFrame_" .. data.code .. "DamageButton"], COLOR_DAMAGE .. "Damage\n" .. COLOR_WHITE .. LFT.browseNames[data.code]['damage'], nil, nil, 15, 0)
+                    end
                 end
 
                 _G["BrowseFrame_" .. data.code .. "NrTank"]:SetText(tank_color .. LFT.dungeonsSpamDisplay[data.code].tank)
@@ -3719,45 +3770,6 @@ function declineRole()
 end
 
 function LFT_Toggle()
-
-    --check for diplomat item
-    if not LFT.diplomat then
-        for slot = 0, 10 do
-            local itemLink = GetContainerItemLink(KEYRING_CONTAINER, slot)
-            if itemLink then
-                if string.find(itemLink, 'of Diplomacy', 1, true) then
-                    LFT.diplomat = true
-                end
-            end
-        end
-        if not LFT.diplomat then
-            lfdebug('not a keyring diplomat')
-            for bag = 0, 5 do
-                for slot = 0, GetContainerNumSlots(bag) do
-                    local itemLink = GetContainerItemLink(bag, slot)
-                    if itemLink then
-                        if string.find(itemLink, 'of Diplomacy', 1, true) then
-                            LFT.diplomat = true
-                        end
-                    end
-                end
-            end
-        end
-        if not LFT.diplomat then
-            local _, race = UnitRace('player')
-            race = string.lower(race)
-
-            local NEED_DIPLOMACY_START = FONT_COLOR_CODE_CLOSE .. 'You need to be a Diplomat to use ' .. COLOR_HUNTER .. 'LFT' .. FONT_COLOR_CODE_CLOSE .. '. Speak with '
-            local FACTION_DIPLOMAT = FONT_COLOR_CODE_CLOSE .. 'Joseph Dalton ' .. FONT_COLOR_CODE_CLOSE .. 'in ' .. COLOR_WHITE .. 'Stormwind ' .. FONT_COLOR_CODE_CLOSE
-            local NEED_DIPLOMACY_END = ' to get a ' .. COLOR_YELLOW .. '\124cffffffff\124Hitem:50012:0:0:0:0:0:0:0:0\124h[Glyph of Diplomacy]\124h\124r' .. FONT_COLOR_CODE_CLOSE .. ' and become a diplomat! You will be able to group and trade with the players of an opposite faction.'
-
-            if race ~= 'human' and race ~= 'gnome' and race ~= 'dwarf' and race ~= 'nightelf' and race ~= 'bloodelf' then
-                FACTION_DIPLOMAT = FONT_COLOR_CODE_CLOSE .. 'Karn Deepeye ' .. FONT_COLOR_CODE_CLOSE .. 'in ' .. FONT_COLOR_CODE_CLOSE .. 'Orgimmar ' .. FONT_COLOR_CODE_CLOSE
-            end
-            lfnotice(NEED_DIPLOMACY_START .. FACTION_DIPLOMAT .. NEED_DIPLOMACY_END)
-            return false
-        end
-    end
 
     -- remove channel from every chat frame
     LFT.removeChannelFromWindows()

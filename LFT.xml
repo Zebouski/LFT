@@ -69,7 +69,7 @@
             </CheckButton>
 
             <Button name="$parent_Button" inherits="UIPanelButtonTemplate">
-                                        <NormalTexture/>
+                <NormalTexture/>
                 <PushedTexture/>
                 <HighlightTexture/>
                 <Size>
@@ -327,42 +327,42 @@
                         </Anchor>
                     </Anchors>
                 </Texture>
-                <Texture name="$parentIconTank" file="Interface\addons\LFT\images\ready_tank">
-                    <Size>
-                        <AbsDimension x="16" y="14"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOM">
-                            <Offset>
-                                <AbsDimension x="38" y="2"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-                <Texture name="$parentIconHealer" file="Interface\addons\LFT\images\ready_healer">
-                    <Size>
-                        <AbsDimension x="16" y="14"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOM">
-                            <Offset>
-                                <AbsDimension x="78" y="2"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
-                <Texture name="$parentIconDamage" file="Interface\addons\LFT\images\ready_damage">
-                    <Size>
-                        <AbsDimension x="16" y="14"/>
-                    </Size>
-                    <Anchors>
-                        <Anchor point="BOTTOM">
-                            <Offset>
-                                <AbsDimension x="118" y="2"/>
-                            </Offset>
-                        </Anchor>
-                    </Anchors>
-                </Texture>
+                <!--                <Texture name="$parentIconTank" file="Interface\addons\LFT\images\ready_tank">-->
+                <!--                    <Size>-->
+                <!--                        <AbsDimension x="16" y="14"/>-->
+                <!--                    </Size>-->
+                <!--                    <Anchors>-->
+                <!--                        <Anchor point="BOTTOM">-->
+                <!--                            <Offset>-->
+                <!--                                <AbsDimension x="38" y="2"/>-->
+                <!--                            </Offset>-->
+                <!--                        </Anchor>-->
+                <!--                    </Anchors>-->
+                <!--                </Texture>-->
+                <!--                <Texture name="$parentIconHealer" file="Interface\addons\LFT\images\ready_healer">-->
+                <!--                    <Size>-->
+                <!--                        <AbsDimension x="16" y="14"/>-->
+                <!--                    </Size>-->
+                <!--                    <Anchors>-->
+                <!--                        <Anchor point="BOTTOM">-->
+                <!--                            <Offset>-->
+                <!--                                <AbsDimension x="78" y="2"/>-->
+                <!--                            </Offset>-->
+                <!--                        </Anchor>-->
+                <!--                    </Anchors>-->
+                <!--                </Texture>-->
+                <!--                <Texture name="$parentIconDamage" file="Interface\addons\LFT\images\ready_damage">-->
+                <!--                    <Size>-->
+                <!--                        <AbsDimension x="16" y="14"/>-->
+                <!--                    </Size>-->
+                <!--                    <Anchors>-->
+                <!--                        <Anchor point="BOTTOM">-->
+                <!--                            <Offset>-->
+                <!--                                <AbsDimension x="118" y="2"/>-->
+                <!--                            </Offset>-->
+                <!--                        </Anchor>-->
+                <!--                    </Anchors>-->
+                <!--                </Texture>-->
             </Layer>
             <Layer level="OVERLAY">
                 <FontString name="$parentDungeonName" justifyH="LEFT" inherits="GameFontNormal"
@@ -428,6 +428,100 @@
         </Layers>
 
         <Frames>
+
+            <Button name="$parentTankButton" inherits="UIPanelButtonTemplate">
+                <NormalTexture/>
+                <PushedTexture/>
+                <HighlightTexture/>
+                <Size>
+                    <AbsDimension x="16" y="14"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="38" y="2"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentTexture" file="Interface\addons\LFT\images\ready_tank">
+                            <Size>
+                                <AbsDimension x="16" y="14"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </Button>
+            <Button name="$parentHealerButton" inherits="UIPanelButtonTemplate">
+                <NormalTexture/>
+                <PushedTexture/>
+                <HighlightTexture/>
+                <Size>
+                    <AbsDimension x="16" y="14"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="78" y="2"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentTexture" file="Interface\addons\LFT\images\ready_healer">
+                            <Size>
+                                <AbsDimension x="16" y="14"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </Button>
+            <Button name="$parentDamageButton" inherits="UIPanelButtonTemplate">
+                <NormalTexture/>
+                <PushedTexture/>
+                <HighlightTexture/>
+                <Size>
+                    <AbsDimension x="16" y="14"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="118" y="2"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentTexture" file="Interface\addons\LFT\images\ready_damage">
+                            <Size>
+                                <AbsDimension x="16" y="14"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </Button>
 
             <Button name="$parent_JoinAs" hidden="true" inherits="UIPanelButtonTemplate2" text="Join as">
                 <Size>
