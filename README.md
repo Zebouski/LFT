@@ -11,6 +11,13 @@ If you encounter any lua errors or other addon problems please take a screenshot
 
 ## Changes ##
 
+### New Dungeons (v.0.0.3.3) ###
+New dungeons:<br>
+- The Crescent Grove 32-38<Br>
+- Karazhan Crypt 58-60<Br>
+- Caverns of Time: Black Morass 60<Br>
+- Stormwind Vault 60<Br>
+
 ### No More Diplomats (v.0.0.3.2) ###
 Removed Diplomat Check<br>
 Visible names of people in browse frame<Br>

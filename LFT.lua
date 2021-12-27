@@ -2,7 +2,7 @@ local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
 local me = UnitName('player')
-local addonVer = '0.0.3.2'
+local addonVer = '0.0.3.3'
 local LFT_ADDON_CHANNEL = 'LFT'
 local groupsFormedThisSession = 0
 
@@ -2470,7 +2470,7 @@ function LFT.getAvailableDungeons(level, type, mine, partyIndex)
     return dungeons
 end
 
-function LFT.fillAvailableDungeons(queueAfter)
+function LFT.fillAvailableDungeons(queueAfter, dont_scroll)
 
     if LFT_TYPE == TYPE_ELITE_QUESTS then
         LFT.dungeons = LFT.getEliteQuests()
@@ -2708,8 +2708,6 @@ function LFT.fillAvailableDungeons(queueAfter)
     end
     -- end gray
 
-    --FauxScrollFrame_Update(_G['DungeonListScrollFrame'], dungeonIndex, LFT.maxDungeonsList, 20)
-
     LFT.fixMainButton()
 
     if queueAfter then
@@ -2736,6 +2734,9 @@ function LFT.fillAvailableDungeons(queueAfter)
         end
     end
 
+    if dont_scroll then
+        return
+    end
     _G['DungeonListScrollFrame']:SetVerticalScroll(0)
     _G['DungeonListScrollFrame']:UpdateScrollChildRect()
 end
@@ -3965,8 +3966,8 @@ function LFTsetRole(role, status, readyCheck)
     --BrowseDungeonListFrame_Update()
 end
 
-function DungeonListFrame_Update()
-    LFT.fillAvailableDungeons()
+function DungeonListFrame_Update(dont_scroll)
+    LFT.fillAvailableDungeons(false, dont_scroll)
 end
 
 function BrowseDungeonListFrame_Update()
@@ -4242,7 +4243,7 @@ function queueFor(name, status)
             end
         end
     end
-    DungeonListFrame_Update()
+    DungeonListFrame_Update(true)
     LFT.fixMainButton()
 end
 
@@ -4713,6 +4714,9 @@ LFT.allDungeons = {
     ['Scarlet Monastery Library'] = { minLevel = 28, maxLevel = 39, code = 'smlib', queued = false, canQueue = true, background = 'scarletmonastery', myRole = '' },
     ['Gnomeregan'] = { minLevel = 29, maxLevel = 38, code = 'gnomer', queued = false, canQueue = true, background = 'gnomeregan', myRole = '' },
     ['Razorfen Kraul'] = { minLevel = 29, maxLevel = 38, code = 'rfk', queued = false, canQueue = true, background = 'razorfenkraul', myRole = '' },
+
+    ['The Crescent Grove'] = { minLevel = 32, maxLevel = 38, code = 'tcg', queued = false, canQueue = true, background = 'tcg', myRole = '' },
+
     ['Scarlet Monastery Armory'] = { minLevel = 32, maxLevel = 41, code = 'smarmory', queued = false, canQueue = true, background = 'scarletmonastery', myRole = '' },
     ['Scarlet Monastery Cathedral'] = { minLevel = 35, maxLevel = 45, code = 'smcath', queued = false, canQueue = true, background = 'scarletmonastery', myRole = '' },
     ['Razorfen Downs'] = { minLevel = 36, maxLevel = 46, code = 'rfd', queued = false, canQueue = true, background = 'razorfendowns', myRole = '' },
@@ -4732,6 +4736,11 @@ LFT.allDungeons = {
     ['Scholomance'] = { minLevel = 58, maxLevel = 60, code = 'scholo', queued = false, canQueue = true, background = 'scholomance', myRole = '' },
     ['Stratholme: Undead District'] = { minLevel = 58, maxLevel = 60, code = 'stratud', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
     ['Stratholme: Scarlet Bastion'] = { minLevel = 58, maxLevel = 60, code = 'stratlive', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
+
+    ['Karazhan Crypt'] = { minLevel = 58, maxLevel = 60, code = 'kc', queued = false, canQueue = true, background = 'kc', myRole = '' },
+    ['Caverns of Time: Black Morass'] = { minLevel = 60, maxLevel = 60, code = 'cotbm', queued = false, canQueue = true, background = 'cotbm', myRole = '' },
+    ['Stormwind Vault'] = { minLevel = 60, maxLevel = 60, code = 'swv', queued = false, canQueue = true, background = 'swv', myRole = '' },
+
     --['GM Test'] = { minLevel = 1, maxLevel = 60, code = 'gmtest', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
 }
 
@@ -4983,7 +4992,34 @@ LFT.bosses = {
         'Magistrate Barthilas',
         'Ramstein the Gorger',
         'Baron Rivendare',
-    }
+    },
+    ['cotbm'] = {
+        'Chronar',
+        'Time-Lord Epochronos',
+        'Antnormi'
+    },
+    ['kc'] = {
+        'Marrowspike',
+        'Hivaxxis',
+        'Corpsemuncher',
+        'Archlich Enkhraz',
+        'Alarus'
+    },
+    ['swv'] = {
+        'Aszosh Grimflame',
+        'Tham\'Grarr',
+        'Black Bride',
+        'Damian',
+        'Volkan Cruelblade',
+        'Arc\'tiras'
+    },
+    ['tcg'] = {
+        'Grovetender Engryss',
+        'Keeper Ranathos',
+        'High Priestess A\'lathea',
+        'Fenektis the Deceiver',
+        'Master Raxxieth'
+    },
 };
 
 -- utils
