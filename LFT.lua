@@ -1,3 +1,6 @@
+BINDING_HEADER_LFT = "Looking For Turtles"
+BINDING_NAME_LFT = "Togle Turtle Finder"
+
 local _G, _ = _G or getfenv()
 
 local LFT = CreateFrame("Frame")
