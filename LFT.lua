@@ -4743,6 +4743,7 @@ LFT.allDungeons = {
     ['Karazhan Crypt'] = { minLevel = 58, maxLevel = 60, code = 'kc', queued = false, canQueue = true, background = 'kc', myRole = '' },
     ['Caverns of Time: Black Morass'] = { minLevel = 60, maxLevel = 60, code = 'cotbm', queued = false, canQueue = true, background = 'cotbm', myRole = '' },
     ['Stormwind Vault'] = { minLevel = 60, maxLevel = 60, code = 'swv', queued = false, canQueue = true, background = 'swv', myRole = '' },
+    ['Hateforge Quarry'] = { minLevel = 52, maxLevel = 60, code = 'hfq', queued = false, canQueue = true, background = 'swv', myRole = '' },
 
     --['GM Test'] = { minLevel = 1, maxLevel = 60, code = 'gmtest', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
 }
@@ -5022,6 +5023,13 @@ LFT.bosses = {
         'High Priestess A\'lathea',
         'Fenektis the Deceiver',
         'Master Raxxieth'
+    },
+	['hfq'] = {
+        'High Foreman Bargul Blackhammer',
+        'Engineer Figgles',
+        'Corossis',
+        'Hatereaver Annihilator',
+        'Har\'gesh Doomcaller'
     },
 };
 
