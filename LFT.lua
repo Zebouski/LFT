@@ -1625,6 +1625,7 @@ local hookChatFrame = function(frame)
             if not LFT.gotTimeFromServer then
                 if LFT.gotOnline and LFT.gotUptime then
                     LFT.gotTimeFromServer = true
+                    skiphook = true
                 end
             end
 
