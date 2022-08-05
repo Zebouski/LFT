@@ -1592,7 +1592,12 @@ local hookChatFrame = function(frame)
     local original = frame.AddMessage
 
     if original then
+        local skiphook = nil
         frame.AddMessage = function(t, message, ...)
+            if skiphook then
+                return original(t, message, unpack(arg))
+            end
+
             LFT.hookExecutions = LFT.hookExecutions + 1
 
             if string.find(message, 'Players online:', 1, true) and
@@ -1620,8 +1625,6 @@ local hookChatFrame = function(frame)
             if not LFT.gotTimeFromServer then
                 if LFT.gotOnline and LFT.gotUptime then
                     LFT.gotTimeFromServer = true
-                    frame.AddMessage = original
-                    original = nil
                 end
             end
 
