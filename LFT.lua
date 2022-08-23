@@ -1,5 +1,5 @@
 BINDING_HEADER_LFT = "Looking For Turtles"
-BINDING_NAME_LFT = "Togle Turtle Finder"
+BINDING_NAME_LFT = "Toggle Turtle Finder"
 
 local _G, _ = _G or getfenv()
 
