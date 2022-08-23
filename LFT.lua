@@ -461,7 +461,7 @@ LFTFillAvailableDungeonsDelay:SetScript("OnHide", function()
         LFT.fillAvailableDungeons(LFTFillAvailableDungeonsDelay.queueAfterIfPossible)
         LFTFillAvailableDungeonsDelay.triggers = LFTFillAvailableDungeonsDelay.triggers + 1
     else
-        lferror('Error occurred at LFTFillAvailableDungeonsDelay triggers = 10. Please report this to Xerron/Er.')
+        --lferror('Error occurred at LFTFillAvailableDungeonsDelay triggers = 10. Please report this to Xerron/Er.')
     end
 end)
 LFTFillAvailableDungeonsDelay:SetScript("OnUpdate", function()
