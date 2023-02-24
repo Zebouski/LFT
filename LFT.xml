@@ -733,6 +733,15 @@
                     </OnClick>
                 </Scripts>
             </Button>
+            <Button inherits="UIPanelCloseButton">
+                <Anchors>
+                    <Anchor point="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Button>
         </Frames>
     </Frame>
 
