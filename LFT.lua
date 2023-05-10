@@ -4739,6 +4739,7 @@ LFT.allDungeons = {
     ['Lower Blackrock Spire'] = { minLevel = 55, maxLevel = 60, code = 'lbrs', queued = false, canQueue = true, background = 'blackrockspire', myRole = '' },
     ['Dire Maul East'] = { minLevel = 55, maxLevel = 60, code = 'dme', queued = false, canQueue = true, background = 'diremaul', myRole = '' },
     ['Dire Maul North'] = { minLevel = 57, maxLevel = 60, code = 'dmn', queued = false, canQueue = true, background = 'diremaul', myRole = '' },
+    ['Dire Maul Tribute'] = { minLevel = 57, maxLevel = 60, code = 'dmt', queued = false, canQueue = true, background = 'diremaul', myRole = '' },
     ['Dire Maul West'] = { minLevel = 57, maxLevel = 60, code = 'dmw', queued = false, canQueue = true, background = 'diremaul', myRole = '' },
     ['Scholomance'] = { minLevel = 58, maxLevel = 60, code = 'scholo', queued = false, canQueue = true, background = 'scholomance', myRole = '' },
     ['Stratholme: Undead District'] = { minLevel = 58, maxLevel = 60, code = 'stratud', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
@@ -4964,6 +4965,9 @@ LFT.bosses = {
         'Guard Fengus',
         'Guard Slip\'kik',
         'Captain Kromcrush',
+        'King Gordok',
+    },
+    ['dmt'] = {
         'King Gordok',
     },
     ['dmw'] = {
