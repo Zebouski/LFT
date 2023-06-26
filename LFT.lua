@@ -4728,11 +4728,13 @@ LFT.allDungeons = {
     ['Scarlet Monastery Cathedral'] = { minLevel = 35, maxLevel = 45, code = 'smcath', queued = false, canQueue = true, background = 'scarletmonastery', myRole = '' },
     ['Razorfen Downs'] = { minLevel = 36, maxLevel = 46, code = 'rfd', queued = false, canQueue = true, background = 'razorfendowns', myRole = '' },
     ['Uldaman'] = { minLevel = 40, maxLevel = 51, code = 'ulda', queued = false, canQueue = true, background = 'uldaman', myRole = '' },
+    ['Gilneas City'] = { minLevel = 42, maxLevel = 50, code = 'gilneas', queued = false, canQueue = true, background = 'gilneas', myRole = '' },
     ['Zul\'Farrak'] = { minLevel = 44, maxLevel = 54, code = 'zf', queued = false, canQueue = true, background = 'zulfarak', myRole = '' },
     ['Maraudon Orange'] = { minLevel = 47, maxLevel = 55, code = 'maraorange', queued = false, canQueue = true, background = 'maraudon', myRole = '' },
     ['Maraudon Purple'] = { minLevel = 45, maxLevel = 55, code = 'marapurple', queued = false, canQueue = true, background = 'maraudon', myRole = '' },
     ['Maraudon Princess'] = { minLevel = 47, maxLevel = 55, code = 'maraprincess', queued = false, canQueue = true, background = 'maraudon', myRole = '' },
     ['Temple of Atal\'Hakkar'] = { minLevel = 50, maxLevel = 60, code = 'st', queued = false, canQueue = true, background = 'sunkentemple', myRole = '' },
+	['Hateforge Quarry'] = { minLevel = 50, maxLevel = 60, code = 'hfq', queued = false, canQueue = true, background = 'hfq', myRole = '' },
     ['Blackrock Depths'] = { minLevel = 52, maxLevel = 60, code = 'brd', queued = false, canQueue = true, background = 'blackrockdepths', myRole = '' },
     ['Blackrock Depths Arena'] = { minLevel = 52, maxLevel = 60, code = 'brdarena', queued = false, canQueue = true, background = 'blackrockdepths', myRole = '' },
     ['Blackrock Depths Emperor'] = { minLevel = 54, maxLevel = 60, code = 'brdemp', queued = false, canQueue = true, background = 'blackrockdepths', myRole = '' },
@@ -4744,11 +4746,10 @@ LFT.allDungeons = {
     ['Scholomance'] = { minLevel = 58, maxLevel = 60, code = 'scholo', queued = false, canQueue = true, background = 'scholomance', myRole = '' },
     ['Stratholme: Undead District'] = { minLevel = 58, maxLevel = 60, code = 'stratud', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
     ['Stratholme: Scarlet Bastion'] = { minLevel = 58, maxLevel = 60, code = 'stratlive', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
-
     ['Karazhan Crypt'] = { minLevel = 58, maxLevel = 60, code = 'kc', queued = false, canQueue = true, background = 'kc', myRole = '' },
     ['Caverns of Time: Black Morass'] = { minLevel = 60, maxLevel = 60, code = 'cotbm', queued = false, canQueue = true, background = 'cotbm', myRole = '' },
     ['Stormwind Vault'] = { minLevel = 60, maxLevel = 60, code = 'swv', queued = false, canQueue = true, background = 'swv', myRole = '' },
-    ['Hateforge Quarry'] = { minLevel = 50, maxLevel = 60, code = 'hfq', queued = false, canQueue = true, background = 'hfq', myRole = '' },
+
 
     --['GM Test'] = { minLevel = 1, maxLevel = 60, code = 'gmtest', queued = false, canQueue = true, background = 'stratholme', myRole = '' },
 }
@@ -4856,6 +4857,15 @@ LFT.bosses = {
         'Galgann Firehammer',
         'Grimlok',
         'Archaedas',
+    },
+	['gilneas'] = {
+        'Matthias Holtz',
+        'Judge Sutherland',
+        'Dustivan Blackcowl',
+        'Marshal Magnus Greystone',
+        'Celia Harlow',
+        'Mortimer Harlow',
+        'Genn Greymane',
     },
     ['zf'] = {
         'Antu\'sul',
