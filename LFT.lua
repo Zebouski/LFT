@@ -3786,6 +3786,14 @@ function LFT_Toggle()
         LFT.level = UnitLevel('player')
     end
 
+    -- Without this warning message, players that are lv 1-12
+    -- trying to use LFT end up thinking the addon is broken
+    if LFT.level >= 13 then
+        _G['LFTLowLevel']:Hide()
+    else
+        _G['LFTLowLevel']:Show()
+    end
+
     for dungeon, data in next, LFT.dungeons do
         if not LFT.dungeonsSpam[data.code] then
             LFT.dungeonsSpam[data.code] = { tank = 0, healer = 0, damage = 0 }

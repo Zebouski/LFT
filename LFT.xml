@@ -1739,6 +1739,20 @@
                                 </Anchor>
                             </Anchors>
                         </FontString>
+
+                        <FontString name="LFTLowLevel" inherits="GameFontWhite"
+                                    text="You are not level 13 yet. Go level up first!">
+                            <Size>
+                                <AbsDimension x="300" y="326"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER">
+                                    <Offset>
+                                        <AbsDimension x="-10" y="30"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
                     </Layer>
                 </Layers>
                 <Frames>
